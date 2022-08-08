@@ -1,11 +1,11 @@
+use simulation::common::*;
 use std::sync::Mutex;
-use simulation::common::{*};
 
 #[macro_export]
 macro_rules! wrap_chemistry {
     ($chem:expr) => {
         Box::new($chem)
-    }
+    };
 }
 
 macro_rules! _define_struct {
@@ -36,7 +36,7 @@ macro_rules! _define_impl__new {
             }
         }
     };
-    
+
     (RESOURCE [$([$resource_name:ident, $is_streamed:stmt]),*]) => {
         pub fn new() -> Self {
             let mut x = 0;
@@ -54,20 +54,20 @@ macro_rules! _define_impl__defs_fn {
         pub fn make_defs() -> Vec<$def_type> {
 
            let mut items: Vec<$def_type> = vec![];
-           
+
            let mut i = 0;
 
            $(
                items.push({
-                   let name = stringify!($attribute).to_string(); 
+                   let name = stringify!($attribute).to_string();
                    let _type = AttributeDefinitionType::$type_category;
                    let _i = i;
                    i = i + 1;
 
                    <$def_type>::new(
-                        &name, 
+                        &name,
                         _type,
-                        _i,                
+                        _i,
                    )
                });
            )*
@@ -102,20 +102,20 @@ macro_rules! _define_impl__defs_fn__res {
         pub fn make_defs() -> Vec<$def_type> {
 
            let mut items: Vec<$def_type> = vec![];
-           
+
            let mut i = 0;
 
            $(
                items.push({
-                   let name = stringify!($attribute).to_string(); 
+                   let name = stringify!($attribute).to_string();
                    //let _type = Resource::$type_category;
                    let _i = i;
                    i = i + 1;
 
                    <$def_type>::new(
-                        &name, 
+                        &name,
                         $is_streamed,
-                        _i,                
+                        _i,
                    )
                });
            )*
@@ -129,7 +129,11 @@ macro_rules! _define_impl__defs_fn__res {
 macro_rules! def_simulation_attributes {
     ($all:tt) => {
         _define_struct!(SimulationAttributesLookup, AttributeIndex, $all);
-        _define_impl!(SimulationAttributesLookup, SimulationAttributeDefinition, $all);
+        _define_impl!(
+            SimulationAttributesLookup,
+            SimulationAttributeDefinition,
+            $all
+        );
     };
 }
 
@@ -137,7 +141,11 @@ macro_rules! def_simulation_attributes {
 macro_rules! def_unit_entry_attributes {
     ($all:tt) => {
         _define_struct!(UnitEntryAttributesLookup, AttributeIndex, $all);
-        _define_impl!(UnitEntryAttributesLookup, UnitEntryAttributeDefinition, $all);
+        _define_impl!(
+            UnitEntryAttributesLookup,
+            UnitEntryAttributeDefinition,
+            $all
+        );
     };
 }
 
@@ -148,7 +156,6 @@ macro_rules! def_unit_attributes {
         _define_impl!(UnitAttributesLookup, UnitAttributeDefinition, $all);
     };
 }
-
 
 #[macro_export]
 macro_rules! def_position_attributes {
@@ -175,8 +182,12 @@ macro_rules! def_position_resources {
 }
 
 macro_rules! get_type_from_attribute_def {
-    (Number) => {i32};
-    (Boolean) => {bool}
+    (Number) => {
+        i32
+    };
+    (Boolean) => {
+        bool
+    };
 }
 
 /*
@@ -190,9 +201,9 @@ macro_rules! reagent {
                 let mut params: Vec<ActionParam> = vec![];
 
                 $(
-                    params.push($param);                    
+                    params.push($param);
                 )*
-                
+
                 ReagentDefinition::new($key, params)
             }
         }
@@ -203,7 +214,7 @@ macro_rules! reagent {
 macro_rules! param_arg {
     ($x:ident) => {
         ActionParam::Placeholder(ActionParamType::$x)
-    }
+    };
 }
 
 #[macro_export]
@@ -212,7 +223,7 @@ macro_rules! param_value {
         ActionParam::$x($val)
     };
 }
-                
+
 //reagent_value!(UnitResourceKey("cheese")),
 
 //#[macro_export]
@@ -226,10 +237,10 @@ macro_rules! param_value {
 macro_rules! def_reactions {
     ($($reaction:expr),*, $(,)?) => {
         pub fn get_reactions() -> Vec<ReactionDefinition> {
-            let mut reactions: Vec<ReactionDefinition> = vec![]; 
+            let mut reactions: Vec<ReactionDefinition> = vec![];
 
             $(
-                reactions.push($reaction);    
+                reactions.push($reaction);
             )*
 
             reactions
@@ -245,74 +256,74 @@ macro_rules! reaction {
             let mut reagents = vec![];
 
             $(
-                reagents.push($reagent);                    
+                reagents.push($reagent);
             )*
-            
+
             ReactionDefinition::new($key, reagents)
         }
     };
 }
 #[macro_export]
 macro_rules! assert_coords_valid_for_size {
-    ( $coord:expr, $size:expr) => {
-        {
-            assert!(
-                ($coord.0 < $size.0) && 
-                ($coord.1 < $size.1), 
-                format!("cannot get grid item at {:?} for a grid with size {:?}", $coord, size)
-            );
-        }
-    };
+    ( $coord:expr, $size:expr) => {{
+        assert!(
+            ($coord.0 < $size.0) && ($coord.1 < $size.1),
+            "cannot get grid item at {:?} for a grid with size {:?}",
+            $coord,
+            size
+        );
+    }};
 }
 #[macro_export]
 macro_rules! assert_coords_valid_for_world {
-    ( $coord:expr, $world:expr) => {
-        {
-            assert!(
-                ($coord.0 < $world.size.0) && 
-                ($coord.1 < $world.size.1), 
-                format!("cannot get grid item at {:?} for a grid with size {:?}", $coord, $world.size)
-            );
-        }
-    };
+    ( $coord:expr, $world:expr) => {{
+        assert!(
+            ($coord.0 < $world.size.0) && ($coord.1 < $world.size.1),
+            "cannot get grid item at {:?} for a grid with size {:?}",
+            $coord,
+            $world.size
+        );
+    }};
 }
 
 #[macro_export]
 macro_rules! assert_unit_attribute_at {
-    ( $sim:expr, $coord:expr, $key:expr, $amount:expr ) => {
-        {
-            let value = $sim.world.get_unit_attribute_at($coord, $sim.unit_attr_id_by_key($key));
-            assert_eq!(value, $amount);
-        }
-    };
+    ( $sim:expr, $coord:expr, $key:expr, $amount:expr ) => {{
+        let value = $sim
+            .world
+            .get_unit_attribute_at($coord, $sim.unit_attr_id_by_key($key));
+        assert_eq!(value, $amount);
+    }};
 }
 
 #[macro_export]
 macro_rules! assert_position_attribute_at {
-    ( $sim:expr, $coord:expr, $key:expr, $amount:expr ) => {
-        {
-            let value = $sim.world.get_unit_attribute_at($coord, $sim.unit_attr_id_by_key($key));
-            assert_eq!(value, $amount);
-        }
-    };
+    ( $sim:expr, $coord:expr, $key:expr, $amount:expr ) => {{
+        let value = $sim
+            .world
+            .get_unit_attribute_at($coord, $sim.unit_attr_id_by_key($key));
+        assert_eq!(value, $amount);
+    }};
 }
 
 #[macro_export]
 macro_rules! assert_unit_resource_at {
-    ( $sim:expr, $coord:expr, $key:expr, $amount:expr ) => {
-        {
-            let amt: UnitResourceAmount = $amount;
-            let value = $sim.world.get_unit_resource_at($coord, $sim.unit_resource_id_by_key($key));
-            assert_eq!(value, $amount);
-        }
-    };
+    ( $sim:expr, $coord:expr, $key:expr, $amount:expr ) => {{
+        let amt: UnitResourceAmount = $amount;
+        let value = $sim
+            .world
+            .get_unit_resource_at($coord, $sim.unit_resource_id_by_key($key));
+        assert_eq!(value, $amount);
+    }};
 }
 
 #[macro_export]
 macro_rules! assert_unit_at {
-    ( $sim:expr, $coord:expr ) => {
-        {
-            assert!($sim.world.get_unit_at($coord).is_some(), format!("Expected used to exist at {:?}, ", $coord));
-        }
-    };
+    ( $sim:expr, $coord:expr ) => {{
+        assert!(
+            $sim.world.get_unit_at($coord).is_some(),
+            "Expected used to exist at {:?}, ",
+            $coord
+        );
+    }};
 }
