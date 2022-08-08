@@ -11,9 +11,9 @@ macro_rules! frames_from_genome {
 macro_rules! genome {
     ($(gene(if_any$if_any:tt, then_do$then_do:tt)),*) => ({ 
         {
-            use biology::genome::framed::builders::legacy::util::{GenomeBuilder, GenomeBuildFunction};
-            use biology::genome::framed::types::{FramedGenomeValue};
-            use simulation::common::{SensorManifest, GeneticManifest, ChemistryManifest};
+            use crate::biology::genome::framed::builders::legacy::util::{GenomeBuilder, GenomeBuildFunction};
+            use crate::biology::genome::framed::types::{FramedGenomeValue};
+            use crate::simulation::common::{SensorManifest, GeneticManifest, ChemistryManifest};
             use std::rc::Rc;
 
 
@@ -63,7 +63,7 @@ macro_rules! __gene {
 macro_rules! __gene_if_any {
     ($sm:expr, $cm:expr, $gm:expr, ($(all$all_item:tt),*)) => ({
         {
-            use biology::genome::framed::types::{FramedGenomeValue};
+            use crate::biology::genome::framed::types::{FramedGenomeValue};
             let mut size = 0;
             let mut values__any: Vec<FramedGenomeValue> = vec![
                 $({
@@ -92,7 +92,7 @@ macro_rules! __gene_if_any {
 macro_rules! __gene__all{
     ($sm:expr, $cm:expr, $gm:expr, ($($cond_item:tt),*)) => ({
         {
-            use biology::genome::framed::types::{FramedGenomeValue, FIXED_NUM_CONDITIONAL_PARAMS};
+            use crate::biology::genome::framed::types::{FramedGenomeValue, FIXED_NUM_CONDITIONAL_PARAMS};
 
             let mut size = 0;
             let mut v: Vec<FramedGenomeValue> = vec![
@@ -136,18 +136,18 @@ macro_rules! __gene_bool_var {
 
     ($sm:expr, $cm:expr, $gm:expr, ($op_key:expr, $param1:expr, $param2:expr, $param3:expr)) => ({
         {
-            use biology::genome::framed::types::{BooleanVariable, FramedGenomeValue};
-            use biology::phenotype::framed::{ParsedGenomeParam};
+            use crate::biology::genome::framed::types::{BooleanVariable, FramedGenomeValue};
+            use crate::biology::phenotype::framed::{ParsedGenomeParam};
 
             let v: Vec<BooleanVariable> = vec![];
             let op_key = stringify!($op_key).to_string();
             let op = $gm.operator_set.by_key(&op_key);
 
-            use biology::genome::framed::convert;
-            use biology::genome::framed::convert::param_meta;
-            use biology::genome::framed::builders::legacy::util::{GenomeBuilder, GenomeBuildFunction};
-            use biology::genome::framed::util;
-            use biology::genetic_manifest::predicates::{OperatorParam};
+            use crate::biology::genome::framed::convert;
+            use crate::biology::genome::framed::convert::param_meta;
+            use crate::biology::genome::framed::builders::legacy::util::{GenomeBuilder, GenomeBuildFunction};
+            use crate::biology::genome::framed::util;
+            use crate::biology::genetic_manifest::predicates::{OperatorParam};
             use std::convert::TryInto;
 
             let mut params_meta: [FramedGenomeValue;3] = [0; 3];
@@ -192,12 +192,12 @@ macro_rules! __gene_bool_var {
 macro_rules! __then_do {
     ($sm:expr, $cm:expr, $gm:expr, ($reaction_name:ident(  $($param:expr),*))) => ({
         {
-            use biology::genome::framed::convert::operation;
-            use biology::genome::framed::types::{BooleanVariable, FramedGenomeValue, FIXED_NUM_OPERATION_PARAMS};
-            use biology::genome::framed::util;
-            use biology::genetic_manifest::predicates::{OperatorParam};
+            use crate::biology::genome::framed::convert::operation;
+            use crate::biology::genome::framed::types::{BooleanVariable, FramedGenomeValue, FIXED_NUM_OPERATION_PARAMS};
+            use crate::biology::genome::framed::util;
+            use crate::biology::genetic_manifest::predicates::{OperatorParam};
             use std::convert::TryInto;
-            use biology::phenotype::framed::{ParsedGenomeParam, MetaReaction};
+            use crate::biology::phenotype::framed::{ParsedGenomeParam, MetaReaction};
 
             let mut operation_id = None;
             let mut operation_type = None;                
@@ -265,9 +265,9 @@ macro_rules! __then_do {
 
 pub mod tests {
     use std::rc::Rc; 
-    use biology::genetic_manifest::{GeneticManifest};
-    use simulation::common::{*};
-    use biology::genome::framed::common::{*};
+    use crate::biology::genetic_manifest::{GeneticManifest};
+    use crate::simulation::common::{*};
+    use crate::biology::genome::framed::common::{*};
     //use super::super::super::types::{*};
 
     // use super::super::super::parsing::FramedGenomeParser;
@@ -531,7 +531,7 @@ Channel #3\n\n";
         let frames = FramedGenomeParser::parse(framed_vals, cm.clone(), sm.clone(), gm.clone());
 
         //println!("frames: {:?}", &frames);
-        use biology::genome::framed::common::{render_frames};
+        use crate::biology::genome::framed::common::{render_frames};
         println!("result: \n{}", render_frames(&frames.frames, &sm, &cm, &gm));
 
         let s = "***FRAME 0:***

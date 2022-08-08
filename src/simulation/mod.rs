@@ -26,11 +26,11 @@ use self::unit::*;
 use self::unit_entry::{UnitEntry, UnitEntryData, UnitManifest};
 use self::unit_entry::{UnitEntryAttributes, UnitEntryId};
 use self::world::*;
-use chemistry::cheese::CheeseChemistry;
-use chemistry::properties::UnitEntryAttributeDefinition;
-use chemistry::properties::{AttributeIndex, AttributeValue, ResourceAmount, ResourceIndex};
-use chemistry::{Chemistry, ChemistryInstance, ChemistryManifest};
-use util::{Coord, GridSize2D};
+use crate::chemistry::cheese::CheeseChemistry;
+use crate::chemistry::properties::UnitEntryAttributeDefinition;
+use crate::chemistry::properties::{AttributeIndex, AttributeValue, ResourceAmount, ResourceIndex};
+use crate::chemistry::{Chemistry, ChemistryInstance, ChemistryManifest};
+use crate::util::{Coord, GridSize2D};
 
 use std::cell::RefCell;
 use std::collections::HashMap;

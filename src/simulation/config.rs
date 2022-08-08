@@ -1,18 +1,18 @@
-use chemistry::*;
-use simulation;
-use simulation::common::{
+use crate::chemistry::*;
+use crate::simulation;
+use crate::simulation::common::{
     get_chemistry_by_key, EmptyPhenotype, Phenotype, PlaceUnitsMethod, SimulationControlEvent,
     SimulationControlEventReceiver, SimulationEvent, SimulationEventSender, SimulationSpec,
     UnitAttributeValue, UnitEntry, UnitEntryBuilder, UnitEntryData, UnitManifest,
     UnitResourceAmount,
 };
-use simulation::fitness::*;
-use simulation::unit::util::convert_maybe_resources_to_resources;
-use simulation::unit::{UnitAttributes, UnitResources};
-use simulation::Simulation;
+use crate::simulation::fitness::*;
+use crate::simulation::unit::util::convert_maybe_resources_to_resources;
+use crate::simulation::unit::{UnitAttributes, UnitResources};
+use crate::simulation::Simulation;
+use crate::util::GridSize2D;
 use std::rc::Rc;
 use std::sync::Arc;
-use util::GridSize2D;
 
 pub mod builder {
     use super::*;

@@ -1,70 +1,70 @@
-// use chemistry::actions::*;
-// use chemistry::actions::{ActionSet};
-// use chemistry::properties::*;
-// use chemistry::reactions::*;
-// use chemistry::*;
-// 
-// use simulation::common::*;
-// use simulation::specs::place_units::PlaceUnits;
-// use simulation::specs::SimulationSpec;
-// use simulation::unit::*;
-// use simulation::world::World;
-// use simulation::Simulation;
-// use util::Coord;
-// 
+// use crate::chemistry::actions::*;
+// use crate::chemistry::actions::{ActionSet};
+// use crate::chemistry::properties::*;
+// use crate::chemistry::reactions::*;
+// use crate::chemistry::*;
+//
+// use crate::simulation::common::*;
+// use crate::simulation::specs::place_units::PlaceUnits;
+// use crate::simulation::specs::SimulationSpec;
+// use crate::simulation::unit::*;
+// use crate::simulation::world::World;
+// use crate::simulation::Simulation;
+// use crate::util::Coord;
+//
 // use std::rc::Rc;
-// 
-// use simulation::position::{
+//
+// use crate::simulation::position::{
 //     PositionAttributeIndex, PositionAttributeValue, PositionResourceAmount, PositionResourceIndex,
 // };
-// 
-// use chemistry::properties::{PositionAttributeDefinition};
-// 
-// use simulation::unit::{
+//
+// use crate::chemistry::properties::{PositionAttributeDefinition};
+//
+// use crate::simulation::unit::{
 //     UnitAttributeIndex, UnitAttributeValue, UnitResourceAmount, UnitResourceIndex,
 // };
-// use util::*;
-// use HashMap;
-// 
+// use crate::util::*;
+// use std::collections::HashMap;
+//
 // #[macro_use]
 // pub mod constants {
 // }
-// 
-// 
+//
+//
 // pub struct SimpleChemistry {
 //     manifest: ChemistryManifest,
 // }
-// 
+//
 // pub mod defs {
 //     use super::*;
-// 
+//
 //     const REACTION_ID_GOBBLE_CHEESE: ReactionId = 0;
 //     const REACTION_ID_MOVE_UNIT: ReactionId = 1;
 //     const REACTION_ID_NEW_UNIT: ReactionId = 2;
-//     
-// 
+//
+//
 //     def_unit_attributes!{[
 //         [total_flowers_collected, Number]
 //     ]}
-//     
+//
 //     def_position_attributes!{[
 //         [has_flowers, Boolean]
 //     ]}
-// 
+//
 //     def_position_resources!{[
 //         [flowers, false]
 //     ]}
-//     
+//
 //     def_unit_resources!{[
 //        [flowers, false]
 //     ]}
-//     
+//
 //     def_reactions!{
-//         reaction!("gobble_cheese", 
+//         reaction!("gobble_cheese",
 //             reagent!("gobble_cheese"),
 //         ),
-// 
-//         reaction!("move_unit", 
+//
+//         reaction!("move_unit",
 //             reagent!("update_unit_resources",
 //                 //reagent_value!(UnitResourceKey("cheese")),
 //                 param_value!(UnitResourceKey, "cheese"),
@@ -74,8 +74,8 @@
 //                 param_arg!(Direction)
 //             ),
 //         ),
-// 
-//         reaction!("new_unit", 
+//
+//         reaction!("new_unit",
 //             reagent!( "update_unit_resources",
 //                 param_value!(UnitResourceKey, "cheese"),
 //                 param_value!(UnitResourceAmount, -NEW_UNIT_COST!()),
@@ -86,7 +86,7 @@
 //         ),
 //     }
 // }
-//         
+//
 // impl CheeseChemistry {
 //     pub fn construct() -> ChemistryInstance {
 //         wrap_chemistry!(CheeseChemistry {
@@ -102,12 +102,12 @@
 //             position_resources:  defs::PositionResourcesLookup::make_defs(),
 //             reactions: defs::get_reactions(),
 //         };
-// 
+//
 //         manifest
 //     }
-// 
+//
 //     pub fn custom_actions() -> ActionSet {
-// 
+//
 //         ActionSet::from(
 //             vec![
 //                 ActionDefinition::new(
@@ -124,25 +124,25 @@
 //                         |sim: &mut Simulation, coord: &Coord, params: &[ActionParam]| -> bool {
 //                             let unit_resources = defs::UnitResourcesLookup::new();
 //                             let pos_resources = defs::PositionResourcesLookup::new();
-// 
+//
 //                             let max_gobble_amount = MAX_GOBBLE_AMOUNT!();
 //                             let pos = sim.world.get_position_at(coord).unwrap();
 //                             let pos_cheese_amount = pos.get_resource(pos_resources.cheese);
-//                             
-// 
+//
+//
 //                             let diff = pos_cheese_amount - MAX_GOBBLE_AMOUNT!();
-// 
+//
 //                             let amount = if pos_cheese_amount >= MAX_GOBBLE_AMOUNT!() {
 //                                 MAX_GOBBLE_AMOUNT!()
 //                             } else {
 //                                 pos_cheese_amount
 //                             };
-// 
-// 
+//
+//
 //                             let new_pos_cheese = pos_cheese_amount - amount;
 //                             sim.world.set_pos_resource_at(coord, pos_resources.cheese, new_pos_cheese);
 //                             sim.world.add_unit_resource_at(coord, unit_resources.cheese, amount);
-// 
+//
 //                             true
 //                         },
 //                     ),
@@ -151,18 +151,18 @@
 //         )
 //     }
 // }
-// 
+//
 // impl Chemistry for CheeseChemistry {
 //     fn get_key(&self) -> String {
 //         "cheese".to_string()
 //     }
-// 
+//
 //     fn default_specs(&self) -> Vec<std::boxed::Box<dyn SimulationSpec>> {
 //         vec![Box::new(PlaceUnits {
 //             method: PlaceUnitsMethod::LinearBottomMiddle { attributes: None },
 //         })]
 //     }
-//     
+//
 //     fn get_next_unit_resources(
 //         &self,
 //         entry: &UnitEntryData,
@@ -172,44 +172,44 @@
 //         tick_multiplier: u32,
 //     ) -> UnitResources {
 //         //println!("unit resources before: {:?}", &unit.resources);
-// 
+//
 //         // is_air_source
 //         let mut resources = unit.resources.clone();
 //         let is_air_source_id: PositionAttributeIndex = self.get_manifest().position_attribute_by_key("is_air_source").id as usize;
 //         let is_air_source = pos.get_attribute(is_air_source_id).unwrap_bool();
-//         
+//
 //         let id_air: PositionAttributeIndex = self.get_manifest().unit_resource_by_key("air").id as usize;
-// 
+//
 //         if is_air_source {
 //             resources[id_air] = 10;
 //         }
-//         
+//
 //         // is_cheese_source
 //         let is_cheese_source_id: PositionAttributeIndex = self.get_manifest().position_attribute_by_key("is_cheese_source").id as usize;
 //         let is_cheese_source = pos.get_attribute(is_cheese_source_id).unwrap_bool();
-// 
+//
 //         //println!("is_cheese_source: {}", is_cheese_source);
-//         
+//
 //         let id_cheese: PositionAttributeIndex = self.get_manifest().unit_resource_by_key("cheese").id as usize;
 //         //println!("id_air: {}", id_air);
 //         //println!("id_cheese: {}", id_cheese);
-// 
+//
 //         if is_cheese_source {
 //             resources[id_cheese] += 50;
 //         }
-// 
+//
 //         println!("resources: {:?}", resources);
 //         resources
 //     }
-// 
+//
 //     fn get_manifest(&self) -> &ChemistryManifest {
 //         &self.manifest
 //     }
-//     
+//
 //     fn get_manifest_mut(&mut self) -> &mut ChemistryManifest {
 //         &mut self.manifest
 //     }
-// 
+//
 //     fn get_base_streamed_resource_allocation(
 //         &self,
 //         world: &mut World,
@@ -217,7 +217,7 @@
 //     ) -> SomeUnitResources {
 //         return self.manifest.unit_resources_of(vec![("air", 11)]);
 //     }
-// 
+//
 //     fn get_base_stored_resource_allocation(
 //         &self,
 //         world: &mut World,
@@ -225,7 +225,7 @@
 //     ) -> SomeUnitResources {
 //         return self.manifest.unit_resources_of(vec![("cheese", 50)]);
 //     }
-// 
+//
 //     fn init_world_custom(&self, world: &mut World, size: &GridSize2D) {
 //         for coord in CoordIterator::new(size.clone()) {
 //             if (coord.0 * size.1 + coord.1) % 20 == 0 {
@@ -248,7 +248,7 @@
 //             }
 //         }
 //     }
-// 
+//
 //     fn get_default_unit_seed_attributes(
 //         &self,
 //         world: &mut World,
@@ -261,17 +261,17 @@
 //         )])
 //     }
 // }
-// 
+//
 // mod tests {
 //     #[allow(unused_imports)]
 //     use super::*;
-//     use chemistry::actions::*;
-//     
+//     use crate::chemistry::actions::*;
+//
 //     #[test]
 //     fn make_cheese_manifest() {
 //         let cheese = CheeseChemistry::construct();
 //     }
-//     
+//
 //     #[test]
 //     fn macros() {
 //         let unit_resources = defs::UnitResourcesLookup::make_defs();
@@ -279,24 +279,24 @@
 //         let position_attributes = defs::PositionAttributesLookup::make_defs();
 //         let position_resources = defs::PositionResourcesLookup::make_defs();
 //     }
-//     
+//
 //     mod gobble_cheese {
 //         use super::*;
 //         use tests::{can_execute, execute_action};
-//         use tests::fixtures;
-// 
+//         use crate::tests::fixtures;
+//
 //         #[test]
 //         fn do_action() {
 //             let unit_attributes = defs::UnitAttributesLookup::new();
 //             let position_attributes = defs::PositionAttributesLookup::new();
 //             let position_resources = defs::PositionResourcesLookup::new();
 //             let unit_resources = defs::UnitResourcesLookup::new();
-// 
+//
 //             let actions = CheeseChemistry::custom_actions();
 //             let action = actions.by_key("gobble_cheese");
-//     
+//
 //             let src_coord = (2,0);
-//             let mut sim = fixtures::default_base(Some(vec![ 
+//             let mut sim = fixtures::default_base(Some(vec![
 //                 Box::new(PlaceUnits {
 //                     method: PlaceUnitsMethod::ManualSingleGenome {
 //                         attributes: None,
@@ -304,29 +304,29 @@
 //                     },
 //                 })
 //             ]));
-// 
+//
 //             sim.world.set_pos_resource_at(&(2,0), position_resources.cheese, 10);
-// 
+//
 //             let params = vec![];
-//             
+//
 //             assert_eq!(
 //                 sim.world.get_unit_resource_at(&(2,0), unit_resources.cheese),
 //                 0
 //             );
-// 
+//
 //             assert!(can_execute(&action, &src_coord, &sim, &params));
 //             assert!(execute_action(&action, &src_coord, &params, &mut sim));
-// 
+//
 //             assert_eq!(
 //                 sim.world.get_unit_resource_at(&(2,0), unit_resources.cheese),
 //                 10, "unit cheese is incorrect"
 //             );
-// 
+//
 //             assert_eq!(
 //                 sim.world.get_pos_resource_at(&(2,0), position_resources.cheese),
 //                 0, "position cheese is not correct"
 //             );
-// 
+//
 //         }
 //     }
 // }

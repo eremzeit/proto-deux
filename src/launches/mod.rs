@@ -1,10 +1,10 @@
-use simulation::common::{
+use crate::simulation::common::{
     BaseChemistry, Chemistry, EmptyPhenotype, PlaceUnits, PlaceUnitsMethod, Simulation,
     SimulationBuilder, SimulationConfig, SimulationControlEvent, SimulationEvent, SimulationSpec,
     ThreadedSimulationReference, UnitEntry, UnitEntryBuilder, UnitEntryData, UnitManifest,
 };
-use simulation::executors::threaded::ThreadedSimulationExecutor;
-use simulation::simulation_data::new_threaded_simulation_reference;
+use crate::simulation::executors::threaded::ThreadedSimulationExecutor;
+use crate::simulation::simulation_data::new_threaded_simulation_reference;
 use std::time::Duration;
 
 // pub fn start_ui_and_sim(sim_config: Option<SimulationConfig>) {

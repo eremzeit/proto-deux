@@ -1,17 +1,17 @@
-use biology::genetic_manifest::predicates::{
+use crate::biology::genetic_manifest::predicates::{
     Operator, OperatorId, OperatorParam, OperatorParamDefinition, OperatorParamType, OperatorSet,
 };
-use biology::genetic_manifest::GeneticManifest;
-use biology::genome::framed::*;
-use biology::phenotype::framed::*;
-use biology::phenotype::Phenotype;
-use chemistry;
-use chemistry::{ChemistryInstance, ReactionId};
-use simulation::common::*;
-use simulation::world::World;
+use crate::biology::genetic_manifest::GeneticManifest;
+use crate::biology::genome::framed::*;
+use crate::biology::phenotype::framed::*;
+use crate::biology::phenotype::Phenotype;
+use crate::chemistry;
+use crate::chemistry::{ChemistryInstance, ReactionId};
+use crate::simulation::common::*;
+use crate::simulation::world::World;
 use std::fmt::{Debug, Formatter, Result};
 
-//use biology::genome::framed::util as util;
+//use crate::biology::genome::framed::util as util;
 
 pub type GenomeBoolResult = bool;
 pub type FramedGenomeWord = u64;
@@ -34,7 +34,7 @@ pub const NUM_META_REACTIONS: FramedGenomeValue = 4;
 pub struct FramedGenome {
     pub frames: Vec<Frame>,
 }
-use biology::genome::framed::render::render_frames;
+use crate::biology::genome::framed::render::render_frames;
 
 impl FramedGenome {
     pub fn display(
@@ -220,8 +220,8 @@ impl Debug for BooleanVariable {
 
 pub mod tests {
     use super::*;
-    use biology::genetic_manifest::predicates::default_operators;
-    use simulation::common::*;
+    use crate::biology::genetic_manifest::predicates::default_operators;
+    use crate::simulation::common::*;
 
     #[test]
     pub fn boolean_variable_normalize__literal() {

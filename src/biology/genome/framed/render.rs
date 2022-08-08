@@ -1,20 +1,20 @@
 use super::types::*;
 use super::types::{BooleanVariable, ConjunctiveClause};
-use biology::genetic_manifest::predicates::{
+use crate::biology::genetic_manifest::predicates::{
     Operator, OperatorId, OperatorParam, OperatorParamDefinition, OperatorParamType, OperatorSet,
 };
-use biology::genetic_manifest::GeneticManifest;
-use biology::phenotype::Phenotype;
-use biology::sensor_manifest::SensorManifest;
-use chemistry;
-use chemistry::properties::AttributeIndex;
-use chemistry::{ChemistryInstance, ReactionId};
-use simulation::common::*;
-use simulation::world::World;
+use crate::biology::genetic_manifest::GeneticManifest;
+use crate::biology::phenotype::Phenotype;
+use crate::biology::sensor_manifest::SensorManifest;
+use crate::chemistry;
+use crate::chemistry::properties::AttributeIndex;
+use crate::chemistry::{ChemistryInstance, ReactionId};
+use crate::simulation::common::*;
+use crate::simulation::world::World;
+use crate::util::Coord;
 use std::fmt::{Debug, Formatter, Result};
-use util::Coord;
 
-use biology::phenotype::framed::{GeneOperationCall, ParsedGenomeParam};
+use crate::biology::phenotype::framed::{GeneOperationCall, ParsedGenomeParam};
 
 pub fn render_param(param: &ParsedGenomeParam, sensor_manifest: &SensorManifest) -> String {
     match param {
@@ -190,10 +190,10 @@ pub fn render_gene_operation(
 
 pub mod tests {
     use super::*;
-    use biology::genetic_manifest::predicates::default_operators;
-    use biology::genome::framed::*;
-    use biology::phenotype::framed::*;
-    use simulation::common::*;
+    use crate::biology::genetic_manifest::predicates::default_operators;
+    use crate::biology::genome::framed::*;
+    use crate::biology::phenotype::framed::*;
+    use crate::simulation::common::*;
 
     #[test]
     pub fn conjunctive_to_str__simple() {

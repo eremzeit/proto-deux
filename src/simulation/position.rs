@@ -1,9 +1,9 @@
-use chemistry::properties::{AttributeIndex, AttributeValue, ResourceAmount, ResourceIndex};
-use chemistry::{Chemistry, ChemistryManifest};
-use simulation::common::*;
-use simulation::unit::*;
-use util::Coord;
-use HashMap;
+use crate::chemistry::properties::{AttributeIndex, AttributeValue, ResourceAmount, ResourceIndex};
+use crate::chemistry::{Chemistry, ChemistryManifest};
+use crate::simulation::common::*;
+use crate::simulation::unit::*;
+use crate::util::Coord;
+use std::collections::HashMap;
 
 pub type PositionAttributeIndex = AttributeIndex;
 pub type PositionResourceIndex = ResourceIndex;

@@ -1,14 +1,14 @@
-use biology::genetic_manifest::predicates::Operator;
-use biology::phenotype::Phenotype;
-use chemistry::{ChemistryInstance, ReactionId};
-use simulation::common::*;
-use simulation::iterators::CoordOffsetIterator;
-use simulation::world::World;
-use util::{Coord, grid_direction_to_num, GridDirection};
+use crate::biology::genetic_manifest::predicates::Operator;
+use crate::biology::phenotype::Phenotype;
+use crate::chemistry::{ChemistryInstance, ReactionId};
+use crate::simulation::common::*;
+use crate::simulation::iterators::CoordOffsetIterator;
+use crate::simulation::world::World;
+use crate::util::{grid_direction_to_num, Coord, GridDirection};
 
 pub struct Mouse {}
 
-use chemistry::cheese::defs;
+use crate::chemistry::cheese::defs;
 
 use rand::Rng;
 // let mut rng = rand::thread_rng();
@@ -29,19 +29,29 @@ impl Phenotype for Mouse {
         if world.get_pos_resource_at(coord, pos_resources.cheese) > 0 {
             return PhenotypeResult {
                 reactions: vec![(defs::REACTION_ID_GOBBLE_CHEESE, 0, 0, 0)],
-            }
+            };
         }
 
         for (_coord, _dir) in CoordOffsetIterator::new(coord, &world.size) {
             if world.get_pos_resource_at(&_coord, pos_resources.cheese) > 0 {
                 return PhenotypeResult {
-                    reactions: vec![(defs::REACTION_ID_MOVE_UNIT, grid_direction_to_num(_dir) as u16, 0, 0)],
+                    reactions: vec![(
+                        defs::REACTION_ID_MOVE_UNIT,
+                        grid_direction_to_num(_dir) as u16,
+                        0,
+                        0,
+                    )],
                 };
             }
         }
 
         PhenotypeResult {
-            reactions: vec![(defs::REACTION_ID_MOVE_UNIT,   grid_direction_to_num(GridDirection::Up) as u16, 0, 0)],
+            reactions: vec![(
+                defs::REACTION_ID_MOVE_UNIT,
+                grid_direction_to_num(GridDirection::Up) as u16,
+                0,
+                0,
+            )],
         }
         // let mut rng = rand::thread_rng();
         // let mut reaction_id: ReactionId = rng.gen();
@@ -79,7 +89,7 @@ impl Mouse {
 pub mod tests {
     #[allow(unused_imports)]
     use super::*;
-    use chemistry::actions::*;
+    use crate::chemistry::actions::*;
 
     #[test]
     pub fn basic() {

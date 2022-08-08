@@ -1,7 +1,7 @@
-use biology::genome::framed::common::*;
-use biology::phenotype::framed::common::*;
+use crate::biology::genome::framed::common::*;
+use crate::biology::phenotype::framed::common::*;
+use crate::simulation::common::*;
 use rand::Rng;
-use simulation::common::*;
 use std::fmt::{Debug, Formatter, Result};
 
 pub mod alterations;
@@ -672,9 +672,9 @@ pub fn random_genome_of_length(length: usize) -> Vec<FramedGenomeWord> {
 
 pub mod tests {
     use super::*;
-    use biology::genome::framed::common::*;
-    use biology::phenotype::framed::common::*;
-    use simulation::common::*;
+    use crate::biology::genome::framed::common::*;
+    use crate::biology::phenotype::framed::common::*;
+    use crate::simulation::common::*;
 
     #[test]
     fn genome_grouping() {

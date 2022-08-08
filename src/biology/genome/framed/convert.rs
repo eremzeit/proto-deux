@@ -3,22 +3,22 @@ use super::types::{
     FramedGenomeValue, FramedGenomeWord, CHANNEL_ZERO, FIXED_NUM_CONDITIONAL_PARAMS,
     FIXED_NUM_OPERATION_PARAMS, FRAME_META_DATA_SIZE, MIN_FRAME_SIZE, NUM_CHANNELS,
 };
-use biology::genetic_manifest::predicates::{
+use crate::biology::genetic_manifest::predicates::{
     Operator, OperatorId, OperatorParam, OperatorParamDefinition, OperatorParamType, OperatorSet,
 };
-use biology::genetic_manifest::GeneticManifest;
-use biology::phenotype::framed::ParsedGenomeParam;
-use biology::phenotype::Phenotype;
-use biology::sensor_manifest::SensorManifest;
-use chemistry::properties::AttributeIndex;
-use chemistry::{ChemistryInstance, ReactionId};
-use simulation::common::*;
-use simulation::world::World;
+use crate::biology::genetic_manifest::GeneticManifest;
+use crate::biology::phenotype::framed::ParsedGenomeParam;
+use crate::biology::phenotype::Phenotype;
+use crate::biology::sensor_manifest::SensorManifest;
+use crate::chemistry::properties::AttributeIndex;
+use crate::chemistry::{ChemistryInstance, ReactionId};
+use crate::simulation::common::*;
+use crate::simulation::world::World;
+use crate::util::Coord;
 use std::fmt::{Debug, Formatter, Result};
 use std::rc::Rc;
-use util::Coord;
 
-use chemistry;
+use crate::chemistry;
 
 pub mod param_meta {
     use super::*;
@@ -77,7 +77,7 @@ pub mod operation {
     pub const OPERATION_TYPE_REACTION: FramedGenomeValue = 0;
     pub const OPERATION_TYPE_META_REACTION: FramedGenomeValue = 1;
 
-    use biology::genome::framed::common::FramedGenomeValue;
+    use crate::biology::genome::framed::common::FramedGenomeValue;
 
     pub fn val_for_reaction_operation_type() -> FramedGenomeValue {
         0
@@ -281,8 +281,8 @@ impl RawFrameParser {
 pub mod tests {
     use super::param_meta;
     use super::*;
-    use biology::genetic_manifest::predicates::default_operators;
-    use simulation::common::*;
+    use crate::biology::genetic_manifest::predicates::default_operators;
+    use crate::simulation::common::*;
 
     #[test]
     pub fn params_meta_to_value() {

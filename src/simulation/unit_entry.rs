@@ -1,13 +1,13 @@
-use simulation::common::{
+use crate::simulation::common::{
     AttributeIndex, Chemistry, ChemistryManifest, Phenotype, PhenotypeId, UnitAttributeValue,
     UnitAttributes, UnitResourceAmount, UnitResources,
 };
-use simulation::unit::util::convert_maybe_resources_to_resources;
+use crate::simulation::unit::util::convert_maybe_resources_to_resources;
 use std::boxed::Box;
 use std::rc::Rc;
 use std::sync::Arc;
 
-use chemistry::properties::AttributeValue;
+use crate::chemistry::properties::AttributeValue;
 
 pub type UnitEntryId = usize;
 
@@ -15,7 +15,7 @@ pub type UnitEntryAttributeValue = AttributeValue;
 pub type UnitEntryAttributeIndex = AttributeIndex;
 pub type UnitEntryAttributes = Vec<UnitEntryAttributeValue>;
 
-use chemistry::properties::UnitEntryAttributeDefinition;
+use crate::chemistry::properties::UnitEntryAttributeDefinition;
 
 #[derive(Clone)]
 pub struct UnitManifest {
@@ -126,7 +126,7 @@ impl UnitEntryData {
 
 pub mod builder {
     use super::*;
-    use simulation::unit_entry;
+    use crate::simulation::unit_entry;
     #[derive(Builder)]
     #[builder(pattern = "owned", setter(strip_option))]
     #[builder(build_fn(skip))]

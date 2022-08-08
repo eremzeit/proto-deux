@@ -1,34 +1,34 @@
-use biology::genetic_manifest::predicates::{
+use crate::biology::genetic_manifest::predicates::{
     Operator, OperatorId, OperatorParam, OperatorParamDefinition, OperatorParamType, OperatorSet,
 };
-use biology::genetic_manifest::GeneticManifest;
+use crate::biology::genetic_manifest::GeneticManifest;
 
-use biology::genome::framed::common::{
+use crate::biology::genome::framed::common::{
     BooleanVariable, ConjunctiveClause, DisjunctiveClause, Frame, FramedGenome, FramedGenomeValue,
     FramedGenomeWord, Gene, CHANNEL_ZERO, FIXED_NUM_CONDITIONAL_PARAMS, FRAME_META_DATA_SIZE,
     NUM_CHANNELS, NUM_META_REACTIONS,
 };
-use biology::genome::framed::convert::{RawFrame, RawFrameParser};
-use biology::phenotype::framed::common::*;
+use crate::biology::genome::framed::convert::{RawFrame, RawFrameParser};
+use crate::biology::phenotype::framed::common::*;
 
 use super::convert;
 use super::convert::param_meta;
 
-use biology::genome::framed::*;
-use biology::phenotype::framed::*;
+use crate::biology::genome::framed::*;
+use crate::biology::phenotype::framed::*;
 
-use biology::genome::framed::render::{
+use crate::biology::genome::framed::render::{
     render_conjunction, render_disjunction, render_gene_operation,
 };
 
-pub use chemistry::properties::RawPropertyId;
-use chemistry::{ChemistryInstance, ReactionId};
-use simulation::common::*;
-use simulation::world::World;
+pub use crate::chemistry::properties::RawPropertyId;
+use crate::chemistry::{ChemistryInstance, ReactionId};
+use crate::simulation::common::*;
+use crate::simulation::world::World;
+use crate::util::Coord;
 use std::fmt::{Debug, Formatter, Result};
-use util::Coord;
 
-pub use biology::sensor_manifest::{SensorContext, SensorManifest, SensorType, SensorValue};
+pub use crate::biology::sensor_manifest::{SensorContext, SensorManifest, SensorType, SensorValue};
 
 pub struct FramedGenomeParser {
     genetic_manifest: GeneticManifest,
@@ -436,7 +436,7 @@ impl FramedGenomeParser {
 pub mod tests {
     use super::super::render::render_genes;
     use super::*;
-    //use biology::genome::framed::tests::{full_test_framed_genome_one};
+    //use crate::biology::genome::framed::tests::{full_test_framed_genome_one};
 
     // #[test]
     // pub fn parsing() {

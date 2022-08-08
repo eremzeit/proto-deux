@@ -2,28 +2,28 @@ pub mod tests;
 
 use std::rc::Rc;
 
-use chemistry::ChemistryInstance;
+use crate::chemistry::ChemistryInstance;
 
-use simulation::common::SimCell;
-use simulation::config::SimulationConfig;
-use simulation::position::{
+use crate::simulation::common::SimCell;
+use crate::simulation::config::SimulationConfig;
+use crate::simulation::position::{
     PositionAttributeIndex, PositionAttributeValue, PositionResourceAmount, PositionResourceIndex,
 };
-use simulation::unit::{
+use crate::simulation::unit::{
     UnitAttributeIndex, UnitAttributeValue, UnitResourceAmount, UnitResourceIndex,
 };
-use simulation::unit_entry::UnitManifest;
-use simulation::unit_entry::{
+use crate::simulation::unit_entry::UnitManifest;
+use crate::simulation::unit_entry::{
     UnitEntryAttributeIndex, UnitEntryAttributeValue, UnitEntryAttributes,
 };
-use simulation::SimulationAttributes;
+use crate::simulation::SimulationAttributes;
 
-use simulation::world::World;
-use simulation::Simulation;
+use crate::simulation::world::World;
+use crate::simulation::Simulation;
+use crate::util::Coord;
+use crate::util::*;
+use crate::HashMap;
 use std::fmt::{Debug, Formatter, Result};
-use util::Coord;
-use util::*;
-use HashMap;
 
 pub type ActionParamNumber = i32;
 pub type ActionDefinitionIndex = usize;

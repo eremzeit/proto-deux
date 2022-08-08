@@ -4,10 +4,10 @@ use std::time::{Duration, Instant};
 // use std::cell::RefCell;
 // use std::sync::mpsc::{channel, Receiver};
 //
-// use chemistry::{BaseChemistry, CheeseChemistry};
-// use simulation::{*};
-use simulation::Simulation;
-//use simulation::simulation_data::{SimulationData, ThreadedSimulationReference};
+// use crate::chemistry::{BaseChemistry, CheeseChemistry};
+// use crate::simulation::{*};
+use crate::simulation::Simulation;
+//use crate::simulation::simulation_data::{SimulationData, ThreadedSimulationReference};
 
 pub struct SimpleSimulationExecutor {
     pub is_paused: bool,

@@ -1,23 +1,23 @@
-use biology::genetic_manifest::predicates::{
+use crate::biology::genetic_manifest::predicates::{
     Operator, OperatorParamDefinition, OperatorParamType, OperatorSet,
 };
-use biology::genetic_manifest::GeneticManifest;
-use biology::genome::framed::common::*;
-use biology::genome::framed::types::NUM_META_REACTIONS;
-use biology::phenotype::Phenotype;
-use chemistry;
-use chemistry::{ChemistryInstance, ReactionId};
-use simulation::common::*;
+use crate::biology::genetic_manifest::GeneticManifest;
+use crate::biology::genome::framed::common::*;
+use crate::biology::genome::framed::types::NUM_META_REACTIONS;
+use crate::biology::phenotype::Phenotype;
+use crate::chemistry;
+use crate::chemistry::{ChemistryInstance, ReactionId};
+use crate::simulation::common::*;
 use std::rc::Rc;
-//use simulation::world::World;
-pub use chemistry::properties::RawPropertyId;
+//use crate::simulation::world::World;
+pub use crate::chemistry::properties::RawPropertyId;
+use crate::util::Coord;
 use std::fmt::{Debug, Formatter, Result};
-use util::Coord;
-//use biology::phenotype::{ParamedReactionCall};
+//use crate::biology::phenotype::{ParamedReactionCall};
 
-use biology::genome::framed::*;
-use biology::phenotype::framed::types::*;
-use chemistry::reactions::ReactionCall;
+use crate::biology::genome::framed::*;
+use crate::biology::phenotype::framed::types::*;
+use crate::chemistry::reactions::ReactionCall;
 use std::convert::TryInto;
 
 pub struct GenomeExecutionContext<'a> {
@@ -35,7 +35,7 @@ pub struct GenomeExecutionContext<'a> {
     pub register_changes: PhenotypeRegisterChanges,
 }
 
-use biology::genome::framed::render::render_gene;
+use crate::biology::genome::framed::render::render_gene;
 
 impl<'a> GenomeExecutionContext<'a> {
     pub fn new(

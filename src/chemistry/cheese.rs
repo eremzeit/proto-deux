@@ -1,30 +1,30 @@
-use chemistry::actions::ActionSet;
-use chemistry::actions::*;
-use chemistry::properties::*;
-use chemistry::reactions::*;
-use chemistry::*;
+use crate::chemistry::actions::ActionSet;
+use crate::chemistry::actions::*;
+use crate::chemistry::properties::*;
+use crate::chemistry::reactions::*;
+use crate::chemistry::*;
 
-use simulation::common::*;
-use simulation::specs::place_units::PlaceUnits;
-use simulation::specs::SimulationSpec;
-use simulation::unit::*;
-use simulation::world::World;
-use simulation::Simulation;
-use util::Coord;
+use crate::simulation::common::*;
+use crate::simulation::specs::place_units::PlaceUnits;
+use crate::simulation::specs::SimulationSpec;
+use crate::simulation::unit::*;
+use crate::simulation::world::World;
+use crate::simulation::Simulation;
+use crate::util::Coord;
 
 use std::rc::Rc;
 
-use simulation::position::{
+use crate::simulation::position::{
     PositionAttributeIndex, PositionAttributeValue, PositionResourceAmount, PositionResourceIndex,
 };
 
-use chemistry::properties::PositionAttributeDefinition;
+use crate::chemistry::properties::PositionAttributeDefinition;
 
-use simulation::unit::{
+use crate::simulation::unit::{
     UnitAttributeIndex, UnitAttributeValue, UnitResourceAmount, UnitResourceIndex,
 };
-use util::*;
-use HashMap;
+use crate::util::*;
+use std::collections::HashMap;
 
 #[macro_use]
 pub mod constants {
@@ -372,14 +372,14 @@ mod specs {
     mod tests {
         #[allow(unused_imports)]
         use super::*;
-        use chemistry::actions::*;
+        use crate::chemistry::actions::*;
     }
 }
 
 mod tests {
     #[allow(unused_imports)]
     use super::*;
-    use chemistry::actions::*;
+    use crate::chemistry::actions::*;
     #[test]
     fn make_cheese_manifest() {
         let cheese = CheeseChemistry::construct();
@@ -393,8 +393,8 @@ mod tests {
     }
     mod gobble_cheese {
         use super::*;
-        use chemistry::actions::tests::execute_action;
-        use tests::fixtures;
+        use crate::chemistry::actions::tests::execute_action;
+        use crate::tests::fixtures;
 
         #[test]
         fn do_action() {

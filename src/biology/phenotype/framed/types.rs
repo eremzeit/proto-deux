@@ -1,22 +1,22 @@
-use biology::genetic_manifest::predicates::OperatorParam;
-use biology::genetic_manifest::predicates::{
+use crate::biology::genetic_manifest::predicates::OperatorParam;
+use crate::biology::genetic_manifest::predicates::{
     Operator, OperatorParamDefinition, OperatorParamType, OperatorSet,
 };
-use biology::genetic_manifest::GeneticManifest;
-use biology::genome::framed::types::NUM_META_REACTIONS;
-use biology::phenotype::Phenotype;
-use biology::sensor_manifest::SensorId;
-use chemistry;
-pub use chemistry::properties::RawPropertyId;
-use chemistry::{ChemistryInstance, ReactionId};
-use simulation::common::*;
-use simulation::world::World;
+use crate::biology::genetic_manifest::GeneticManifest;
+use crate::biology::genome::framed::types::NUM_META_REACTIONS;
+use crate::biology::phenotype::Phenotype;
+use crate::biology::sensor_manifest::SensorId;
+use crate::chemistry;
+pub use crate::chemistry::properties::RawPropertyId;
+use crate::chemistry::{ChemistryInstance, ReactionId};
+use crate::simulation::common::*;
+use crate::simulation::world::World;
+use crate::util::Coord;
 use std::fmt::{Debug, Formatter, Result};
 use std::rc::Rc;
-use util::Coord;
 
-use biology::genome::framed::convert::param_meta;
-use biology::genome::framed::types::{FramedGenomeValue, RegisterId};
+use crate::biology::genome::framed::convert::param_meta;
+use crate::biology::genome::framed::types::{FramedGenomeValue, RegisterId};
 use std::convert::TryInto;
 
 pub type PhenotypeRegisterValue = u8;

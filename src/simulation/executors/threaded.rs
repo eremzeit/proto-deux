@@ -4,12 +4,12 @@ use std::sync::mpsc::{channel, Receiver};
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 
-use chemistry::{BaseChemistry, CheeseChemistry};
-use simulation::common::SimulationControlEventReceiver;
-use simulation::simulation_data::{SimulationData, ThreadedSimulationReference};
-use simulation::Simulation;
-use simulation::*;
-use util::RateCounter;
+use crate::chemistry::{BaseChemistry, CheeseChemistry};
+use crate::simulation::common::SimulationControlEventReceiver;
+use crate::simulation::simulation_data::{SimulationData, ThreadedSimulationReference};
+use crate::simulation::Simulation;
+use crate::simulation::*;
+use crate::util::RateCounter;
 
 pub struct ThreadedSimulationExecutor {
     pub is_paused: bool,

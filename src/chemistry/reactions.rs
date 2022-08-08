@@ -1,9 +1,9 @@
-use biology::phenotype::NUM_REACTION_PARAMS;
-use chemistry::actions::{ActionDefinitionIndex, ActionParam, ActionParamType, ActionSet};
-use chemistry::ReactionId;
-use simulation::common::*;
+use crate::biology::phenotype::NUM_REACTION_PARAMS;
+use crate::chemistry::actions::{ActionDefinitionIndex, ActionParam, ActionParamType, ActionSet};
+use crate::chemistry::ReactionId;
+use crate::simulation::common::*;
+use crate::util::grid_direction_from_num;
 use std::time::Instant;
-use util::grid_direction_from_num;
 
 #[derive(Clone, Debug)]
 pub struct ReactionDefinition {
@@ -32,7 +32,7 @@ impl ReactionDefinition {
 
 pub type ReagentValue = u8;
 pub type ActionIndex = u8;
-//use chemistry::actions::{};
+//use crate::chemistry::actions::{};
 
 #[derive(Clone, Debug)]
 pub struct ReagentDefinition {
@@ -211,7 +211,7 @@ pub fn get_param_by_index(reaction_call: ReactionCall, i: usize) -> ReactionCall
 
 pub mod tests {
     use super::*;
-    use simulation::common::*;
+    use crate::simulation::common::*;
     #[test]
     fn replace_placeholders__index_replacement() {
         //fn replace_placeholders(reaction: &ReactionDefinition, reaction_call: ReactionCall) -> Vec<[ActionParam; 3]> {

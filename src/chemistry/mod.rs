@@ -9,22 +9,22 @@ pub mod simple;
 
 use self::properties::*;
 use self::reactions::*;
-use chemistry::actions::{
+use crate::chemistry::actions::{
     default_actions, ActionDefinition, ActionParam, ActionParamType, ActionSet,
 };
-use simulation::common::*;
-use simulation::specs::place_units::{PlaceUnits, PlaceUnitsMethod};
-use simulation::specs::SimulationSpec;
-use simulation::SimulationAttributes;
+use crate::simulation::common::*;
+use crate::simulation::specs::place_units::{PlaceUnits, PlaceUnitsMethod};
+use crate::simulation::specs::SimulationSpec;
+use crate::simulation::SimulationAttributes;
+use crate::util::{grid_direction_from_num, Coord};
 use std::rc::Rc;
 use std::sync::Mutex;
 use std::time::Instant;
-use util::{grid_direction_from_num, Coord};
 
-pub use chemistry::cheese::CheeseChemistry;
-pub use chemistry::lever::LeverChemistry;
-pub use chemistry::manifest::*;
-pub use chemistry::nanobots::NanobotsChemistry;
+pub use crate::chemistry::cheese::CheeseChemistry;
+pub use crate::chemistry::lever::LeverChemistry;
+pub use crate::chemistry::manifest::*;
+pub use crate::chemistry::nanobots::NanobotsChemistry;
 
 pub type ReactionId = u8;
 pub type ChemistryInstance = Box<dyn Chemistry>;

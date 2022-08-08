@@ -1,13 +1,13 @@
-use biology::genetic_manifest::predicates::OperatorParam;
-use biology::genome::framed::common::*;
-use biology::phenotype::framed::common::*;
-use simulation::common::*;
-use util::{grid_direction_from_string, grid_direction_to_num};
+use crate::biology::genetic_manifest::predicates::OperatorParam;
+use crate::biology::genome::framed::common::*;
+use crate::biology::phenotype::framed::common::*;
+use crate::simulation::common::*;
+use crate::util::{grid_direction_from_string, grid_direction_to_num};
 
 #[macro_export]
 macro_rules! convert_val_to_channel {
     ($channel:expr, $val:expr) => {{
-        use biology::genome::framed::types::FramedGenomeWord;
+        use crate::biology::genome::framed::types::FramedGenomeWord;
 
         let bits = (($channel as usize % 4) * 16) as u64;
         let result = (($val as FramedGenomeWord & 0xffff) << bits);

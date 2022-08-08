@@ -1,10 +1,10 @@
 pub mod legacy;
 
-use biology::genome::framed::common::*;
-use biology::phenotype::framed::common::*;
-use simulation::common::*;
+use crate::biology::genome::framed::common::*;
+use crate::biology::phenotype::framed::common::*;
+use crate::simulation::common::*;
 
-use biology::genome::framed::builders::*;
+use crate::biology::genome::framed::builders::*;
 
 pub fn genome1(cm: &ChemistryManifest, sm: &SensorManifest, gm: &GeneticManifest) -> FramedGenome {
     let framed_vals = frame(
@@ -270,7 +270,7 @@ pub fn get_genome2() -> GenomeBuilder {
     )
 }
 
-use biology::genome::framed::builders::legacy::util::*;
+use crate::biology::genome::framed::builders::legacy::util::*;
 
 pub fn get_genome3() -> GenomeBuilder {
     genome!(gene(

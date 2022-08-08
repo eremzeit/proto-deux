@@ -1,13 +1,12 @@
+use crate::simulation::common::*;
+use crate::util::{coord_by_coord_offset, Coord, CoordOffset, GridDirection, GridSize2D};
 use ndarray::*;
 use ndarray::{Array, Array2, Dim, Ix, Shape};
-use simulation::common::*;
-use util::{Coord, CoordOffset, GridDirection, GridSize2D, coord_by_coord_offset};
-
 
 pub struct CoordOffsetIterator {
     iter: OffsetIterator,
     coord: Coord,
-    grid_size: GridSize2D
+    grid_size: GridSize2D,
 }
 
 impl Iterator for CoordOffsetIterator {
@@ -31,7 +30,7 @@ impl Iterator for CoordOffsetIterator {
 }
 
 impl CoordOffsetIterator {
-    pub fn new(coord:&Coord, grid_size: &GridSize2D) -> Self {
+    pub fn new(coord: &Coord, grid_size: &GridSize2D) -> Self {
         Self {
             coord: coord.clone(),
             iter: OffsetIterator::new(),
@@ -39,7 +38,6 @@ impl CoordOffsetIterator {
         }
     }
 }
-
 
 pub struct OffsetIterator {
     direction: Option<GridDirection>,
@@ -59,10 +57,10 @@ impl Iterator for OffsetIterator {
     fn next(&mut self) -> Option<Self::Item> {
         let current_dir = self.direction.clone();
         match self.direction {
-            Some(GridDirection::Up) => { 
+            Some(GridDirection::Up) => {
                 self.direction = Some(GridDirection::Right);
                 Some(((0, 1), GridDirection::Up))
-            },
+            }
 
             Some(GridDirection::Right) => {
                 self.direction = Some(GridDirection::Down);
@@ -77,15 +75,12 @@ impl Iterator for OffsetIterator {
             Some(GridDirection::Left) => {
                 self.direction = None;
                 Some(((-1, 0), GridDirection::Left))
-            },
-
-            None => {
-                None
             }
+
+            None => None,
         }
     }
 }
-
 
 pub struct CoordIterator {
     x: usize,
@@ -94,21 +89,17 @@ pub struct CoordIterator {
 }
 
 impl CoordIterator {
-  pub fn new(size: GridSize2D) -> CoordIterator {
-      CoordIterator {
-          x: 0,
-          y: 0,
-          size,
-      }
-  }
+    pub fn new(size: GridSize2D) -> CoordIterator {
+        CoordIterator { x: 0, y: 0, size }
+    }
 
-  // pub fn only_units(self, world: &World) -> Box<dyn Iterator<Item=Unit>> {
-  //   let a = self.filter(|coord| -> bool {
-  //       world.has_unit_at(coord)
-  //   });
+    // pub fn only_units(self, world: &World) -> Box<dyn Iterator<Item=Unit>> {
+    //   let a = self.filter(|coord| -> bool {
+    //       world.has_unit_at(coord)
+    //   });
 
-  //   a
-  // }
+    //   a
+    // }
 }
 
 impl Iterator for CoordIterator {
@@ -123,8 +114,8 @@ impl Iterator for CoordIterator {
             let coord = (self.x, self.y);
             self.x += 1;
             return Some(coord);
-        } 
-    
+        }
+
         self.x = 0;
         self.y += 1;
 
@@ -143,7 +134,7 @@ impl Iterator for CoordIterator {
 //     y: usize,
 //     world: &'a World,
 // }
-// 
+//
 // impl<'a> PositionIterator<'a> {
 //     pub fn new(world: &'a World) -> PositionIterator<'a> {
 //         PositionIterator {
@@ -152,49 +143,48 @@ impl Iterator for CoordIterator {
 //             world,
 //         }
 //     }
-// 
+//
 //     pub fn reset(&mut self) {
 //         self.x = 0;
 //         self.y = 0;
 //     }
 // }
-// 
+//
 // impl<'a> Iterator for PositionIterator<'a> {
 //     type Item = &'a Position;
-//     
+//
 //     // traverse by rows
 //     fn next(&mut self) -> Option<Self::Item> {
 //         let x_size = self.world.size.0;
 //         let y_size = self.world.size.1;
-// 
+//
 //         if self.x < x_size {
-//             assert!(self.y < y_size); 
+//             assert!(self.y < y_size);
 //             let coord = (self.x, self.y);
 //             let position = self.world.get_position_at(&coord);
 //             self.x += 1;
 //             return Some(position);
-//         } 
-//     
+//         }
+//
 //         self.x = 0;
 //         self.y += 1;
-// 
+//
 //         if self.y < y_size {
 //             let coord = (self.x, self.y);
 //             let position = self.world.get_position_at(&coord);
 //             self.x += 1;
 //             return Some(position);
 //         }
-// 
+//
 //         None
 //     }
 // }
-
 
 // pub struct UnitIterator<'a> {
 //   position_iterator: PositionIterator<'a>,
 //   world: &'a World,
 // }
-// 
+//
 // impl<'a> UnitIterator<'a> {
 //     pub fn new(world: &'a World) -> UnitIterator<'a> {
 //         UnitIterator {
@@ -203,39 +193,37 @@ impl Iterator for CoordIterator {
 //         }
 //     }
 // }
-// 
+//
 // impl<'a> Iterator for UnitIterator<'a> {
 //     type Item = Coord;
-//     
+//
 //     // traverse by rows
 //     fn next(&mut self) -> Option<Self::Item> {
 //       loop {
 //         let maybe_pos = self.position_iterator.next();
-//         
+//
 //         if maybe_pos.is_none() {
 //           return None;
 //         }
-// 
+//
 //         let coord = maybe_pos.unwrap();
 //         if let Some(unit) = self.world.get_unit_at(&coord) {
 //           return Some(coord.clone());
 //         }
-// 
+//
 //       }
 //     }
 // }
 
-
 mod test {
     mod coord_offset_iterator {
         use super::*;
-        use simulation::iterators::CoordOffsetIterator;
-        use util::{GridDirection, GridSize2D};
+        use crate::simulation::iterators::CoordOffsetIterator;
+        use crate::util::{GridDirection, GridSize2D};
 
         fn test() {
-            let mut _iter = CoordOffsetIterator::new(&(2,2), &(5,5));
-            assert_eq!(_iter.next().unwrap(), ((2,3), GridDirection::Up));
+            let mut _iter = CoordOffsetIterator::new(&(2, 2), &(5, 5));
+            assert_eq!(_iter.next().unwrap(), ((2, 3), GridDirection::Up));
         }
     }
-
 }

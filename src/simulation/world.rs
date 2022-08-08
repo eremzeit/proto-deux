@@ -1,10 +1,10 @@
 use std::sync::mpsc::{channel, Receiver, Sender};
 
-use chemistry::{CheeseChemistry, Chemistry, ChemistryInstance};
+use crate::chemistry::{CheeseChemistry, Chemistry, ChemistryInstance};
+use crate::simulation::common::*;
+use crate::util::{coord_by_coord_offset, coord_by_direction_offset, Coord, GridDirection};
 use ndarray::*;
 use ndarray::{Array, Array2, Dim, Ix, Shape};
-use simulation::common::*;
-use util::{coord_by_coord_offset, coord_by_direction_offset, Coord, GridDirection};
 
 pub type Grid = Array2<Option<Position>>;
 

@@ -1,12 +1,14 @@
-use simulation::common::*;
-use simulation::config::*;
-use simulation::executors::threaded::ThreadedSimulationExecutor;
-use simulation::simulation_data::{new_threaded_simulation_reference, ThreadedSimulationReference};
+use crate::simulation::common::*;
+use crate::simulation::config::*;
+use crate::simulation::executors::threaded::ThreadedSimulationExecutor;
+use crate::simulation::simulation_data::{
+    new_threaded_simulation_reference, ThreadedSimulationReference,
+};
 
-use biology::genome::framed::builders::legacy::util::GenomeBuilder;
-use biology::genome::framed::*;
-use biology::phenotype::framed::*;
-use simulation::common::UnitEntryBuilder;
+use crate::biology::genome::framed::builders::legacy::util::GenomeBuilder;
+use crate::biology::genome::framed::*;
+use crate::biology::phenotype::framed::*;
+use crate::simulation::common::UnitEntryBuilder;
 
 pub fn get_genome1() -> GenomeBuilder {
     genome!(
@@ -241,7 +243,7 @@ pub fn get_genome2() -> GenomeBuilder {
     )
 }
 
-use biology::genome::framed::builders::legacy::util::*;
+use crate::biology::genome::framed::builders::legacy::util::*;
 
 pub fn get_genome3() -> GenomeBuilder {
     genome!(gene(

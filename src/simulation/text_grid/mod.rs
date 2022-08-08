@@ -1,8 +1,8 @@
-use chemistry::cheese::*;
-use chemistry::*;
-use simulation::common::*;
-use simulation::*;
-use util::text_grid::{render_into_grid, GridCellRenderer};
+use crate::chemistry::cheese::*;
+use crate::chemistry::*;
+use crate::simulation::common::*;
+use crate::simulation::*;
+use crate::util::text_grid::{render_into_grid, GridCellRenderer};
 
 pub struct ResourceGridCellRenderer {
     pub resource_idx: UnitResourceIndex,
@@ -40,7 +40,9 @@ mod tests {
                 method: PlaceUnitsMethod::LinearBottomMiddle { attributes: None },
             })])
             .headless(true)
-            .unit_manifest(UnitManifest { units:vec![UnitEntry::new("main", EmptyPhenotype::construct())]})
+            .unit_manifest(UnitManifest {
+                units: vec![UnitEntry::new("main", EmptyPhenotype::construct())],
+            })
             .to_simulation();
 
         let renderer = ResourceGridCellRenderer {

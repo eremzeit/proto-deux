@@ -1,13 +1,13 @@
-use chemistry::{BaseChemistry, CheeseChemistry, Chemistry};
-use simulation::common::{
+use crate::chemistry::{BaseChemistry, CheeseChemistry, Chemistry};
+use crate::simulation::common::{
     ChemistryInstance, Coord, EmptyPhenotype, GridSize2D, SimCell, Simulation,
     SimulationAttributes, UnitEntry, UnitEntryData, UnitManifest,
 };
-use simulation::config::SimulationConfig;
-use simulation::config::*;
-use simulation::specs::{SimulationSpec, SpecContext};
-use simulation::unit::{UnitAttributeValue, UnitAttributes};
-use simulation::world::*;
+use crate::simulation::config::SimulationConfig;
+use crate::simulation::config::*;
+use crate::simulation::specs::{SimulationSpec, SpecContext};
+use crate::simulation::unit::{UnitAttributeValue, UnitAttributes};
+use crate::simulation::world::*;
 use std::sync::Arc;
 use typemap::{CloneMap, Key};
 

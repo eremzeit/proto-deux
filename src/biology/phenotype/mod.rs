@@ -1,10 +1,10 @@
 pub mod framed;
 pub mod mouse;
 
-use biology::genetic_manifest::predicates::Operator;
-pub use biology::phenotype::framed::ParsedGenomeParam;
-use chemistry::reactions::ReactionCall;
-use simulation::common::*;
+use crate::biology::genetic_manifest::predicates::Operator;
+pub use crate::biology::phenotype::framed::ParsedGenomeParam;
+use crate::chemistry::reactions::ReactionCall;
+use crate::simulation::common::*;
 use std::fmt::{Debug, Formatter, Result};
 use std::rc::Rc;
 

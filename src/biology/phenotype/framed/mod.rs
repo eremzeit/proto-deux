@@ -1,28 +1,28 @@
 pub mod execution;
 pub mod types;
 
-use biology::genetic_manifest::predicates::{
+use crate::biology::genetic_manifest::predicates::{
     Operator, OperatorParam, OperatorParamDefinition, OperatorParamType, OperatorSet,
 };
-use biology::genetic_manifest::GeneticManifest;
-use biology::genome::framed::types::{
+use crate::biology::genetic_manifest::GeneticManifest;
+use crate::biology::genome::framed::types::{
     BooleanVariable, DisjunctiveClause, Frame, FramedGenome, FramedGenomeWord,
 };
-pub use biology::phenotype::framed::execution::GenomeExecutionContext;
-pub use biology::phenotype::framed::types::*;
-use biology::phenotype::Phenotype;
-use biology::sensor_manifest::SensorId;
-use chemistry;
-use chemistry::reactions::ReactionCallParam;
-use chemistry::{ChemistryInstance, ReactionId};
-use simulation::common::*;
-use simulation::world::World;
+pub use crate::biology::phenotype::framed::execution::GenomeExecutionContext;
+pub use crate::biology::phenotype::framed::types::*;
+use crate::biology::phenotype::Phenotype;
+use crate::biology::sensor_manifest::SensorId;
+use crate::chemistry;
+use crate::chemistry::reactions::ReactionCallParam;
+use crate::chemistry::{ChemistryInstance, ReactionId};
+use crate::simulation::common::*;
+use crate::simulation::world::World;
+use crate::util::Coord;
 use std::rc::Rc;
-use util::Coord;
 
 pub mod common {
     pub use super::FramedGenomePhenotype;
-    pub use biology::phenotype::framed::types::*;
+    pub use crate::biology::phenotype::framed::types::*;
 }
 
 pub struct FramedGenomePhenotype {
@@ -122,12 +122,12 @@ impl FramedGenomePhenotype {
 
 pub mod test {
     use super::{FramedGenomePhenotype, GenomeExecutionContext};
-    use biology::genome::framed::common::*;
-    use biology::genome::framed::convert::simple_convert_into_frames;
-    use biology::genome::framed::parsing::FramedGenomeParser;
-    use biology::genome::framed::render::render_frames;
-    use biology::genome::framed::*;
-    use simulation::common::*;
+    use crate::biology::genome::framed::common::*;
+    use crate::biology::genome::framed::convert::simple_convert_into_frames;
+    use crate::biology::genome::framed::parsing::FramedGenomeParser;
+    use crate::biology::genome::framed::render::render_frames;
+    use crate::biology::genome::framed::*;
+    use crate::simulation::common::*;
     use std::rc::Rc;
     pub fn count_units(world: &World) -> u64 {
         let mut count: u64 = 0;

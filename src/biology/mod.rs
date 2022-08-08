@@ -8,6 +8,6 @@ pub mod phenotype;
 
 pub mod experiments;
 
-use simulation::{Simulation};
+use crate::simulation::Simulation;
 
 pub type GenomeValue = u8;

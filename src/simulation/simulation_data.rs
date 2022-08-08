@@ -1,15 +1,15 @@
-//use simulation::config::*;
-// use simulation::position::*;
-// use simulation::unit::*;
-use simulation::world::*;
-use simulation::config::*;
-use simulation::unit::{UnitAttributes, UnitResources};
+//use crate::simulation::config::*;
+// use crate::simulation::position::*;
+// use crate::simulation::unit::*;
+use crate::simulation::config::*;
+use crate::simulation::unit::{UnitAttributes, UnitResources};
+use crate::simulation::world::*;
 
-use util::Coord;
-use std::sync::{Arc, Mutex};
+use crate::util::Coord;
 use std::cell::RefCell;
+use std::sync::{Arc, Mutex};
 
-use std::sync::atomic::{*};
+use std::sync::atomic::*;
 
 pub type ThreadedSimulationReference = Arc<Mutex<RefCell<Option<SimulationData>>>>;
 
@@ -23,4 +23,3 @@ pub struct SimulationData {
     pub config: SimulationConfigData,
     pub tick: u64,
 }
-

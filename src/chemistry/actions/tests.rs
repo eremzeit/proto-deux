@@ -1,25 +1,25 @@
 use super::{ActionDefinition, ActionParam};
-use HashMap;
+use std::collections::HashMap;
 
 use std::rc::Rc;
 
-use chemistry::nanobots::NanobotsChemistry;
-use simulation::common::*;
-use simulation::position::{
+use crate::chemistry::nanobots::NanobotsChemistry;
+use crate::simulation::common::*;
+use crate::simulation::position::{
     PositionAttributeIndex, PositionAttributeValue, PositionResourceAmount, PositionResourceIndex,
 };
-use simulation::unit::{
+use crate::simulation::unit::{
     UnitAttributeIndex, UnitAttributeValue, UnitResourceAmount, UnitResourceIndex,
 };
 
-use simulation::specs::place_units::{PlaceUnits, PlaceUnitsMethod};
+use crate::simulation::specs::place_units::{PlaceUnits, PlaceUnitsMethod};
 
-use util::*;
+use crate::util::*;
 
-use util::{coord_by_direction_offset, Coord};
+use crate::util::{coord_by_direction_offset, Coord};
 
-use chemistry::actions::default_actions;
-use simulation::common::{get_chemistry_by_key, GridDirection, UnitEntry};
+use crate::chemistry::actions::default_actions;
+use crate::simulation::common::{get_chemistry_by_key, GridDirection, UnitEntry};
 
 pub mod set_unit_resource {
     use super::*;
@@ -62,7 +62,7 @@ pub mod set_unit_resource {
 
 pub mod offset_unit_resource {
     use super::*;
-    use chemistry::cheese;
+    use crate::chemistry::cheese;
 
     #[test]
     fn test_evaluate_strict() {
@@ -104,8 +104,8 @@ pub mod offset_unit_resource {
 
 pub mod grow_unit {
     use super::*;
-    use tests::fixtures;
-    use util::*;
+    use crate::tests::fixtures;
+    use crate::util::*;
     fn test_new_unit(src_coord: Coord, dir: GridDirection) {
         let actions = default_actions();
         let action = actions.by_key("new_unit");

@@ -1,11 +1,11 @@
 use self::properties::*;
 use self::reactions::*;
-use biology::genetic_manifest::predicates::OperatorParam;
-use chemistry::actions::{default_actions, ActionDefinition, ActionParam, ActionSet};
-use simulation::common::*;
-use simulation::specs::place_units::{PlaceUnits, PlaceUnitsMethod};
-use simulation::specs::SimulationSpec;
-use util::Coord;
+use crate::biology::genetic_manifest::predicates::OperatorParam;
+use crate::chemistry::actions::{default_actions, ActionDefinition, ActionParam, ActionSet};
+use crate::simulation::common::*;
+use crate::simulation::specs::place_units::{PlaceUnits, PlaceUnitsMethod};
+use crate::simulation::specs::SimulationSpec;
+use crate::util::Coord;
 
 #[derive(Clone)]
 pub struct ChemistryManifest {
@@ -490,7 +490,7 @@ impl ChemistryManifest {
 
 pub mod tests {
     use super::*;
-    use chemistry::cheese::CheeseChemistry;
+    use crate::chemistry::cheese::CheeseChemistry;
 
     #[test]
     pub fn manifest() {

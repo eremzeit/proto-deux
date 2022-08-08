@@ -35,10 +35,13 @@ extern crate piston_window;
 
 #[macro_use]
 pub mod util;
+
 pub mod chemistry;
+
 pub mod simulation;
 #[macro_use]
 pub mod biology;
+
 pub mod launches;
 pub mod tests;
 pub mod ui;
@@ -52,11 +55,5 @@ use crate::biology::*;
 use crate::simulation::*;
 
 fn main() {
-    //tests::test_framed_genome();
-    // ui::start_app_with_genome();
     ui::execute::start_app();
-
-    //tests::fps::test_with_genome();
-    //tests::perf::test_multithreading2();
-    //tests::experiments::evolve_lever();
 }
