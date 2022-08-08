@@ -1,0 +1,219 @@
+use biology::genetic_manifest::predicates::{OperatorParam};
+use simulation::common::{
+  UnitAttributeIndex, UnitResourceIndex, PositionAttributeIndex, PositionResourceIndex, ChemistryManifest,
+  UnitAttributeValue, PositionAttributeValue, PositionResourceAmount, SimulationAttributeValue, UnitResourceAmount,  SimulationAttributeIndex,
+};
+
+//use self::reactions::*;
+//use chemistry::actions::{default_actions, ActionDefinition, ActionParam, ActionSet};
+//use simulation::specs::place_units::{PlaceUnits, PlaceUnitsMethod};
+//use simulation::specs::SimulationSpec;
+//use util::Coord;
+
+pub use chemistry::cheese::CheeseChemistry;
+pub use chemistry::nanobots::NanobotsChemistry;
+
+#[derive(Clone)]
+pub enum PropertyValue {
+    UnitAttribute(UnitAttributeValue),
+    PositionAttribute(PositionAttributeValue),
+    UnitResource(UnitResourceAmount),
+    PositionResource(PositionResourceAmount),
+    SimulationAttribute(SimulationAttributeValue)
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub enum PropertyId {
+    UnitAttributeId(UnitAttributeIndex),
+    PositionAttributeId(PositionAttributeIndex),
+    UnitResourceId(UnitResourceIndex),
+    PositionResourceId(PositionResourceIndex),
+    SimulationAttributeId(SimulationAttributeIndex)
+}
+
+impl PropertyId {
+    pub fn as_operator_param(&self) -> OperatorParam {
+        match &self {
+            PropertyId::PositionAttributeId(id) => 
+                *id as OperatorParam,
+            PropertyId::PositionResourceId(id) => 
+                *id as OperatorParam,
+            PropertyId::UnitAttributeId(id) => 
+                *id as OperatorParam,
+            PropertyId::UnitResourceId(id) => 
+                *id as OperatorParam,
+            PropertyId::SimulationAttributeId(id) => 
+                *id as OperatorParam,
+        }
+    }
+
+    pub fn as_key(&self, chemistry_manifest: &ChemistryManifest) -> String {
+        match &self {
+            PropertyId::PositionAttributeId(id) => 
+                chemistry_manifest.position_attributes[*id].key.to_string(),
+            PropertyId::PositionResourceId(id) => 
+                chemistry_manifest.position_resources[*id].key.to_string(),
+            PropertyId::UnitAttributeId(id) => 
+                chemistry_manifest.unit_attributes[*id].key.to_string(),
+            PropertyId::UnitResourceId(id) => 
+                chemistry_manifest.unit_resources[*id].key.to_string(),
+            PropertyId::SimulationAttributeId(id) => 
+                chemistry_manifest.simulation_attributes[*id].key.to_string(),
+        }
+    }
+
+    pub fn coerce_to_sim_attribute_id(&self) -> SimulationAttributeIndex {
+        match &self {
+            PropertyId::SimulationAttributeId(id) => { *id },
+            _ => { panic!("aoeu") }
+        }
+    }
+}
+
+#[derive(Clone)]
+pub struct Property {
+  pub key: String,
+  pub long_key: String,
+  pub property_id: PropertyId,
+  pub id: usize,
+}
+
+#[derive(Clone)]
+pub struct ResourceDefinition {
+  pub key: String,
+  pub id: ResourceIndex,
+  pub is_streamed: bool,
+}
+
+pub type PositionResourceDefinition = ResourceDefinition;
+pub type UnitResourceDefinition = ResourceDefinition;
+
+impl ResourceDefinition {
+  pub fn new(key: &str, is_streamed: bool, id: ResourceIndex) -> ResourceDefinition {
+    ResourceDefinition {
+      id,
+      key: key.to_string(),
+      is_streamed,
+    }    
+  }
+}
+
+pub type ResourceIndex = usize;
+pub type ResourceAmount = i32;
+pub type AttributeIndex = usize;
+pub type RawPropertyId = usize;
+
+#[derive(Clone)]
+pub enum AttributeDefinitionType {
+  Number,
+  Str,
+  Boolean,
+}
+
+pub type AttributeInteger = i32;
+
+#[derive(Clone, PartialEq)]
+pub enum AttributeValue {
+  Bool(bool),
+  Integer(AttributeInteger),
+  String(String),
+  Nil,
+}
+
+use std::fmt::{Debug, Result, Formatter};
+
+impl AttributeValue {
+    pub fn unwrap_bool(&self) -> bool {
+        match self {
+            Self::Bool(x) => *x,
+            Self::Nil => false,
+            _ => { panic!("Expected a bool but found a {:?}", self); }
+        }
+    }
+    
+    pub fn unwrap_integer(&self) -> AttributeInteger {
+        match self {
+            Self::Integer(x) => *x,
+            Self::Nil => 0,
+            _ => { panic!("Expected an integer but found a {:?}", self); }
+        }
+    }
+    
+    pub fn coerce_unwrap_to_integer(&self) -> AttributeInteger {
+        match self {
+            Self::Bool(x) => {
+                if *x { 1 } else { 0 }
+            },
+            Self::Integer(x) => *x,
+            Self::Nil => 0,
+            _ => { 0 }
+        }
+    }
+}
+
+impl Debug for AttributeValue {
+  fn fmt(&self, f: &mut Formatter<'_>) -> Result {
+    match self {
+      AttributeValue::Bool(boolean) => write!(f, "{}", boolean),
+      AttributeValue::Integer(int) => write!(f, "{}", int),
+      AttributeValue::String(string) => write!(f, "{}", string),
+      AttributeValue::Nil => write!(f, "Nil"),
+    }
+  }
+}
+
+#[derive(Clone)]
+pub struct AttributeDefinition {
+  pub key: String,
+  pub value_type: AttributeDefinitionType,
+  pub id: AttributeIndex,
+}
+
+pub type UnitAttributeDefinition = AttributeDefinition;
+pub type PositionAttributeDefinition = AttributeDefinition;
+pub type SimulationAttributeDefinition = AttributeDefinition;
+pub type UnitEntryAttributeDefinition = AttributeDefinition;
+
+impl AttributeDefinition {
+  pub fn new(key: &str, value_type: AttributeDefinitionType, id: AttributeIndex) -> AttributeDefinition {
+    AttributeDefinition {
+      id: 0,
+      key: key.to_string(),
+      value_type,
+    }    
+  }
+}
+
+impl Debug for AttributeDefinition {
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result {
+        write!(f, "AttributeDefinition {:?}", (self.id, &self.key))
+    }
+}
+
+#[derive(Clone)]
+pub struct ResourceTabulation {
+    pub last_update_tick: u64,
+    pub offset_per_tick: i32,
+    pub last_amount: ResourceAmount,
+}
+
+impl ResourceTabulation {
+    pub fn new () -> Self {
+        ResourceTabulation {
+            last_update_tick: 0,
+            offset_per_tick: 0,
+            last_amount: 0,
+        }
+    }
+
+    pub fn get_current_amount(&self, current_tick: u64) -> ResourceAmount {
+        let tick_diff = (current_tick - self.last_update_tick) as i32;
+        (tick_diff * self.offset_per_tick + self.last_amount) as ResourceAmount
+    }
+
+    pub fn update(&mut self, current_tick: u64, amount: ResourceAmount) {
+        self.last_amount = amount;
+        self.last_update_tick = current_tick;
+    }
+}
+
