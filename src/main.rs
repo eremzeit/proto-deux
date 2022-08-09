@@ -70,16 +70,10 @@ fn main() {
 
     match args {
         RunMode::HeadlessSimulation(sim_args) => {
-            runners::start_headless_sim(
-                sim_args.simulation_scenario_key,
-                sim_args.unit_entry_scenario_key,
-            );
+            runners::start_headless_sim(sim_args);
         }
-        RunMode::GuiSimulation(sim_args) => {
-            runners::start_sim_with_gui(
-                sim_args.simulation_scenario_key,
-                sim_args.unit_entry_scenario_key,
-            );
+        RunMode::GuiSimulation(sim_args, gui_args) => {
+            runners::start_sim_with_gui(sim_args, gui_args);
         }
         _ => panic!("Run mode not implemented yet"),
     }

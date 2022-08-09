@@ -25,45 +25,45 @@ use crate::simulation::common::UnitEntryBuilder;
 //     );
 // }
 
-pub fn start_app() {
-    let (sender_from_ui, receiver_from_ui) = std::sync::mpsc::channel::<SimulationControlEvent>();
-    let sim_ref = new_threaded_simulation_reference();
-    let sim_ref2 = sim_ref.clone();
+// pub fn start_app() {
+//     let (sender_from_ui, receiver_from_ui) = std::sync::mpsc::channel::<SimulationControlEvent>();
+//     let sim_ref = new_threaded_simulation_reference();
+//     let sim_ref2 = sim_ref.clone();
 
-    let handle = std::thread::spawn(move || {
-        let sim = SimulationBuilder::default()
-            .chemistry_key("cheese".to_string())
-            .unit_entries(vec![UnitEntryBuilder::default()
-                .species_name("main".to_string())
-                .phenotype(Rc::new(Box::new(Mouse::construct())))
-                .default_resources(vec![("cheese", 100)])])
-            //("default", Rc::new(Box::new(Mouse::construct())), vec![("cheese", 100)], vec![])
-            .iterations(100000)
-            .size((50, 50))
-            .unit_placement(PlaceUnitsMethod::ManualSingleEntry {
-                attributes: None,
-                coords: vec![(1, 1)],
-            })
-            .to_simulation();
+//     let handle = std::thread::spawn(move || {
+//         let sim = SimulationBuilder::default()
+//             .chemistry_key("cheese".to_string())
+//             .unit_entries(vec![UnitEntryBuilder::default()
+//                 .species_name("main".to_string())
+//                 .phenotype(Rc::new(Box::new(Mouse::construct())))
+//                 .default_resources(vec![("cheese", 100)])])
+//             //("default", Rc::new(Box::new(Mouse::construct())), vec![("cheese", 100)], vec![])
+//             .iterations(100000)
+//             .size((50, 50))
+//             .unit_placement(PlaceUnitsMethod::ManualSingleEntry {
+//                 attributes: None,
+//                 coords: vec![(1, 1)],
+//             })
+//             .to_simulation();
 
-        let mut executor = ThreadedSimulationExecutor::new(sim, sim_ref2, receiver_from_ui);
-        executor.is_paused = true;
-        executor.max_view_updates_per_second = 100;
-        executor.max_ticks_per_second = 100;
-        executor.run();
-    });
+//         let mut executor = ThreadedSimulationExecutor::new(sim, sim_ref2, receiver_from_ui);
+//         executor.is_paused = true;
+//         executor.max_view_updates_per_second = 100;
+//         executor.max_ticks_per_second = 100;
+//         executor.run();
+//     });
 
-    let s = sender_from_ui.clone();
-    //sender_from_ui.send(SimulationControlEvent::Resume);
-    ui::event_loop::start_ui_loop(sim_ref, sender_from_ui);
-}
+//     let s = sender_from_ui.clone();
+//     //sender_from_ui.send(SimulationControlEvent::Resume);
+//     ui::event_loop::start_ui_loop(sim_ref, sender_from_ui);
+// }
 
 pub fn start_app_with_genome() {
     let (sender_from_ui, receiver_from_ui) = std::sync::mpsc::channel::<SimulationControlEvent>();
     let sim_ref = new_threaded_simulation_reference();
     let sim_ref2 = sim_ref.clone();
 
-    use crate::chemistry::cheese::constants::NEW_UNIT_COST;
+    // use crate::chemistry::cheese::constants::NEW_UNIT_COST;
 
     let handle = std::thread::spawn(move || {
         let gm = GeneticManifest::new();
