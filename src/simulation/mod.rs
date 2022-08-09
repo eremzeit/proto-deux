@@ -57,30 +57,29 @@ pub struct Simulation {
     pub unit_entry_attributes: Vec<UnitEntryAttributes>,
     pub iterations: u64,
 
-    pub control_events: SimulationControlEventReceiver,
+    // pub control_events: Option<SimulationControlEventReceiver>,
     _spec_timings: Vec<u128>,
     _last_perf_update_time: Instant,
     _last_perf_update_tick: u64,
 }
 
-pub enum SimulationUiEvent {
-    SimulationEvent(SimulationEvent),
-    Nil,
-}
+// pub enum SimulationUiEvent {
+//     SimulationEvent(SimulationEvent),
+//     Nil,
+// }
 
-#[derive(Debug)]
-pub enum SimulationEvent {
-    // UnitAttributeUpdated(UnitAttributeIndex, UnitAttributeValue),
-    // PositionAttributeUpdated(PositionAttributeIndex, PositionAttributeValue),
-    // SimulationAttributeUpdated(SimulationAttributeIndex, SimulationAttributeValue),
-    //
-    // UnitResourceUpdated(UnitResourceIndex, UnitResourceAmount),
-    // PositionResourceUpdated(PositionResourceIndex, PositionResourceAmount),
-    UnitEntryDescriptionUpdated(UnitEntryId, String, String),
-    PositionUpdated(Coord),
-    Nil,
-}
-
+// #[derive(Debug)]
+// pub enum SimulationEvent {
+//     // UnitAttributeUpdated(UnitAttributeIndex, UnitAttributeValue),
+//     // PositionAttributeUpdated(PositionAttributeIndex, PositionAttributeValue),
+//     // SimulationAttributeUpdated(SimulationAttributeIndex, SimulationAttributeValue),
+//     //
+//     // UnitResourceUpdated(UnitResourceIndex, UnitResourceAmount),
+//     // PositionResourceUpdated(PositionResourceIndex, PositionResourceAmount),
+//     UnitEntryDescriptionUpdated(UnitEntryId, String, String),
+//     PositionUpdated(Coord),
+//     Nil,
+// }
 #[derive(Debug)]
 pub enum SimulationControlEvent {
     Pause,
@@ -89,9 +88,8 @@ pub enum SimulationControlEvent {
     Halt,
 }
 
-pub type SimulationEventSender = Sender<SimulationEvent>;
+// pub type SimulationEventSender = Sender<SimulationEvent>;
 //pub type SimulationEventSender = Receiver<SimulationEvent>;
-
 pub type SimulationControlEventSender = Sender<SimulationControlEvent>;
 pub type SimulationControlEventReceiver = Receiver<SimulationControlEvent>;
 
@@ -111,10 +109,8 @@ impl Simulation {
         iterations: u64,
         mut unit_manifest: UnitManifest,
         specs: SimulationSpecs,
-        sim_events: &SimulationEventSender,
-        control_events_receiver: SimulationControlEventReceiver,
     ) -> Simulation {
-        let world = World::new(size, &chemistry, sim_events);
+        let world = World::new(size, &chemistry);
         chemistry.init_manifest();
         unit_manifest.init_manifest();
 
@@ -141,7 +137,6 @@ impl Simulation {
             unit_manifest,
             attributes,
             unit_entry_attributes,
-            control_events: control_events_receiver,
             _spec_timings,
             _last_perf_update_time: Instant::now(),
             _last_perf_update_tick: 0,
@@ -394,14 +389,14 @@ mod tests {
     }
 }
 
-pub fn send_event(channel: &mut SimulationEventSender, event: SimulationEvent) {
-    //println!(">>> SENDING EVENT {:?}", event);
-    match &channel.send(event) {
-        Ok(result) => {}
+// pub fn send_event(channel: &mut SimulationEventSender, event: SimulationEvent) {
+//     //println!(">>> SENDING EVENT {:?}", event);
+//     match &channel.send(event) {
+//         Ok(result) => {}
 
-        Err(e) => {
-            let _e: &SendError<SimulationEvent> = e;
-            //println!("send error; {:?} {}", e, e);
-        }
-    }
-}
+//         Err(e) => {
+//             let _e: &SendError<SimulationEvent> = e;
+//             //println!("send error; {:?} {}", e, e);
+//         }
+//     }
+// }

@@ -1,7 +1,7 @@
 use crate::chemistry::{BaseChemistry, CheeseChemistry};
 use crate::simulation::common::{
     Position, Simulation, SimulationConfig, SimulationControlEvent, SimulationControlEventSender,
-    SimulationData, SimulationEvent,
+    SimulationData,
 };
 use crate::simulation::simulation_data::ThreadedSimulationReference;
 
@@ -27,7 +27,6 @@ use opengl_graphics::GlGraphics;
 
 pub fn start_ui_loop(
     _sim: ThreadedSimulationReference,
-    mut sim_events: Receiver<SimulationEvent>,
     sender_from_ui: SimulationControlEventSender,
 ) {
     let mut counter = RateCounter::new();

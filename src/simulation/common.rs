@@ -8,10 +8,10 @@ pub use super::specs::*;
 pub use super::unit::*;
 pub use super::world::World;
 pub use super::{
-    increment_simulation_attribute_integer, send_event, PhenotypeId, SimCell, Simulation,
+    increment_simulation_attribute_integer, PhenotypeId, SimCell, Simulation,
     SimulationAttributeIndex, SimulationAttributeValue, SimulationAttributes,
     SimulationControlEvent, SimulationControlEventReceiver, SimulationControlEventSender,
-    SimulationEvent, SimulationEventSender, SimulationResourceAmount, SimulationResourceIndex,
+    SimulationResourceAmount, SimulationResourceIndex,
 };
 
 pub use crate::biology::phenotype::mouse::Mouse;

@@ -1,7 +1,6 @@
 [package]
-authors = ["Alan Jones <erem.zeit@gmail.com>"]
 edition = "2021"
-name = "proto-deux"
+name = "proto_deux"
 version = "0.1.0"
 
 [dependencies]
@@ -27,3 +26,4 @@ shader_version = "0.7.0"
 vecmath = "1.0.0"
 
 piston2d-opengl_graphics = "0.81.0"
+clap = { version = "3.2.16", features = ["derive"] }

@@ -2,7 +2,7 @@ use super::unit_entry::UnitEntryId;
 use crate::chemistry::properties::{AttributeIndex, AttributeValue, ResourceAmount, ResourceIndex};
 use crate::chemistry::ChemistryInstance;
 use crate::chemistry::{Chemistry, ChemistryManifest};
-use crate::simulation::common::{send_event, Coord, SimulationEvent, SimulationEventSender};
+use crate::simulation::common::Coord;
 use std::collections::HashMap;
 
 pub type UnitResourceIndex = ResourceIndex;
@@ -51,72 +51,37 @@ impl Unit {
             .expect(&format!("Invalid unit attribute set"))
     }
 
-    pub fn add_resources(
-        &mut self,
-        resources: &SomeUnitResources,
-        events: &mut SimulationEventSender,
-    ) {
+    pub fn add_resources(&mut self, resources: &SomeUnitResources) {
         add_resources_to(&mut self.resources, resources);
-        send_event(events, SimulationEvent::PositionUpdated(self.coord));
     }
 
-    pub fn set_resources(&mut self, resources: UnitResources, events: &mut SimulationEventSender) {
+    pub fn set_resources(&mut self, resources: UnitResources) {
         //println!("unit.set_resources: {:?}", resources);
         self.resources = resources;
-        send_event(events, SimulationEvent::PositionUpdated(self.coord));
     }
 
-    pub fn add_resource(
-        &mut self,
-        idx: UnitResourceIndex,
-        amount: i32,
-        events: &mut SimulationEventSender,
-    ) {
+    pub fn add_resource(&mut self, idx: UnitResourceIndex, amount: i32) {
         self.resources[idx] += amount;
-        send_event(events, SimulationEvent::PositionUpdated(self.coord));
     }
 
-    pub fn set_resource(
-        &mut self,
-        resource_idx: UnitResourceIndex,
-        amount: UnitResourceAmount,
-        events: &mut SimulationEventSender,
-    ) {
+    pub fn set_resource(&mut self, resource_idx: UnitResourceIndex, amount: UnitResourceAmount) {
         self.resources[resource_idx] = amount;
-        send_event(events, SimulationEvent::PositionUpdated(self.coord));
     }
 
-    pub fn set_some_resources(
-        &mut self,
-        resources: &Vec<Option<UnitResourceAmount>>,
-        events: &mut SimulationEventSender,
-    ) {
+    pub fn set_some_resources(&mut self, resources: &Vec<Option<UnitResourceAmount>>) {
         for i in (0..resources.len()) {
             if resources[i].is_some() {
                 self.resources[i] = resources[i].unwrap();
             }
         }
-
-        send_event(events, SimulationEvent::PositionUpdated(self.coord));
     }
 
-    pub fn set_attribute(
-        &mut self,
-        attr_idx: UnitAttributeIndex,
-        value: UnitAttributeValue,
-        events: &mut SimulationEventSender,
-    ) {
+    pub fn set_attribute(&mut self, attr_idx: UnitAttributeIndex, value: UnitAttributeValue) {
         self.attributes[attr_idx] = value;
-        send_event(events, SimulationEvent::PositionUpdated(self.coord));
     }
 
-    pub fn set_attributes(
-        &mut self,
-        attributes: UnitAttributes,
-        events: &mut SimulationEventSender,
-    ) {
+    pub fn set_attributes(&mut self, attributes: UnitAttributes) {
         self.attributes = attributes;
-        send_event(events, SimulationEvent::PositionUpdated(self.coord));
     }
 
     pub fn format_resources_short(&self, chemistry: ChemistryInstance) -> String {

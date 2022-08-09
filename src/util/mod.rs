@@ -1,15 +1,15 @@
+pub mod cli;
 pub mod text_grid;
 
 #[macro_use]
 pub mod macros;
 
-use std::cmp::{min, max};
+use std::cmp::{max, min};
 use std::time::{Duration, Instant};
 
 pub type Coord = (usize, usize);
 pub type CoordOffset = (i32, i32);
 pub type GridSize2D = (usize, usize);
-
 
 pub struct RateCounter {
     pub count: u128,
@@ -25,7 +25,6 @@ impl RateCounter {
             last_rate: 0.0,
         }
     }
-    
 
     pub fn inc_and_update(&mut self) {
         //println!("inc");
@@ -34,7 +33,10 @@ impl RateCounter {
         let elapsed_ms = self.last_update.elapsed().as_millis();
         if (elapsed_ms > 5000) {
             self.last_rate = (self.count as f64 / elapsed_ms as f64) as f64;
-            println!("rate: {:?}", (self.last_rate * 1000.0, self.count, elapsed_ms));
+            println!(
+                "rate: {:?}",
+                (self.last_rate * 1000.0, self.count, elapsed_ms)
+            );
 
             self.count = 0;
             self.last_update = Instant::now();
@@ -44,10 +46,10 @@ impl RateCounter {
 
 #[derive(Clone, PartialEq)]
 pub enum GridDirection {
-  Up,
-  Right,
-  Down,
-  Left,
+    Up,
+    Right,
+    Down,
+    Left,
 }
 
 use std::fmt::{Debug, Formatter, Result};
@@ -96,19 +98,27 @@ pub fn grid_direction_from_string(key: &str) -> Option<GridDirection> {
     return None;
 }
 
-pub fn coord_by_direction_offset(coord: &Coord, direction: &GridDirection, size: GridSize2D) -> Option<Coord> {
-  let offset = match direction {
-    GridDirection::Up => (0, 1),
-    GridDirection::Right => (1, 0),
-    GridDirection::Down => (0, -1),
-    GridDirection::Left => (-1, 0),
-  };
+pub fn coord_by_direction_offset(
+    coord: &Coord,
+    direction: &GridDirection,
+    size: GridSize2D,
+) -> Option<Coord> {
+    let offset = match direction {
+        GridDirection::Up => (0, 1),
+        GridDirection::Right => (1, 0),
+        GridDirection::Down => (0, -1),
+        GridDirection::Left => (-1, 0),
+    };
 
-  //assert_coords_valid_for_size(
-  coord_by_coord_offset(coord, offset, size)
+    //assert_coords_valid_for_size(
+    coord_by_coord_offset(coord, offset, size)
 }
 
-pub fn coord_by_coord_offset(coord: &Coord, offset: CoordOffset, size: GridSize2D) -> Option<Coord> {
+pub fn coord_by_coord_offset(
+    coord: &Coord,
+    offset: CoordOffset,
+    size: GridSize2D,
+) -> Option<Coord> {
     let new_x = coord.0 as i32 + offset.0;
     let new_y = coord.1 as i32 + offset.1;
     if new_x >= 0 && new_y >= 0 && new_x < size.0 as i32 && new_y < size.1 as i32 {
@@ -118,7 +128,12 @@ pub fn coord_by_coord_offset(coord: &Coord, offset: CoordOffset, size: GridSize2
     }
 }
 
-pub fn proportional_resize(rect_width: u32, rect_height: u32, target_width: u32, target_height: u32) -> (u32, u32) {
+pub fn proportional_resize(
+    rect_width: u32,
+    rect_height: u32,
+    target_width: u32,
+    target_height: u32,
+) -> (u32, u32) {
     let wr = rect_width as f32 / target_width as f32;
     let hr = rect_height as f32 / target_height as f32;
 

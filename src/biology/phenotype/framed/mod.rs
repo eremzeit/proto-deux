@@ -155,9 +155,7 @@ pub mod test {
         let framed_vals = simple_convert_into_frames(genome_values);
         let frames = FramedGenomeParser::parse(framed_vals, cm.clone(), sm.clone(), gm.clone());
 
-        let (sender, receiver) = std::sync::mpsc::channel::<SimulationEvent>();
         let mut sim = SimulationBuilder::default()
-            .sim_events(sender)
             .size((3, 3))
             .iterations(100)
             .chemistry(CheeseChemistry::construct())

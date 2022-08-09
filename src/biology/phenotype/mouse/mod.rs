@@ -11,8 +11,6 @@ pub struct Mouse {}
 use crate::chemistry::cheese::defs;
 
 use rand::Rng;
-// let mut rng = rand::thread_rng();
-// let n1: u8 = rng.gen();
 
 impl Phenotype for Mouse {
     fn get_behavior(
@@ -93,9 +91,7 @@ pub mod tests {
 
     #[test]
     pub fn basic() {
-        let (sender, receiver) = std::sync::mpsc::channel::<SimulationEvent>();
         let mut sim = SimulationBuilder::default()
-            .sim_events(sender)
             .size((5, 5))
             .chemistry(CheeseChemistry::construct())
             .headless(true)

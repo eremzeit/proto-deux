@@ -24,9 +24,8 @@ pub struct Position {
 }
 
 impl Position {
-    pub fn set_unit(&mut self, unit: Option<Unit>, events: &mut SimulationEventSender) {
+    pub fn set_unit(&mut self, unit: Option<Unit>) {
         self.unit = unit;
-        send_event(events, SimulationEvent::PositionUpdated(self.coord));
     }
 
     pub fn get_attribute(&self, attr_idx: PositionAttributeIndex) -> PositionAttributeValue {
@@ -56,29 +55,16 @@ impl Position {
         resource_idx: PositionResourceIndex,
         val: PositionResourceAmount,
         tick: u64,
-        events: &mut SimulationEventSender,
     ) {
         self.resources[resource_idx].update(tick, val);
-        send_event(events, SimulationEvent::PositionUpdated(self.coord));
     }
 
-    pub fn set_attribute(
-        &mut self,
-        attr_idx: PositionAttributeIndex,
-        val: PositionAttributeValue,
-        events: &mut SimulationEventSender,
-    ) {
+    pub fn set_attribute(&mut self, attr_idx: PositionAttributeIndex, val: PositionAttributeValue) {
         self.attributes[attr_idx] = val;
-        send_event(events, SimulationEvent::PositionUpdated(self.coord));
     }
 
-    pub fn set_attributes(
-        &mut self,
-        attributes: PositionAttributes,
-        events: &mut SimulationEventSender,
-    ) {
+    pub fn set_attributes(&mut self, attributes: PositionAttributes) {
         self.attributes = attributes;
-        send_event(events, SimulationEvent::PositionUpdated(self.coord));
     }
 
     pub fn has_unit(&self) -> bool {
@@ -99,75 +85,50 @@ impl Position {
 
         panic!["Unit does not exist for position at {:?}", self.coord];
     }
-    pub fn set_unit_attribute(
-        &mut self,
-        attr_idx: UnitAttributeIndex,
-        value: UnitAttributeValue,
-        events: &mut SimulationEventSender,
-    ) {
+
+    pub fn set_unit_attribute(&mut self, attr_idx: UnitAttributeIndex, value: UnitAttributeValue) {
         let mut unit = self.unit.as_mut();
         if let Some(u) = unit {
-            u.set_attribute(attr_idx, value, events);
+            u.set_attribute(attr_idx, value);
         }
     }
-    pub fn set_unit_attributes(
-        &mut self,
-        attributes: UnitAttributes,
-        events: &mut SimulationEventSender,
-    ) {
+    pub fn set_unit_attributes(&mut self, attributes: UnitAttributes) {
         let mut unit = self.unit.as_mut();
         if let Some(u) = unit {
-            u.set_attributes(attributes, events);
+            u.set_attributes(attributes);
         }
     }
-    pub fn set_unit_resource(
-        &mut self,
-        resource: UnitResourceIndex,
-        amount: UnitResourceAmount,
-        events: &mut SimulationEventSender,
-    ) {
+    pub fn set_unit_resource(&mut self, resource: UnitResourceIndex, amount: UnitResourceAmount) {
         let mut unit = self.unit.as_mut();
         if let Some(u) = unit {
-            u.set_resource(resource, amount, events);
+            u.set_resource(resource, amount);
         }
     }
-    pub fn set_some_unit_resources(
-        &mut self,
-        resources: &Vec<Option<UnitResourceAmount>>,
-        events: &mut SimulationEventSender,
-    ) {
+    pub fn set_some_unit_resources(&mut self, resources: &Vec<Option<UnitResourceAmount>>) {
         let mut unit = self.unit.as_mut();
         //println!("setting some unit resources: {:?}", unit);
 
         if let Some(u) = unit {
-            u.set_some_resources(resources, events);
+            u.set_some_resources(resources);
         } else {
             panic!("Unit doesnt exist: {:?}", self.coord);
         }
     }
 
-    pub fn set_unit_resources(
-        &mut self,
-        resources: UnitResources,
-        events: &mut SimulationEventSender,
-    ) {
+    pub fn set_unit_resources(&mut self, resources: UnitResources) {
         let mut unit = self.unit.as_mut();
 
         if let Some(u) = unit {
-            u.set_resources(resources, events);
+            u.set_resources(resources);
         } else {
             panic!("Unit doesnt exist: {:?}", self.coord);
         }
     }
 
-    pub fn add_unit_resources(
-        &mut self,
-        resources: &SomeUnitResources,
-        events: &mut SimulationEventSender,
-    ) {
+    pub fn add_unit_resources(&mut self, resources: &SomeUnitResources) {
         let mut unit = self.unit.as_mut();
         if let Some(u) = unit {
-            u.add_resources(resources, events);
+            u.add_resources(resources);
         }
     }
 
@@ -175,11 +136,10 @@ impl Position {
         &mut self,
         resource_idx: UnitResourceIndex,
         amount: UnitResourceAmount,
-        events: &mut SimulationEventSender,
     ) {
         let mut unit = self.unit.as_mut();
         if let Some(u) = unit {
-            u.add_resource(resource_idx, amount, events);
+            u.add_resource(resource_idx, amount);
         }
     }
 }

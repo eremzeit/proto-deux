@@ -2,9 +2,8 @@ use crate::chemistry::*;
 use crate::simulation;
 use crate::simulation::common::{
     get_chemistry_by_key, EmptyPhenotype, Phenotype, PlaceUnitsMethod, SimulationControlEvent,
-    SimulationControlEventReceiver, SimulationEvent, SimulationEventSender, SimulationSpec,
-    UnitAttributeValue, UnitEntry, UnitEntryBuilder, UnitEntryData, UnitManifest,
-    UnitResourceAmount,
+    SimulationControlEventReceiver, SimulationSpec, UnitAttributeValue, UnitEntry,
+    UnitEntryBuilder, UnitEntryData, UnitManifest, UnitResourceAmount,
 };
 use crate::simulation::fitness::*;
 use crate::simulation::unit::util::convert_maybe_resources_to_resources;
@@ -26,8 +25,6 @@ pub mod builder {
         pub chemistry_key: String,
         pub chemistry: ChemistryInstance,
         pub specs: Vec<Box<dyn SimulationSpec>>,
-        pub sim_events: SimulationEventSender,
-        pub control_events: SimulationControlEventReceiver,
         pub headless: bool,
         pub unit_placement: PlaceUnitsMethod,
     }
@@ -109,26 +106,6 @@ pub mod builder {
                 Some(i) => i,
                 None => 100,
             };
-            let sim_events = match self.sim_events {
-                Some(x) => x,
-                None => {
-                    if !self.headless.unwrap_or(false) {
-                        panic!("An event channel is required if the simulation isn't headless");
-                    }
-                    let (sender, receiver) = std::sync::mpsc::channel::<SimulationEvent>();
-                    sender
-                }
-            };
-            let control_events = match self.control_events {
-                Some(x) => x,
-                None => {
-                    if !self.headless.unwrap_or(false) {
-                        panic!("An event channel is required if the simulation isn't headless");
-                    }
-                    let (sender, receiver) = std::sync::mpsc::channel::<SimulationControlEvent>();
-                    receiver
-                }
-            };
 
             let mut unit_manifest = std::mem::replace(&mut self.unit_manifest, None);
             let mut chemistry = std::mem::replace(&mut self.chemistry, None);
@@ -139,8 +116,6 @@ pub mod builder {
                 iterations,
                 unit_manifest.unwrap(),
                 specs,
-                &sim_events,
-                control_events,
             );
 
             sim

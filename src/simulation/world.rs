@@ -14,18 +14,12 @@ pub struct World {
     pub size: GridSize2D,
     pub spec_state: SpecState,
     pub last_unit_id: UnitId,
-    pub events: SimulationEventSender,
     pub tick: u64,
-
     pub _unit_count: u64,
 }
 
 impl World {
-    pub fn new(
-        size: GridSize2D,
-        chemistry: &ChemistryInstance,
-        events: &SimulationEventSender,
-    ) -> World {
+    pub fn new(size: GridSize2D, chemistry: &ChemistryInstance) -> World {
         let mut grid: Grid = Array2::from_elem((size.0, size.1).f(), None);
         for x in 0..size.0 {
             for y in 0..size.1 {
@@ -38,7 +32,6 @@ impl World {
             size,
             spec_state: SpecState::custom(),
             last_unit_id: 0,
-            events: events.clone(),
             tick: 0,
             _unit_count: 0,
         }
@@ -190,7 +183,7 @@ impl World {
                 }
             }
 
-            _pos.set_unit(unit, &mut self.events);
+            _pos.set_unit(unit);
         }
     }
 
@@ -219,7 +212,7 @@ impl World {
         let mut item = self.grid.get_mut([coord.0, coord.1]).unwrap();
 
         if let Some(pos) = item {
-            pos.set_unit_attribute(attr_idx, value, &mut self.events);
+            pos.set_unit_attribute(attr_idx, value);
         }
     }
 
@@ -247,7 +240,7 @@ impl World {
 
         let mut item = self.grid.get_mut([coord.0, coord.1]).unwrap();
         if let Some(pos) = item {
-            pos.set_unit_resource(resource_idx, amount, &mut self.events);
+            pos.set_unit_resource(resource_idx, amount);
         }
     }
 
@@ -260,14 +253,14 @@ impl World {
         let mut item = self.grid.get_mut([coord.0, coord.1]).unwrap();
 
         if let Some(pos) = item {
-            pos.set_some_unit_resources(unit_resources, &mut self.events);
+            pos.set_some_unit_resources(unit_resources);
         }
     }
 
     pub fn set_unit_resources_at(&mut self, coord: &Coord, unit_resources: UnitResources) {
         let mut item = self.grid.get_mut([coord.0, coord.1]).unwrap();
         if let Some(pos) = item {
-            pos.set_unit_resources(unit_resources, &mut self.events);
+            pos.set_unit_resources(unit_resources);
         }
     }
 
@@ -279,7 +272,7 @@ impl World {
     ) {
         let mut item = self.grid.get_mut([coord.0, coord.1]).unwrap();
         if let Some(pos) = item {
-            pos.add_unit_resource(resource_idx, amount, &mut self.events);
+            pos.add_unit_resource(resource_idx, amount);
         }
     }
 
@@ -298,7 +291,7 @@ impl World {
     pub fn add_unit_resources_at(&mut self, coord: &Coord, unit_resources: &SomeUnitResources) {
         let mut item = self.grid.get_mut([coord.0, coord.1]).unwrap();
         if let Some(pos) = item {
-            pos.add_unit_resources(unit_resources, &mut self.events);
+            pos.add_unit_resources(unit_resources);
         }
     }
 
@@ -306,7 +299,7 @@ impl World {
         let mut item = self.grid.get_mut([coord.0, coord.1]).unwrap();
 
         if let Some(pos) = item {
-            pos.set_unit_attributes(attributes, &mut self.events);
+            pos.set_unit_attributes(attributes);
         }
     }
 
@@ -319,7 +312,7 @@ impl World {
         let mut item = self.grid.get_mut([coord.0, coord.1]).unwrap();
 
         if let Some(pos) = item {
-            return pos.set_resource(resource_idx, value, self.tick, &mut self.events);
+            return pos.set_resource(resource_idx, value, self.tick);
         }
 
         panic!["Position does not exist at {:?}", coord];
@@ -362,7 +355,7 @@ impl World {
         let mut item = self.grid.get_mut([coord.0, coord.1]).unwrap();
 
         if let Some(pos) = item {
-            return pos.set_attribute(attr_idx, val, &mut self.events);
+            return pos.set_attribute(attr_idx, val);
         }
 
         panic!["Position does not exist at {:?}", coord];
@@ -372,7 +365,7 @@ impl World {
         let mut item = self.grid.get_mut([coord.0, coord.1]).unwrap();
 
         if let Some(pos) = item {
-            pos.set_attributes(attributes, &mut self.events);
+            pos.set_attributes(attributes);
         }
     }
 
@@ -416,10 +409,8 @@ pub mod tests {
 
     #[test]
     pub fn set_some_resources() {
-        let (sender, receiver) = channel::<SimulationEvent>();
-
         let chemistry: ChemistryInstance = CheeseChemistry::construct();
-        let mut world = World::new((5, 5), &chemistry, &sender);
+        let mut world = World::new((5, 5), &chemistry);
         let unit_entry = UnitEntry::new("foo_unit", EmptyPhenotype::construct());
         let coord = (2, 2);
         world.seed_unit_at(&coord, &unit_entry.info, None, &chemistry);

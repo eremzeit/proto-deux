@@ -19,7 +19,6 @@ pub struct ThreadedSimulationExecutor {
     pub simulation: Simulation,
 
     pub control_events_receiver: SimulationControlEventReceiver,
-    downstream_control_events: SimulationControlEventSender,
     pub last_view_update: Instant,
     pub last_tick: Instant,
     pub double: ThreadedSimulationReference,
@@ -29,19 +28,14 @@ impl ThreadedSimulationExecutor {
     pub fn new(
         mut simulation: Simulation,
         double: ThreadedSimulationReference,
+        control_events: SimulationControlEventReceiver,
     ) -> ThreadedSimulationExecutor {
-        let (mut proxy_sender, mut proxy_receiver) =
-            std::sync::mpsc::channel::<SimulationControlEvent>();
-        //let receiver: Receiver<SimulationControlEvent> = ;
-        std::mem::swap(&mut proxy_receiver, &mut simulation.control_events);
-
         ThreadedSimulationExecutor {
             is_paused: true,
             is_finished: false,
             max_view_updates_per_second: 10,
             max_ticks_per_second: 100000,
-            control_events_receiver: proxy_receiver,
-            downstream_control_events: proxy_sender,
+            control_events_receiver: control_events,
 
             simulation,
             last_tick: Instant::now(),
@@ -95,6 +89,7 @@ impl ThreadedSimulationExecutor {
 
                 // TODO: experiment with this
                 std::thread::sleep(target_tick_delay / divisor);
+
                 // //AOEUAOEUAOEU
                 // if self.simulation.world.tick > 1000 {
                 //     self.max_ticks_per_second = 8;
