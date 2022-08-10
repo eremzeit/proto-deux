@@ -67,7 +67,7 @@ impl World {
         chemistry: &ChemistryInstance,
     ) {
         let src_unit = self.get_unit_at(src_coord).unwrap().clone(); // TODO PERF
-                                                                     //println!("moving unit {:?}, {:?}", dest_coord, src_coord);
+        println!("moving unit {:?}, {:?}", dest_coord, src_coord);
         self.set_unit_at(dest_coord, Some(src_unit));
         self.set_unit_at(src_coord, None);
     }

@@ -61,6 +61,7 @@ impl SimulationSpec for PhenotypeExecution {
                 let reaction_def =
                     &sim.chemistry.get_manifest().reactions[reaction_call.0 as usize];
 
+                println!("EXECUTING REACTION: {}", reaction_def.key);
                 execute_reaction(
                     sim,
                     &coord,

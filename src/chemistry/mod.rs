@@ -83,6 +83,7 @@ pub trait Chemistry {
             self.get_default_unit_seed_attributes(world, coord, entry)
         }
     }
+
     fn get_unit_seed_stored_resource_amounts(
         &self,
         world: &mut World,

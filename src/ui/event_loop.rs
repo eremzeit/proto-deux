@@ -5,9 +5,10 @@ use crate::simulation::common::{
 };
 use crate::simulation::simulation_data::ThreadedSimulationReference;
 
-use piston_window::G2dTextureContext;
+use piston_window::{G2dTextureContext, Viewport};
 
 use crate::util::RateCounter;
+use std::rc::Rc;
 use std::sync::mpsc::{channel, Receiver, Sender};
 use std::sync::Arc;
 use std::time::{Duration, Instant};
@@ -25,9 +26,30 @@ use piston_window::{OpenGL, PistonWindow, WindowSettings};
 
 use opengl_graphics::GlGraphics;
 
-pub fn start_ui_loop(
+use super::world::{draw_world, get_cell_renderer, CellRenderer};
+
+// pub fn get_cell_renderer() -> <dyn CellRenderer> {
+//     match sim.config.chemistry_key.as_str() {
+//         "cheese" => {}
+//         _ => unreachable!(),
+//     }
+// }
+
+pub struct WorldRenderConfig {
+    pub cell_size: f64,
+    pub chemistry_key: String,
+    pub renders_per_second: u32,
+}
+
+pub struct UiConfig {
+    pub window_size: Option<[u32; 2]>,
+}
+
+pub fn start_sim_ui(
+    ui_config: UiConfig,
     _sim: ThreadedSimulationReference,
     sender_from_ui: SimulationControlEventSender,
+    world_render_config: WorldRenderConfig,
 ) {
     let mut counter = RateCounter::new();
     let mut started_sim = false;
@@ -41,60 +63,51 @@ pub fn start_ui_loop(
 
     let mut gl = GlGraphics::new(OpenGL::V4_2);
 
-    let mut fps = FPSCounter::new();
-    let mut last_fps = 0;
-    let mut fps_printed = false;
-
     let start_time = Instant::now();
-
-    let frame_time_ms = 5.0;
+    let frame_time_ms = (1000 / world_render_config.renders_per_second) as f64;
 
     window.set_bench_mode(true);
 
+    let mut started_sim = false;
+    let mut last_rendered_tick = 0;
+    let cell_size = 20.0;
+    let cell_renderer = get_cell_renderer(world_render_config.chemistry_key.as_str());
+
     while let Some(e) = window.next() {
-        let current_time = Instant::now();
-        let time_since = current_time.duration_since(start_time).as_millis();
-
-        // let tile_size = max_tile_size - ((time_since % 5000) as f64 / 5000.0 * 1.0);
-        let tile_size = 10.0;
-
         if let Some(r) = e.render_args() {
-            gl.draw(r.viewport(), |c, g| {
-                clear([0.5; 4], g);
+            let guard = _sim.lock();
+            let unwrapped = guard.unwrap();
+            let option = unwrapped.borrow();
+            let sim_option_ref: Option<&SimulationData> = option.as_ref();
 
-                let rect = [0.0, 0.0, tile_size, tile_size];
-                rectangle(
-                    [0.0, 255.0, 0.0, 255.0],
-                    rect,
-                    c.transform.trans(100.0, 200.0),
-                    g,
-                );
+            if sim_option_ref.is_none() {
+                return;
+            }
 
-                last_fps = fps.tick();
-            });
+            let sim = sim_option_ref.unwrap();
+
+            draw_world(
+                sim,
+                &mut gl,
+                r.viewport(),
+                &cell_renderer,
+                world_render_config.cell_size,
+            );
+            last_rendered_tick = sim.tick;
         }
 
         if let Some(u) = e.update_args() {
-            // update game state
-            // framerate independence
             if u.dt < frame_time_ms {
-                thread::sleep(Duration::from_millis((frame_time_ms - u.dt + 2.0) as u64));
+                thread::sleep(Duration::from_millis(
+                    ((frame_time_ms - (u.dt * 1000.0)) / 2.0) as u64,
+                ));
             }
         }
 
-        if (time_since / 1000) % 5 == 0 {
-            if !fps_printed {
-                println!("fps: {}", last_fps);
-                fps_printed = true;
-            }
-        } else {
-            fps_printed = false;
+        if !started_sim {
+            sender_from_ui.send(SimulationControlEvent::Resume);
+            started_sim = true;
         }
-
-        // if !started_sim {
-        //     sender_from_ui.send(SimulationControlEvent::Resume);
-        //     started_sim = true;
-        // }
     }
 }
 

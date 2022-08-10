@@ -24,14 +24,14 @@ impl Phenotype for Mouse {
 
         let pos_resources = defs::PositionResourcesLookup::new();
 
-        if world.get_pos_resource_at(coord, pos_resources.cheese) > 0 {
+        if world.get_pos_resource_at(coord, pos_resources.cheese) > 10 {
             return PhenotypeResult {
                 reactions: vec![(defs::REACTION_ID_GOBBLE_CHEESE, 0, 0, 0)],
             };
         }
 
         for (_coord, _dir) in CoordOffsetIterator::new(coord, &world.size) {
-            if world.get_pos_resource_at(&_coord, pos_resources.cheese) > 0 {
+            if world.get_pos_resource_at(&_coord, pos_resources.cheese) > 10 {
                 return PhenotypeResult {
                     reactions: vec![(
                         defs::REACTION_ID_MOVE_UNIT,

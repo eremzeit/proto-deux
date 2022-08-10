@@ -29,12 +29,14 @@ impl ThreadedSimulationExecutor {
         mut simulation: Simulation,
         double: ThreadedSimulationReference,
         control_events: SimulationControlEventReceiver,
+        max_ticks_per_second: u32,
+        max_view_updates_per_second: u32,
     ) -> ThreadedSimulationExecutor {
         ThreadedSimulationExecutor {
             is_paused: true,
             is_finished: false,
-            max_view_updates_per_second: 10,
-            max_ticks_per_second: 100000,
+            max_view_updates_per_second: max_ticks_per_second,
+            max_ticks_per_second: max_view_updates_per_second,
             control_events_receiver: control_events,
 
             simulation,
@@ -69,12 +71,13 @@ impl ThreadedSimulationExecutor {
 
             let mut has_initialized = false;
 
-            loop {
-                let mut target_tick_delay =
-                    Duration::new(0, (10u32).pow(9) / self.max_ticks_per_second);
-                let mut target_view_delay =
-                    Duration::new(0, (10u32).pow(9) / self.max_view_updates_per_second);
+            let mut target_tick_delay =
+                Duration::new(0, (10u32).pow(9) / self.max_ticks_per_second);
+            let mut target_view_delay =
+                Duration::new(0, (10u32).pow(9) / self.max_view_updates_per_second);
 
+            // TODO: this should be rewritten
+            loop {
                 let observed_delay = Instant::now().duration_since(self.last_tick);
                 let should_tick = observed_delay > target_tick_delay;
                 let mut divisor = if self.max_ticks_per_second < 5 { 2 } else { 3 };
@@ -90,15 +93,10 @@ impl ThreadedSimulationExecutor {
                 // TODO: experiment with this
                 std::thread::sleep(target_tick_delay / divisor);
 
-                // //AOEUAOEUAOEU
-                // if self.simulation.world.tick > 1000 {
-                //     self.max_ticks_per_second = 8;
-                //     self.max_view_updates_per_second = 8;
-                // }
                 if should_tick {
                     counter.inc_and_update();
                     self.simulation.tick();
-                    //println!("tick");
+                    println!("tick");
                     self.last_tick = Instant::now();
                     has_initialized = true;
 

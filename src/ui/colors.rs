@@ -1,0 +1,19 @@
+pub const CHEESE_YELLOW: [u64; 4] = [0xd3, 0xc7, 0x00, 0xff];
+pub const BEIGE_TAN: [u64; 4] = [0xD7, 0xBC, 0x15, 0xFF];
+pub const DANGEROUS_OLIVE: [u64; 4] = [0x2f, 0x3a, 0x01, 0xff];
+pub const NIGHT_BROWN: [u64; 4] = [0x23, 0x1e, 0x14, 0xff];
+pub const TAN: [u64; 4] = [0xd6, 0xcf, 0xb5, 0xff];
+pub const BLACK: [u64; 4] = [0x00, 0x00, 0x00, 0xff];
+pub const LIGHT_BLACK: [u64; 4] = [0x33, 0x33, 0x33, 0xff];
+pub const STONE_GRAY: [u64; 4] = [0x77, 0x77, 0x77, 0xff];
+pub const RED: [u64; 4] = [0xee, 0x11, 0x11, 0xFF];
+pub const WHITE: [u64; 4] = [0xff, 0xff, 0xff, 0xFF];
+
+pub fn to_color(color: [u64; 4]) -> [f32; 4] {
+    return [
+        (color[0] as f32 / 255.0),
+        (color[1] as f32 / 255.0),
+        (color[2] as f32 / 255.0),
+        (color[3] as f32 / 255.0),
+    ];
+}

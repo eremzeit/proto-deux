@@ -304,17 +304,16 @@ impl Chemistry for CheeseChemistry {
 
             use rand::Rng;
             let mut rng = rand::thread_rng();
-            //if (coord.0 + coord.1) % 3 == 0 {
-            let is_bottom_left = coord.0 == 0 && coord.1 == 0 || coord.0 == 1 && coord.1 == 0;
-            if is_bottom_left || rng.gen_range(0..(coord.0 + coord.1) % 5 + 10) == 0 {
-                world.set_pos_attribute_at(
-                    &coord,
-                    self.get_manifest()
-                        .position_attribute_by_key("is_cheese_source")
-                        .id as usize,
-                    PositionAttributeValue::Bool(true),
-                );
-            }
+            // let is_bottom_left = coord.0 == 0 && coord.1 == 0 || coord.0 == 1 && coord.1 == 0;
+            // if is_bottom_left || rng.gen_range(0..(coord.0 + coord.1) % 5 + 10) == 0 {
+            //     world.set_pos_attribute_at(
+            //         &coord,
+            //         self.get_manifest()
+            //             .position_attribute_by_key("is_cheese_source")
+            //             .id as usize,
+            //         PositionAttributeValue::Bool(true),
+            //     );
+            // }
 
             if rng.gen_range(0..(coord.0 + coord.1) % 5 + 5) == 0 {
                 let position_resources = defs::PositionResourcesLookup::new();

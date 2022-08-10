@@ -205,7 +205,7 @@ impl Debug for AttributeDefinition {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct ResourceTabulation {
     pub last_update_tick: u64,
     pub offset_per_tick: i32,
@@ -223,7 +223,9 @@ impl ResourceTabulation {
 
     pub fn get_current_amount(&self, current_tick: u64) -> ResourceAmount {
         let tick_diff = (current_tick - self.last_update_tick) as i32;
-        (tick_diff * self.offset_per_tick + self.last_amount) as ResourceAmount
+        let amount = (tick_diff * self.offset_per_tick + self.last_amount) as ResourceAmount;
+
+        amount
     }
 
     pub fn update(&mut self, current_tick: u64, amount: ResourceAmount) {

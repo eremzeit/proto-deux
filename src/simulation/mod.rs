@@ -246,7 +246,8 @@ impl Simulation {
                 .duration_since(self._last_perf_update_time)
                 .as_millis();
             let total_ticks = (self.world.tick - self._last_perf_update_tick).max(1);
-            if ms_since_perf_update > 3000 {
+
+            if ms_since_perf_update > 10000 {
                 let averages = self
                     ._spec_timings
                     .iter()
