@@ -2,6 +2,7 @@ use crate::biology::genetic_manifest::predicates::Operator;
 use crate::biology::phenotype::Phenotype;
 use crate::chemistry::variants::cheese::defs;
 use crate::chemistry::{ChemistryInstance, ReactionId};
+use crate::simulation::common::variants::cheese::constants::MAX_GOBBLE_AMOUNT;
 use crate::simulation::common::*;
 use crate::simulation::iterators::CoordOffsetIterator;
 use crate::simulation::world::World;
@@ -17,10 +18,9 @@ impl Phenotype for SmartMouse {
         chemistry: &ChemistryInstance,
     ) -> PhenotypeResult {
         let reactions = &chemistry.get_manifest().reactions;
-
         let pos_resources = defs::PositionResourcesLookup::new();
 
-        if world.get_pos_resource_at(coord, pos_resources.cheese) > 10 {
+        if world.get_pos_resource_at(coord, pos_resources.cheese) > MAX_GOBBLE_AMOUNT {
             return PhenotypeResult {
                 reactions: vec![(defs::REACTION_ID_GOBBLE_CHEESE, 0, 0, 0)],
             };

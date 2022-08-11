@@ -114,6 +114,7 @@ pub fn parse_cli_args() -> RunMode {
                 },
             );
         }
+
         _ => unreachable!(), // If all subcommands are defined above, anything else is unreachable
     }
 }

@@ -108,10 +108,6 @@ impl CellRenderer for CheeseCellRenderer {
             let cell_width = cell_rect[3];
             let width = cell_width * cheese_pct;
             let offset = (cell_width - width) / 2.0;
-            println!(
-                "cheese_pct: {}, cell_width: {}, width: {}",
-                cheese_pct, cell_width, width
-            );
             let rect = [cell_rect[0] + offset, cell_rect[1] + offset, width, width];
 
             ellipse(

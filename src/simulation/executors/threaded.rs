@@ -88,7 +88,6 @@ impl ThreadedSimulationExecutor {
                 let should_update_view = Instant::now().duration_since(self.last_view_update)
                     > (target_view_delay / divisor);
                 //println!("target: {:?}", &target_tick_delay);
-                //let divisor = 2;
 
                 // TODO: experiment with this
                 std::thread::sleep(target_tick_delay / divisor);
@@ -96,7 +95,6 @@ impl ThreadedSimulationExecutor {
                 if should_tick {
                     counter.inc_and_update();
                     self.simulation.tick();
-                    println!("tick");
                     self.last_tick = Instant::now();
                     has_initialized = true;
 
