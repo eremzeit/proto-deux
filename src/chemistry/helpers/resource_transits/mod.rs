@@ -1,9 +1,8 @@
-use crate::chemistry::{BaseChemistry, CheeseChemistry, Chemistry};
+use crate::chemistry::variants::{BaseChemistry, CheeseChemistry};
 use crate::simulation::common::CoordIterator;
 use crate::simulation::common::*;
 use crate::simulation::config::SimulationConfig;
 use crate::simulation::iterators::*;
-use crate::simulation::specs::{SimulationSpec, SpecContext};
 use crate::simulation::unit::{add_resources_to, UnitAttributes, UnitResources};
 use crate::util::text_grid::TextGridOptions;
 use crate::util::*;
@@ -86,17 +85,9 @@ pub fn calculate_linear_diff_transits(
 
 pub fn linear_diff_for_pos(coord: Coord, world: &World, chemistry: &Arc<Box<dyn Chemistry>>) {}
 
-pub struct ResourceTransits {}
-
-impl SimulationSpec for ResourceTransits {
-    fn on_tick(&mut self, sim: &mut SimCell, context: &SpecContext) {}
-
-    fn get_name(&self) -> String {
-        "ResourceTransits".to_string()
-    }
-}
-
 mod tests {
+    use crate::simulation::common::helpers::place_units::PlaceUnitsMethod;
+
     #[allow(unused_imports)]
     use super::*;
 
@@ -104,11 +95,10 @@ mod tests {
     fn test() {
         let mut sim = SimulationBuilder::default()
             .size((5, 5))
-            .chemistry(CheeseChemistry::construct())
+            .chemistry(CheeseChemistry::construct(
+                PlaceUnitsMethod::LinearBottomMiddle { attributes: None },
+            ))
             .headless(true)
-            .specs(vec![Box::new(PlaceUnits {
-                method: PlaceUnitsMethod::LinearBottomMiddle { attributes: None },
-            })])
             .unit_manifest(UnitManifest {
                 units: vec![UnitEntry::new("main", EmptyPhenotype::construct())],
             })

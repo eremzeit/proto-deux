@@ -5,14 +5,8 @@ use crate::simulation::common::{
     UnitAttributeValue, UnitResourceAmount, UnitResourceIndex,
 };
 
-//use self::reactions::*;
-//use crate::chemistry::actions::{default_actions, ActionDefinition, ActionParam, ActionSet};
-//use crate::simulation::specs::place_units::{PlaceUnits, PlaceUnitsMethod};
-//use crate::simulation::specs::SimulationSpec;
-//use crate::util::Coord;
-
-pub use crate::chemistry::cheese::CheeseChemistry;
-pub use crate::chemistry::nanobots::NanobotsChemistry;
+pub use crate::chemistry::variants::cheese::CheeseChemistry;
+pub use crate::chemistry::variants::nanobots::NanobotsChemistry;
 
 #[derive(Clone)]
 pub enum PropertyValue {

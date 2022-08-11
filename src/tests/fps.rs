@@ -5,6 +5,7 @@ use crate::simulation::common::*;
 //use crate::biology::genome::framed::macros::util::GenomeBuilder;
 use crate::biology::genome::framed::*;
 use crate::biology::phenotype::framed::*;
+use crate::simulation::common::helpers::place_units::PlaceUnitsMethod;
 
 pub fn test_with_genome() {
     let gm = GeneticManifest::new();
@@ -23,8 +24,9 @@ pub fn test_with_genome() {
         .headless(true)
         .size((20, 20))
         .iterations(10000)
-        .chemistry(CheeseChemistry::construct())
-        .unit_placement(PlaceUnitsMethod::SimpleDrop { attributes: None })
+        .chemistry(CheeseChemistry::construct(PlaceUnitsMethod::SimpleDrop {
+            attributes: None,
+        }))
         .unit_manifest(UnitManifest {
             units: vec![UnitEntryBuilder::default()
                 .species_name("species1".to_string())

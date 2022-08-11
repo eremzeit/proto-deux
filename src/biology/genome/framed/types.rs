@@ -219,6 +219,8 @@ impl Debug for BooleanVariable {
 }
 
 pub mod tests {
+    use chemistry::variants::CheeseChemistry;
+
     use super::*;
     use crate::biology::genetic_manifest::predicates::default_operators;
     use crate::simulation::common::*;

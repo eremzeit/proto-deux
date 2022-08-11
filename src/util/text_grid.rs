@@ -124,7 +124,9 @@ mod tests {
 
     #[allow(unused_imports)]
     use super::*;
-    use crate::chemistry::cheese::*;
+    use crate::{
+        chemistry::variants::cheese::*, simulation::common::helpers::place_units::PlaceUnitsMethod,
+    };
 
     #[test]
     fn render_coords_with_border() {
@@ -138,11 +140,10 @@ mod tests {
 
         let mut sim = SimulationBuilder::default()
             .size((2, 2))
-            .chemistry(CheeseChemistry::construct())
+            .chemistry(CheeseChemistry::construct(
+                PlaceUnitsMethod::LinearBottomMiddle { attributes: None },
+            ))
             .headless(true)
-            .specs(vec![Box::new(PlaceUnits {
-                method: PlaceUnitsMethod::LinearBottomMiddle { attributes: None },
-            })])
             .unit_manifest(UnitManifest {
                 units: vec![UnitEntry::new("main", EmptyPhenotype::construct())],
             })

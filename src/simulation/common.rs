@@ -2,8 +2,6 @@ pub use super::config::{SimulationBuilder, SimulationConfig};
 pub use super::fitness::*;
 pub use super::iterators::CoordIterator;
 pub use super::position::*;
-pub use super::specs::phenotype_execution::PhenotypeExecution;
-pub use super::specs::place_units::{PlaceUnits, PlaceUnitsMethod};
 pub use super::specs::*;
 pub use super::unit::*;
 pub use super::world::World;
@@ -14,7 +12,6 @@ pub use super::{
     SimulationResourceAmount, SimulationResourceIndex,
 };
 
-pub use crate::biology::phenotype::mouse::Mouse;
 pub use crate::biology::phenotype::{BoxedPhenotype, EmptyPhenotype, Phenotype, PhenotypeResult};
 pub use crate::biology::sensor_manifest::{SensorContext, SensorManifest};
 
@@ -31,7 +28,6 @@ pub use crate::chemistry::{
     get_chemistry_by_key, ChemistryInstance, ChemistryManifest, ReactionId,
 };
 pub use crate::simulation::simulation_data::{SimulationData, ThreadedSimulationReference};
-pub use crate::simulation::specs::resource_allocation::StoredResourceAllocationMethod;
 pub use crate::simulation::unit_entry::builder::UnitEntryBuilder;
 pub use crate::simulation::unit_entry::{
     UnitEntry, UnitEntryAttributeValue, UnitEntryAttributes, UnitEntryData, UnitEntryId,

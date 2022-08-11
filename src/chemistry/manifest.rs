@@ -3,8 +3,6 @@ use self::reactions::*;
 use crate::biology::genetic_manifest::predicates::OperatorParam;
 use crate::chemistry::actions::{default_actions, ActionDefinition, ActionParam, ActionSet};
 use crate::simulation::common::*;
-use crate::simulation::specs::place_units::{PlaceUnits, PlaceUnitsMethod};
-use crate::simulation::specs::SimulationSpec;
 use crate::util::Coord;
 
 #[derive(Clone)]
@@ -490,7 +488,6 @@ impl ChemistryManifest {
 
 pub mod tests {
     use super::*;
-    use crate::chemistry::cheese::CheeseChemistry;
 
     #[test]
     pub fn manifest() {

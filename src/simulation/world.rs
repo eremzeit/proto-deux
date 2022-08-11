@@ -1,6 +1,6 @@
 use std::sync::mpsc::{channel, Receiver, Sender};
 
-use crate::chemistry::{CheeseChemistry, Chemistry, ChemistryInstance};
+use crate::chemistry::{Chemistry, ChemistryInstance};
 use crate::simulation::common::*;
 use crate::util::{coord_by_coord_offset, coord_by_direction_offset, Coord, GridDirection};
 use ndarray::*;
@@ -12,7 +12,6 @@ pub type Grid = Array2<Option<Position>>;
 pub struct World {
     pub grid: Grid,
     pub size: GridSize2D,
-    pub spec_state: SpecState,
     pub last_unit_id: UnitId,
     pub tick: u64,
     pub _unit_count: u64,
@@ -30,7 +29,6 @@ impl World {
         World {
             grid,
             size,
-            spec_state: SpecState::custom(),
             last_unit_id: 0,
             tick: 0,
             _unit_count: 0,
@@ -299,6 +297,7 @@ impl World {
         let mut item = self.grid.get_mut([coord.0, coord.1]).unwrap();
 
         if let Some(pos) = item {
+            println!("AOEU: {:?}", attributes);
             pos.set_unit_attributes(attributes);
         }
     }
@@ -405,11 +404,15 @@ impl World {
 // }
 
 pub mod tests {
+    use crate::simulation::common::{
+        helpers::place_units::PlaceUnitsMethod, variants::CheeseChemistry,
+    };
+
     use super::*;
 
     #[test]
     pub fn set_some_resources() {
-        let chemistry: ChemistryInstance = CheeseChemistry::construct();
+        let chemistry: ChemistryInstance = CheeseChemistry::construct(PlaceUnitsMethod::Skip);
         let mut world = World::new((5, 5), &chemistry);
         let unit_entry = UnitEntry::new("foo_unit", EmptyPhenotype::construct());
         let coord = (2, 2);

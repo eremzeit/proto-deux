@@ -1,9 +1,13 @@
 use crate::biology::experiments::*;
+use crate::simulation::common::helpers::place_units::PlaceUnitsMethod;
 use crate::simulation::common::*;
 
 pub fn evolve_lever() {
     let chemistry_key = "lever".to_string();
-    let chemistry = get_chemistry_by_key(&chemistry_key);
+    let chemistry = get_chemistry_by_key(
+        &chemistry_key,
+        PlaceUnitsMethod::SimpleDrop { attributes: None },
+    );
     let gm = GeneticManifest::new();
     let cm = chemistry.get_manifest();
     let sm = SensorManifest::with_default_sensors(&cm);
@@ -16,7 +20,6 @@ pub fn evolve_lever() {
             num_simulation_ticks: 1,
             grid_size: (10, 1),
             num_genomes_per_sim: 3,
-            unit_placement: PlaceUnitsMethod::SimpleDrop { attributes: None },
             iterations: 5,
             default_unit_resources: vec![],
             default_unit_attr: vec![],

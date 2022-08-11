@@ -266,6 +266,7 @@ macro_rules! __then_do {
 pub mod tests {
     use std::rc::Rc; 
     use crate::biology::genetic_manifest::{GeneticManifest};
+    use crate::simulation::common::variants::cheese::CheeseChemistry;
     use crate::simulation::common::{*};
     use crate::biology::genome::framed::common::{*};
     //use super::super::super::types::{*};

@@ -4,9 +4,10 @@ use crate::chemistry::properties::*;
 use crate::chemistry::reactions::*;
 use crate::chemistry::*;
 
+use crate::simulation::common::helpers::phenotype_execution::phenotype_execution;
+use crate::simulation::common::helpers::resource_allocation::allocate_stored_resources;
+use crate::simulation::common::helpers::resource_allocation::StoredResourceAllocationMethod;
 use crate::simulation::common::*;
-use crate::simulation::specs::place_units::PlaceUnits;
-use crate::simulation::specs::SimulationSpec;
 use crate::simulation::unit::*;
 use crate::simulation::world::World;
 use crate::simulation::Simulation;
@@ -31,6 +32,7 @@ pub mod constants {}
 
 pub struct LeverChemistry {
     manifest: ChemistryManifest,
+    place_units_method: PlaceUnitsMethod,
 }
 
 pub mod defs {
@@ -61,9 +63,10 @@ pub mod defs {
     }
 }
 impl LeverChemistry {
-    pub fn construct() -> ChemistryInstance {
+    pub fn construct(place_units_method: PlaceUnitsMethod) -> ChemistryInstance {
         wrap_chemistry!(LeverChemistry {
             manifest: LeverChemistry::default_manifest(),
+            place_units_method: place_units_method
         })
     }
 
@@ -112,18 +115,22 @@ impl Chemistry for LeverChemistry {
         "lever".to_string()
     }
 
-    fn construct_specs(
-        &self,
-        unit_placement: &PlaceUnitsMethod,
-    ) -> Vec<std::boxed::Box<dyn SimulationSpec>> {
-        vec![
-            Box::new(PlaceUnits {
-                method: unit_placement.clone(),
-            }),
-            Box::new(PhenotypeExecution {}),
-            Box::new(specs::PostTick {}),
-        ]
+    fn get_unit_placement(&self) -> PlaceUnitsMethod {
+        self.place_units_method.clone()
     }
+
+    // fn construct_specs(
+    //     &self,
+    //     unit_placement: &PlaceUnitsMethod,
+    // ) -> Vec<std::boxed::Box<dyn SimulationSpec>> {
+    //     vec![
+    //         Box::new(PlaceUnits {
+    //             method: unit_placement.clone(),
+    //         }),
+    //         Box::new(PhenotypeExecution {}),
+    //         Box::new(specs::PostTick {}),
+    //     ]
+    // }
 
     fn get_next_unit_resources(
         &self,
@@ -178,26 +185,17 @@ impl Chemistry for LeverChemistry {
     ) -> UnitAttributes {
         self.get_manifest().unit_attributes_of(vec![])
     }
-}
 
-mod specs {
-    use super::*;
-
-    pub struct PostTick {}
-
-    impl SimulationSpec for PostTick {
-        fn on_tick(&mut self, sim: &mut SimCell, context: &SpecContext) {}
-
-        fn get_name(&self) -> String {
-            "Lever::PostTick".to_string()
-        }
+    fn on_simulation_tick(&self, sim: &mut SimCell) {
+        allocate_stored_resources(
+            sim,
+            sim.unit_manifest,
+            &StoredResourceAllocationMethod::Every,
+        );
+        phenotype_execution(sim);
     }
 
-    mod tests {
-        #[allow(unused_imports)]
-        use super::*;
-        use crate::chemistry::actions::*;
-    }
+    fn on_simulation_finish(&self, sim: &mut SimCell) {}
 }
 
 mod tests {
@@ -207,7 +205,7 @@ mod tests {
 
     #[test]
     fn make_cheese_manifest() {
-        let cheese = LeverChemistry::construct();
+        let cheese = LeverChemistry::construct(PlaceUnitsMethod::Skip);
     }
 
     #[test]
@@ -235,12 +233,12 @@ mod tests {
             let action = actions.by_key("pull_lever");
 
             let src_coord = (2, 0);
-            let mut sim = fixtures::default_base(Some(vec![Box::new(PlaceUnits {
-                method: PlaceUnitsMethod::ManualSingleEntry {
+
+            let mut sim =
+                fixtures::default_base_with_unit_placement(PlaceUnitsMethod::ManualSingleEntry {
                     attributes: None,
                     coords: vec![src_coord],
-                },
-            })]));
+                });
 
             assert_eq!(sim.unit_entry_attributes[0][0].unwrap_integer(), 0);
             let params = vec![ActionParam::Constant(1)];

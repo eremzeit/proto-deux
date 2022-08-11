@@ -334,6 +334,7 @@ pub mod parsing_v2 {
     //use super::*;
     use crate::biology::genome::framed::common::*;
     use crate::biology::phenotype::framed::common::*;
+    use crate::simulation::common::variants::CheeseChemistry;
     use crate::simulation::common::*;
 
     #[test]

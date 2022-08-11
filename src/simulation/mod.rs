@@ -20,15 +20,13 @@ use self::config::*;
 use self::iterators::CoordIterator;
 use self::position::*;
 use self::simulation_data::{SimulationData, ThreadedSimulationReference};
-use self::specs::place_units::*;
-use self::specs::*;
 use self::unit::*;
 use self::unit_entry::{UnitEntry, UnitEntryData, UnitManifest};
 use self::unit_entry::{UnitEntryAttributes, UnitEntryId};
 use self::world::*;
-use crate::chemistry::cheese::CheeseChemistry;
 use crate::chemistry::properties::UnitEntryAttributeDefinition;
 use crate::chemistry::properties::{AttributeIndex, AttributeValue, ResourceAmount, ResourceIndex};
+use crate::chemistry::variants::cheese::CheeseChemistry;
 use crate::chemistry::{Chemistry, ChemistryInstance, ChemistryManifest};
 use crate::util::{Coord, GridSize2D};
 
@@ -50,17 +48,12 @@ pub type SimulationResourceAmount = ResourceAmount;
 
 pub struct Simulation {
     pub world: World,
-    pub specs: SimulationSpecs,
     pub chemistry: ChemistryInstance,
     pub attributes: Vec<SimulationAttributeValue>,
     pub unit_manifest: UnitManifest,
     pub unit_entry_attributes: Vec<UnitEntryAttributes>,
     pub iterations: u64,
-
     // pub control_events: Option<SimulationControlEventReceiver>,
-    _spec_timings: Vec<u128>,
-    _last_perf_update_time: Instant,
-    _last_perf_update_tick: u64,
 }
 
 // pub enum SimulationUiEvent {
@@ -108,13 +101,11 @@ impl Simulation {
         size: GridSize2D,
         iterations: u64,
         mut unit_manifest: UnitManifest,
-        specs: SimulationSpecs,
     ) -> Simulation {
         let world = World::new(size, &chemistry);
         chemistry.init_manifest();
         unit_manifest.init_manifest();
 
-        let _spec_timings = vec![0; specs.len()];
         let attributes = chemistry.get_default_simulation_attributes();
 
         let unit_entry_attributes = unit_manifest
@@ -131,15 +122,11 @@ impl Simulation {
 
         let mut simulation = Simulation {
             world,
-            specs,
             chemistry,
             iterations,
             unit_manifest,
             attributes,
             unit_entry_attributes,
-            _spec_timings,
-            _last_perf_update_time: Instant::now(),
-            _last_perf_update_tick: 0,
         };
 
         simulation.init();
@@ -158,32 +145,18 @@ impl Simulation {
             .collect::<Vec<_>>();
         sim_log!("UNIT ENTRIES: {:?}", &entries);
 
-        self.chemistry.init_pos_properties(&mut self.world);
-        self.chemistry.init_world_custom(&mut self.world);
-        let context = self.context();
-
-        for spec in self.specs.iter_mut() {
-            sim_log!("INIT SPEC: {}", spec.get_name());
-
-            spec.on_init(
-                &mut SimCell {
-                    attributes: &mut self.attributes,
-                    world: &mut self.world,
-                    unit_entry_attributes: &mut self.unit_entry_attributes,
-                    unit_manifest: &self.unit_manifest,
-                    chemistry: &self.chemistry,
-                },
-                &context,
-            );
-        }
+        self.chemistry.on_simulation_init(&mut SimCell {
+            attributes: &mut self.attributes,
+            world: &mut self.world,
+            unit_entry_attributes: &mut self.unit_entry_attributes,
+            unit_manifest: &self.unit_manifest,
+            chemistry: &self.chemistry,
+        });
     }
     pub fn _start(&mut self) {
         while self.world.tick < self.iterations {
             self.tick();
         }
-    }
-    pub fn context(&self) -> SpecContext {
-        SpecContext {}
     }
 
     pub fn editable(&mut self) -> SimCell {
@@ -196,24 +169,24 @@ impl Simulation {
         }
     }
 
-    // pub fn _update_all(&mut self) {
-    //     for coord in CoordIterator::new(self.size.clone())  {
-    //         send_event(&mut self.event_intake, SimulationEvent::PositionUpdated(coord));
+    // pub fn sim_cell(&mut self) -> SimCell {
+    //     SimCell {
+    //         attributes: &mut self.attributes,
+    //         world: &mut self.world,
+    //         unit_entry_attributes: &mut self.unit_entry_attributes,
+    //         unit_manifest: &self.unit_manifest,
+    //         chemistry: &self.chemistry,
     //     }
     // }
+
     pub fn finish(&mut self) {
-        for spec in self.specs.iter_mut() {
-            spec.on_end(
-                &mut SimCell {
-                    attributes: &mut self.attributes,
-                    world: &mut self.world,
-                    unit_entry_attributes: &mut self.unit_entry_attributes,
-                    unit_manifest: &self.unit_manifest,
-                    chemistry: &self.chemistry,
-                },
-                &SpecContext {},
-            );
-        }
+        self.chemistry.on_simulation_finish(&mut SimCell {
+            attributes: &mut self.attributes,
+            world: &mut self.world,
+            unit_entry_attributes: &mut self.unit_entry_attributes,
+            unit_manifest: &self.unit_manifest,
+            chemistry: &self.chemistry,
+        });
     }
 
     pub fn tick(&mut self) {
@@ -221,47 +194,55 @@ impl Simulation {
             println!("tick: {}", self.world.tick);
         }
 
-        if self.world.tick < self.iterations {
-            for (i, spec) in self.specs.iter_mut().enumerate() {
-                //println!("spec tick: {}", spec.get_name());
-                let before = Instant::now();
+        self.chemistry.on_simulation_tick(&mut SimCell {
+            attributes: &mut self.attributes,
+            world: &mut self.world,
+            unit_entry_attributes: &mut self.unit_entry_attributes,
+            unit_manifest: &self.unit_manifest,
+            chemistry: &self.chemistry,
+        });
 
-                spec.on_tick(
-                    &mut SimCell {
-                        attributes: &mut self.attributes,
-                        world: &mut self.world,
-                        unit_entry_attributes: &mut self.unit_entry_attributes,
-                        unit_manifest: &self.unit_manifest,
-                        chemistry: &self.chemistry,
-                    },
-                    &SpecContext {},
-                );
+        // if self.world.tick < self.iterations {
+        //     for (i, spec) in self.specs.iter_mut().enumerate() {
+        //         //println!("spec tick: {}", spec.get_name());
+        //         let before = Instant::now();
 
-                let spec_ms = Instant::now().duration_since(before).as_micros();
-                //println!("{} - {}microsecs", spec.get_name(), spec_ms);
-                self._spec_timings[i] += spec_ms;
-            }
+        //         spec.on_tick(
+        //             &mut SimCell {
+        //                 attributes: &mut self.attributes,
+        //                 world: &mut self.world,
+        //                 unit_entry_attributes: &mut self.unit_entry_attributes,
+        //                 unit_manifest: &self.unit_manifest,
+        //                 chemistry: &self.chemistry,
+        //             },
+        //             &SpecContext {},
+        //         );
 
-            let ms_since_perf_update = Instant::now()
-                .duration_since(self._last_perf_update_time)
-                .as_millis();
-            let total_ticks = (self.world.tick - self._last_perf_update_tick).max(1);
+        //         let spec_ms = Instant::now().duration_since(before).as_micros();
+        //         //println!("{} - {}microsecs", spec.get_name(), spec_ms);
+        //         self._spec_timings[i] += spec_ms;
+        //     }
 
-            if ms_since_perf_update > 10000 {
-                let averages = self
-                    ._spec_timings
-                    .iter()
-                    .map(|x| -> u128 { *x / total_ticks as u128 })
-                    .collect::<Vec<_>>();
-                print_spec_time_averages(&averages, &self.specs);
-                self._spec_timings = vec![0; self.specs.len()];
+        // let ms_since_perf_update = Instant::now()
+        //     .duration_since(self._last_perf_update_time)
+        //     .as_millis();
+        // let total_ticks = (self.world.tick - self._last_perf_update_tick).max(1);
 
-                self._last_perf_update_time = Instant::now();
-                self._last_perf_update_tick = self.world.tick;
-            }
+        // if ms_since_perf_update > 10000 {
+        //     let averages = self
+        //         ._spec_timings
+        //         .iter()
+        //         .map(|x| -> u128 { *x / total_ticks as u128 })
+        //         .collect::<Vec<_>>();
+        //     print_spec_time_averages(&averages, &self.specs);
+        //     self._spec_timings = vec![0; self.specs.len()];
 
-            self.world.tick = self.world.tick + 1;
-        }
+        //     self._last_perf_update_time = Instant::now();
+        //     self._last_perf_update_tick = self.world.tick;
+        // }
+
+        // self.world.tick = self.world.tick + 1;
+        // }
         if self.world.tick >= self.iterations - 1 {
             self.finish();
         }
@@ -318,25 +299,25 @@ fn add_times(times: &Vec<u128>) -> u128 {
     total
 }
 
-fn print_spec_time_averages(spec_times: &Vec<u128>, specs: &SimulationSpecs) {
-    let mut times = spec_times.iter().enumerate().collect::<Vec<_>>();
-    times.sort_by(|a, b| b.1.cmp(a.1));
-    let mut slowest = times.to_vec();
-    slowest.truncate(2);
+// fn print_spec_time_averages(spec_times: &Vec<u128>, specs: &SimulationSpecs) {
+//     let mut times = spec_times.iter().enumerate().collect::<Vec<_>>();
+//     times.sort_by(|a, b| b.1.cmp(a.1));
+//     let mut slowest = times.to_vec();
+//     slowest.truncate(2);
 
-    let mut s = "".to_string();
+//     let mut s = "".to_string();
 
-    for (i, time) in &slowest {
-        s = format!(
-            "{}, [{} - ({}us)]",
-            s,
-            specs.get(*i).unwrap().get_name(),
-            *time
-        );
-    }
+//     for (i, time) in &slowest {
+//         s = format!(
+//             "{}, [{} - ({}us)]",
+//             s,
+//             specs.get(*i).unwrap().get_name(),
+//             *time
+//         );
+//     }
 
-    println!("PERF: {}us | {}", add_times(spec_times), s);
-}
+//     println!("PERF: {}us | {}", add_times(spec_times), s);
+// }
 
 pub fn increment_simulation_attribute_integer(
     val: &SimulationAttributeValue,
@@ -354,6 +335,8 @@ pub struct SimCell<'a> {
 }
 
 mod tests {
+    use crate::simulation::common::helpers::place_units::PlaceUnitsMethod;
+
     use super::common::*;
     #[allow(unused_imports)]
     use super::*;
@@ -362,23 +345,26 @@ mod tests {
     fn test_attribute_initialization() {
         let mut sim = SimulationBuilder::default()
             .size((5, 5))
-            .chemistry(CheeseChemistry::construct())
+            .chemistry(CheeseChemistry::construct(
+                PlaceUnitsMethod::ManualSingleEntry {
+                    attributes: None,
+                    coords: vec![(1, 1)],
+                },
+            ))
             .headless(true)
-            .specs(vec![Box::new(PlaceUnits {
-                method: PlaceUnitsMethod::LinearBottomMiddle { attributes: None },
-            })])
             .unit_manifest(UnitManifest {
                 units: vec![UnitEntry::new("main", EmptyPhenotype::construct())],
             })
             .to_simulation();
-        assert_eq!(sim.world.has_unit_at(&(2, 0)), true);
+        assert_eq!(sim.world.has_unit_at(&(1, 1)), true);
 
         let id = sim
             .chemistry
             .get_manifest()
             .unit_attribute_by_key("rolling_consumption")
             .id;
-        match sim.world.get_unit_attribute_at(&(2, 0), id as usize) {
+
+        match sim.world.get_unit_attribute_at(&(1, 1), id as usize) {
             UnitAttributeValue::Integer(b) => {
                 assert_eq!(b, 0);
             }

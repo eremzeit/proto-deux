@@ -1,9 +1,9 @@
 use crate::chemistry::*;
 use crate::simulation;
 use crate::simulation::common::{
-    get_chemistry_by_key, EmptyPhenotype, Phenotype, PlaceUnitsMethod, SimulationControlEvent,
-    SimulationControlEventReceiver, SimulationSpec, UnitAttributeValue, UnitEntry,
-    UnitEntryBuilder, UnitEntryData, UnitManifest, UnitResourceAmount,
+    get_chemistry_by_key, EmptyPhenotype, Phenotype, SimulationControlEvent,
+    SimulationControlEventReceiver, UnitAttributeValue, UnitEntry, UnitEntryBuilder, UnitEntryData,
+    UnitManifest, UnitResourceAmount,
 };
 use crate::simulation::fitness::*;
 use crate::simulation::unit::util::convert_maybe_resources_to_resources;
@@ -14,6 +14,8 @@ use std::rc::Rc;
 use std::sync::Arc;
 
 pub mod builder {
+    use crate::simulation::common::helpers::place_units::PlaceUnitsMethod;
+
     use super::*;
     #[derive(Builder)]
     #[builder(pattern = "owned", setter(strip_option))]
@@ -24,9 +26,7 @@ pub mod builder {
         pub iterations: u64,
         pub chemistry_key: String,
         pub chemistry: ChemistryInstance,
-        pub specs: Vec<Box<dyn SimulationSpec>>,
         pub headless: bool,
-        pub unit_placement: PlaceUnitsMethod,
     }
 
     impl SimulationBuilder {
@@ -39,19 +39,21 @@ pub mod builder {
                 None => {
                     self.chemistry = Some(get_chemistry_by_key(
                         &self.chemistry_key.as_ref().unwrap_or(&"base".to_string()),
+                        PlaceUnitsMethod::Default,
                     ));
                 }
             }
         }
 
-        pub fn chemistry_specs(
-            &mut self,
-            unit_placement: PlaceUnitsMethod,
-        ) -> Vec<Box<dyn SimulationSpec>> {
-            self._init_chemistry();
-            let chemistry = self.chemistry.as_mut().unwrap();
-            chemistry.construct_specs(self.unit_placement.as_mut().unwrap())
-        }
+        // attemting to remove this
+        // pub fn chemistry_specs(
+        //     &mut self,
+        //     unit_placement: PlaceUnitsMethod,
+        // ) -> Vec<Box<dyn SimulationSpec>> {
+        //     self._init_chemistry();
+        //     let chemistry = self.chemistry.as_mut().unwrap();
+        //     chemistry.construct_specs(self.unit_placement.as_mut().unwrap())
+        // }
 
         pub fn to_simulation(mut self) -> simulation::Simulation {
             let size = self.size.unwrap();
@@ -60,11 +62,14 @@ pub mod builder {
              * INIT CHEMISTRY
              */
             self._init_chemistry();
-            if self.chemistry.is_none() {
-                self.chemistry = Some(get_chemistry_by_key(
-                    self.chemistry_key.as_ref().unwrap_or(&"base".to_string()),
-                ));
-            }
+
+            // will this break since i uncommented?
+            // if self.chemistry.is_none() {
+            //     self.chemistry = Some(get_chemistry_by_key(
+            //         self.chemistry_key.as_ref().unwrap_or(&"base".to_string()),
+            //         PlaceUnitsMethod::Default,
+            //     ));
+            // }
             let chemistry_manifest = self.chemistry.as_ref().unwrap().get_manifest();
 
             /*
@@ -94,13 +99,9 @@ pub mod builder {
             /*
              * INIT SPECS
              */
-            let mut _specs: Option<Vec<Box<dyn SimulationSpec>>> = None;
-            std::mem::swap(&mut self.specs, &mut _specs);
-
-            let specs: Vec<Box<dyn SimulationSpec>> = match _specs {
-                Some(s) => s,
-                None => self.chemistry_specs(self.unit_placement.as_ref().unwrap().clone()),
-            };
+            self._init_chemistry();
+            let chemistry = self.chemistry.as_mut().unwrap();
+            // let specs = chemistry.construct_specs(self.unit_placement.as_mut().unwrap());
 
             let iterations = match self.iterations {
                 Some(i) => i,
@@ -115,7 +116,6 @@ pub mod builder {
                 size,
                 iterations,
                 unit_manifest.unwrap(),
-                specs,
             );
 
             sim

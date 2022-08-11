@@ -4,7 +4,7 @@ use std::sync::mpsc::{channel, Receiver};
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 
-use crate::chemistry::{BaseChemistry, CheeseChemistry};
+use crate::chemistry::variants::{BaseChemistry, CheeseChemistry};
 use crate::simulation::common::SimulationControlEventReceiver;
 use crate::simulation::simulation_data::{SimulationData, ThreadedSimulationReference};
 use crate::simulation::Simulation;

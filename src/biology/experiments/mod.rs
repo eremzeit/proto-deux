@@ -1,6 +1,8 @@
-use crate::biology::genome::framed::common::*;
 use crate::biology::phenotype::framed::common::*;
 use crate::simulation::common::*;
+use crate::{
+    biology::genome::framed::common::*, simulation::common::helpers::place_units::PlaceUnitsMethod,
+};
 use rand::Rng;
 use std::fmt::{Debug, Formatter, Result};
 
@@ -37,7 +39,6 @@ pub struct ExperimentSimSettings {
     pub num_simulation_ticks: u64,
     pub grid_size: (usize, usize),
     pub num_genomes_per_sim: usize,
-    pub unit_placement: PlaceUnitsMethod,
     pub iterations: usize,
     pub default_unit_resources: Vec<(&'static str, UnitResourceAmount)>,
     pub default_unit_attr: Vec<(&'static str, UnitAttributeValue)>,
@@ -235,7 +236,10 @@ impl SimpleExperiment {
         &mut self,
         genome_uids: &Vec<ExperimentGenomeUid>,
     ) -> Vec<TrialResultItem> {
-        let chemistry = get_chemistry_by_key(&self.settings.chemistry_key.to_string());
+        let chemistry = get_chemistry_by_key(
+            &self.settings.chemistry_key.to_string(),
+            PlaceUnitsMethod::Default,
+        );
         let sm = SensorManifest::with_default_sensors(chemistry.get_manifest());
         let gm = &self.settings.genetic_manifest;
         let unit_entries = self._get_unit_entries_for_uids(
@@ -251,7 +255,7 @@ impl SimpleExperiment {
             .size(self.settings.sim_settings.grid_size.clone())
             .iterations(self.settings.sim_settings.num_simulation_ticks)
             .chemistry_key(self.settings.chemistry_key.clone())
-            .unit_placement(self.settings.sim_settings.unit_placement.clone())
+            // .unit_placement()
             .unit_manifest(UnitManifest {
                 units: unit_entries,
             })
@@ -674,12 +678,16 @@ pub mod tests {
     use super::*;
     use crate::biology::genome::framed::common::*;
     use crate::biology::phenotype::framed::common::*;
+    use crate::simulation::common::helpers::place_units::PlaceUnitsMethod;
     use crate::simulation::common::*;
 
     #[test]
     fn genome_grouping() {
         let chemistry_key = "cheese".to_string();
-        let chemistry = get_chemistry_by_key(&chemistry_key);
+        let chemistry = get_chemistry_by_key(
+            &chemistry_key,
+            PlaceUnitsMethod::SimpleDrop { attributes: None },
+        );
         let gm = GeneticManifest::new();
         let cm = chemistry.get_manifest();
         let sm = SensorManifest::with_default_sensors(&cm);
@@ -692,7 +700,6 @@ pub mod tests {
                 num_simulation_ticks: 10,
                 grid_size: (10, 10),
                 num_genomes_per_sim: 2,
-                unit_placement: PlaceUnitsMethod::SimpleDrop { attributes: None },
                 iterations: 20,
                 default_unit_resources: vec![("cheese", 200)],
                 default_unit_attr: vec![],
@@ -714,7 +721,10 @@ pub mod tests {
     #[test]
     fn test_partition_into_groups() {
         let chemistry_key = "cheese".to_string();
-        let chemistry = get_chemistry_by_key(&chemistry_key);
+        let chemistry = get_chemistry_by_key(
+            &chemistry_key,
+            PlaceUnitsMethod::SimpleDrop { attributes: None },
+        );
         let gm = GeneticManifest::new();
         let cm = chemistry.get_manifest();
         let sm = SensorManifest::with_default_sensors(&cm);
@@ -727,7 +737,6 @@ pub mod tests {
                 num_simulation_ticks: 10,
                 grid_size: (10, 10),
                 num_genomes_per_sim: 2,
-                unit_placement: PlaceUnitsMethod::SimpleDrop { attributes: None },
                 iterations: 20,
                 default_unit_resources: vec![("cheese", 200)],
                 default_unit_attr: vec![],
@@ -750,7 +759,7 @@ pub mod tests {
     #[test]
     fn test_random_genome_generation() {
         let chemistry_key = "cheese".to_string();
-        let chemistry = get_chemistry_by_key(&chemistry_key);
+        let chemistry = get_chemistry_by_key(&chemistry_key, PlaceUnitsMethod::Skip);
         let gm = GeneticManifest::new();
         let cm = chemistry.get_manifest();
         let sm = SensorManifest::with_default_sensors(&cm);
@@ -764,7 +773,10 @@ pub mod tests {
     #[test]
     fn test_adjust_rank() {
         let chemistry_key = "cheese".to_string();
-        let chemistry = get_chemistry_by_key(&chemistry_key);
+        let chemistry = get_chemistry_by_key(
+            &chemistry_key,
+            PlaceUnitsMethod::SimpleDrop { attributes: None },
+        );
         let gm = GeneticManifest::new();
         let cm = chemistry.get_manifest();
         let sm = SensorManifest::with_default_sensors(&cm);
@@ -772,6 +784,7 @@ pub mod tests {
         //assert_eq!(vals1.len(), 100);
         //let genome1 = FramedGenomeParser::parse(vals1, cm.clone(), sm.clone(), gm.clone());
         //print!("random genome: {}\n", genome1.display(&sm, &cm, &gm));
+
         let settings = SimpleExperimentSettings {
             cull_strategy: CullStrategy::WorstFirst,
             fitness_calculation_key: "total_cheese_consumed".to_string(),
@@ -780,7 +793,6 @@ pub mod tests {
                 num_simulation_ticks: 10,
                 grid_size: (10, 10),
                 num_genomes_per_sim: 2,
-                unit_placement: PlaceUnitsMethod::SimpleDrop { attributes: None },
                 iterations: 20,
                 default_unit_resources: vec![("cheese", 200)],
                 default_unit_attr: vec![],
@@ -836,7 +848,10 @@ pub mod tests {
     #[test]
     fn test_pull_genome() {
         let chemistry_key = "cheese".to_string();
-        let chemistry = get_chemistry_by_key(&chemistry_key);
+        let chemistry = get_chemistry_by_key(
+            &chemistry_key,
+            PlaceUnitsMethod::SimpleDrop { attributes: None },
+        );
         let gm = GeneticManifest::new();
         let cm = chemistry.get_manifest();
         let sm = SensorManifest::with_default_sensors(&cm);
@@ -849,7 +864,6 @@ pub mod tests {
                 num_simulation_ticks: 10,
                 grid_size: (10, 10),
                 num_genomes_per_sim: 2,
-                unit_placement: PlaceUnitsMethod::SimpleDrop { attributes: None },
                 iterations: 20,
                 default_unit_resources: vec![("cheese", 200)],
                 default_unit_attr: vec![],

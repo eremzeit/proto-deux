@@ -3,7 +3,7 @@ use std::collections::HashMap;
 
 use std::rc::Rc;
 
-use crate::chemistry::nanobots::NanobotsChemistry;
+use crate::chemistry::variants::nanobots::NanobotsChemistry;
 use crate::simulation::common::*;
 use crate::simulation::position::{
     PositionAttributeIndex, PositionAttributeValue, PositionResourceAmount, PositionResourceIndex,
@@ -11,8 +11,6 @@ use crate::simulation::position::{
 use crate::simulation::unit::{
     UnitAttributeIndex, UnitAttributeValue, UnitResourceAmount, UnitResourceIndex,
 };
-
-use crate::simulation::specs::place_units::{PlaceUnits, PlaceUnitsMethod};
 
 use crate::util::*;
 
@@ -22,13 +20,18 @@ use crate::chemistry::actions::default_actions;
 use crate::simulation::common::{get_chemistry_by_key, GridDirection, UnitEntry};
 
 pub mod set_unit_resource {
+    use crate::simulation::common::helpers::place_units::PlaceUnitsMethod;
+
     use super::*;
 
     #[test]
     fn test__evaluate() {
         let actions = default_actions();
         let action = actions.by_key("set_unit_resource");
-        let chemistry = NanobotsChemistry::construct();
+        let chemistry = NanobotsChemistry::construct(PlaceUnitsMethod::ManualSingleEntry {
+            attributes: None,
+            coords: vec![(1, 1)],
+        });
 
         let unit_manifest = UnitManifest {
             units: vec![UnitEntry::new("main", EmptyPhenotype::construct())],
@@ -37,12 +40,6 @@ pub mod set_unit_resource {
             .size((5, 5))
             .headless(true)
             .chemistry(chemistry)
-            .specs(vec![Box::new(PlaceUnits {
-                method: PlaceUnitsMethod::ManualSingleEntry {
-                    attributes: None,
-                    coords: vec![(1, 1)],
-                },
-            })])
             .unit_manifest(unit_manifest)
             .to_simulation();
 
@@ -62,7 +59,9 @@ pub mod set_unit_resource {
 
 pub mod offset_unit_resource {
     use super::*;
-    use crate::chemistry::cheese;
+    use crate::{
+        chemistry::variants::cheese, simulation::common::helpers::place_units::PlaceUnitsMethod,
+    };
 
     #[test]
     fn test_evaluate_strict() {
@@ -72,13 +71,12 @@ pub mod offset_unit_resource {
         let mut sim = SimulationBuilder::default()
             .size((5, 5))
             .headless(true)
-            .chemistry(NanobotsChemistry::construct())
-            .specs(vec![Box::new(PlaceUnits {
-                method: PlaceUnitsMethod::ManualSingleEntry {
+            .chemistry(NanobotsChemistry::construct(
+                PlaceUnitsMethod::ManualSingleEntry {
                     attributes: None,
                     coords: vec![(2, 2)],
                 },
-            })])
+            ))
             .unit_manifest(UnitManifest {
                 units: vec![UnitEntry::new("main", EmptyPhenotype::construct())],
             })
@@ -104,17 +102,18 @@ pub mod offset_unit_resource {
 
 pub mod grow_unit {
     use super::*;
+    use crate::simulation::common::helpers::place_units::PlaceUnitsMethod;
     use crate::tests::fixtures;
     use crate::util::*;
     fn test_new_unit(src_coord: Coord, dir: GridDirection) {
         let actions = default_actions();
         let action = actions.by_key("new_unit");
-        let mut sim = fixtures::default_base(Some(vec![Box::new(PlaceUnits {
-            method: PlaceUnitsMethod::ManualSingleEntry {
+
+        let mut sim =
+            fixtures::default_base_with_unit_placement(PlaceUnitsMethod::ManualSingleEntry {
                 attributes: None,
                 coords: vec![src_coord],
-            },
-        })]));
+            });
 
         assert_eq!(
             sim.world.get_position_at(&src_coord).unwrap().has_unit(),

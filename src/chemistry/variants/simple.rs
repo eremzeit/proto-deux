@@ -5,8 +5,6 @@
 // use crate::chemistry::*;
 //
 // use crate::simulation::common::*;
-// use crate::simulation::specs::place_units::PlaceUnits;
-// use crate::simulation::specs::SimulationSpec;
 // use crate::simulation::unit::*;
 // use crate::simulation::world::World;
 // use crate::simulation::Simulation;

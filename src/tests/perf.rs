@@ -1,11 +1,9 @@
 use crate::chemistry::actions::{ActionDefinition, ActionParam};
-use crate::chemistry::{BaseChemistry, CheeseChemistry, Chemistry};
+use crate::chemistry::variants::{BaseChemistry, CheeseChemistry};
 use crate::simulation::common::*;
 use crate::simulation::config::SimulationConfig;
 use crate::simulation::config::*;
 use crate::simulation::executors::simple::SimpleSimulationExecutor;
-use crate::simulation::specs::place_units::*;
-use crate::simulation::specs::SimulationSpec;
 use crate::simulation::unit::{UnitAttributeValue, UnitAttributes};
 use crate::simulation::world::*;
 use ndarray::parallel::prelude::IntoParallelIterator;

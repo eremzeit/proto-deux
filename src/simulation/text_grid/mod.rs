@@ -1,4 +1,4 @@
-use crate::chemistry::cheese::*;
+use crate::chemistry::variants::cheese::*;
 use crate::chemistry::*;
 use crate::simulation::common::*;
 use crate::simulation::*;
@@ -28,6 +28,8 @@ impl GridCellRenderer for ResourceGridCellRenderer {
 }
 
 mod tests {
+    use crate::simulation::common::helpers::place_units::PlaceUnitsMethod;
+
     #[allow(unused_imports)]
     use super::*;
 
@@ -35,10 +37,9 @@ mod tests {
     fn render_amounts() {
         let mut sim = SimulationBuilder::default()
             .size((2, 2))
-            .chemistry(CheeseChemistry::construct())
-            .specs(vec![Box::new(PlaceUnits {
-                method: PlaceUnitsMethod::LinearBottomMiddle { attributes: None },
-            })])
+            .chemistry(CheeseChemistry::construct(
+                PlaceUnitsMethod::LinearBottomMiddle { attributes: None },
+            ))
             .headless(true)
             .unit_manifest(UnitManifest {
                 units: vec![UnitEntry::new("main", EmptyPhenotype::construct())],

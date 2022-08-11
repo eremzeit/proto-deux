@@ -1,30 +1,26 @@
 pub mod actions;
-pub mod cheese;
-pub mod lever;
+pub mod helpers;
 pub mod manifest;
-pub mod nanobots;
 pub mod properties;
 pub mod reactions;
-pub mod simple;
+pub mod variants;
 
+use self::helpers::place_units::place_units;
+use self::helpers::place_units::PlaceUnitsMethod;
 use self::properties::*;
 use self::reactions::*;
+use self::variants::LeverChemistry;
 use crate::chemistry::actions::{
     default_actions, ActionDefinition, ActionParam, ActionParamType, ActionSet,
 };
 use crate::simulation::common::*;
-use crate::simulation::specs::place_units::{PlaceUnits, PlaceUnitsMethod};
-use crate::simulation::specs::SimulationSpec;
 use crate::simulation::SimulationAttributes;
 use crate::util::{grid_direction_from_num, Coord};
 use std::rc::Rc;
 use std::sync::Mutex;
 use std::time::Instant;
 
-pub use crate::chemistry::cheese::CheeseChemistry;
-pub use crate::chemistry::lever::LeverChemistry;
 pub use crate::chemistry::manifest::*;
-pub use crate::chemistry::nanobots::NanobotsChemistry;
 
 pub type ReactionId = u8;
 pub type ChemistryInstance = Box<dyn Chemistry>;
@@ -32,11 +28,11 @@ pub type ChemistryInstance = Box<dyn Chemistry>;
 /* used to pass values from the phenotype to the action execution
  * to replace placeholders */
 pub type ActionArgValue = u32;
-pub fn get_chemistry_by_key(key: &str) -> Box<dyn Chemistry> {
+pub fn get_chemistry_by_key(key: &str, place_units_method: PlaceUnitsMethod) -> Box<dyn Chemistry> {
     match key {
-        "cheese" => CheeseChemistry::construct(),
-        "lever" => LeverChemistry::construct(),
-        _ => CheeseChemistry::construct(),
+        "cheese" => CheeseChemistry::construct(place_units_method),
+        "lever" => LeverChemistry::construct(place_units_method),
+        _ => CheeseChemistry::construct(place_units_method),
     }
 }
 
@@ -45,6 +41,8 @@ pub trait Chemistry {
         let mut manifest = self.get_manifest_mut();
         manifest.normalize_manifest();
     }
+
+    fn get_unit_placement(&self) -> PlaceUnitsMethod;
 
     fn get_manifest(&self) -> &ChemistryManifest;
     fn get_manifest_mut(&mut self) -> &mut ChemistryManifest;
@@ -113,6 +111,19 @@ pub trait Chemistry {
         vec![]
     }
 
+    fn on_simulation_init(&self, sim: &mut SimCell) {
+        self.init_pos_properties(&mut sim.world);
+        self.init_world_custom(&mut sim.world);
+        self.init_units(sim);
+    }
+    fn on_simulation_tick(&self, sim: &mut SimCell);
+    fn on_simulation_finish(&self, sim: &mut SimCell);
+
+    fn init_world_custom(&self, world: &mut World) {}
+    fn init_units(&self, sim: &mut SimCell) {
+        place_units(sim, &self.get_unit_placement());
+    }
+
     fn init_pos_properties(&self, world: &mut World) {
         for coord in CoordIterator::new(world.size.clone()) {
             let pos_attributes = self.get_manifest().empty_position_attributes();
@@ -120,140 +131,30 @@ pub trait Chemistry {
         }
     }
 
-    fn init_unit_properties(&self, world: &mut World) {
-        for coord in CoordIterator::new(world.size.clone()) {
-            if world.has_unit_at(&coord) {
-                let unit_resources = self.get_manifest().empty_unit_resources();
-                world.set_unit_resources_at(&coord, unit_resources);
-                //println!("resources: {:?}, {:?}", coord, unit_resources);
-                world.set_unit_attributes_at(&coord, self.get_manifest().empty_unit_attributes());
-            }
-        }
-    }
-
-    // fn init_world(&self, world: &mut World, sim_config: &SimulationConfig) {
-    //   for coord in CoordIterator::new(sim_config.size) {
-    //     let pos_attributes = self.get_manifest().empty_position_attributes();
-    //     world.set_pos_attributes_at(&coord, pos_attributes);
-
-    //     if world.has_unit_at(&coord) {
-    //       let unit_resources = self.get_manifest().empty_unit_resources();
-    //       world.set_unit_resources_at(&coord, unit_resources);
-    //       //println!("resources: {:?}, {:?}", coord, unit_resources);
-    //       world.set_unit_attributes_at(&coord, self.get_manifest().empty_unit_attributes());
+    // fn init_unit_properties(&self, world: &mut World) {
+    //     for coord in CoordIterator::new(world.size.clone()) {
+    //         if world.has_unit_at(&coord) {
+    //             println!("updating properties at: {:?}", coord);
+    //             let unit_resources = self.get_manifest().empty_unit_resources();
+    //             world.set_unit_resources_at(&coord, unit_resources);
+    //             //println!("resources: {:?}, {:?}", coord, unit_resources);
+    //             world.set_unit_attributes_at(&coord, self.get_manifest().empty_unit_attributes());
+    //         }
     //     }
-    //   }
     // }
 
-    fn init_world_custom(&self, world: &mut World) {}
+    /* TODO: remove the concept of specs, which were meant to be a dynamic list of behaviors that could
+    be configured on the fly independent of the chemistry.
+        We already have the concept of chemistry.on_init().  Lets just add the concept of chemistry.on_tick().
 
-    // used for extreme convenience and backwards compatability
-    // only.  doesn't allow for any configuration.
-    //fn default_specs(&self) -> Vec<std::boxed::Box<dyn SimulationSpec>>;
-
-    // if we ever need custom init data per each chemistry type then
-    // we can convert this to accepting an enum of where each variant
-    // is a named dictionary.
-    fn construct_specs(
-        &self,
-        unit_placement: &PlaceUnitsMethod,
-    ) -> Vec<std::boxed::Box<dyn SimulationSpec>>;
-}
-
-pub struct BaseChemistry {
-    pub manifest: ChemistryManifest,
-}
-
-impl BaseChemistry {
-    pub fn construct() -> ChemistryInstance {
-        wrap_chemistry!(BaseChemistry {
-            manifest: BaseChemistry::default_manifest(),
-        })
-    }
-
-    pub fn default_manifest() -> ChemistryManifest {
-        let reactions = vec![];
-
-        let mut manifest = ChemistryManifest {
-            simulation_attributes: vec![],
-            reactions,
-            action_set: default_actions(),
-
-            position_resources: vec![],
-
-            unit_resources: vec![UnitResourceDefinition::new("energy", false, 0)],
-            unit_attributes: vec![UnitAttributeDefinition::new(
-                "is_foo",
-                AttributeDefinitionType::Boolean,
-                0,
-            )],
-            position_attributes: vec![PositionAttributeDefinition::new(
-                "is_rooted",
-                AttributeDefinitionType::Boolean,
-                0,
-            )],
-
-            unit_entry_attributes: vec![],
-
-            all_properties: vec![],
-        };
-        manifest.normalize_manifest();
-
-        manifest
-    }
-}
-
-impl Chemistry for BaseChemistry {
-    fn get_key(&self) -> String {
-        "base".to_string()
-    }
-
-    fn get_manifest(&self) -> &ChemistryManifest {
-        &self.manifest
-    }
-
-    fn get_manifest_mut(&mut self) -> &mut ChemistryManifest {
-        &mut self.manifest
-    }
-
-    // fn default_specs(&self) -> Vec<std::boxed::Box<dyn SimulationSpec>> {
-    //     vec![Box::new(PlaceUnits {
-    //         method: PlaceUnitsMethod::LinearBottomMiddle { attributes: None },
-    //     })]
-    // }
-
-    fn construct_specs(
-        &self,
-        unit_placement: &PlaceUnitsMethod,
-    ) -> Vec<std::boxed::Box<dyn SimulationSpec>> {
-        vec![
-            Box::new(PlaceUnits {
-                method: unit_placement.clone(),
-            }),
-            Box::new(PhenotypeExecution {}),
-        ]
-    }
-
-    // fn default_specs(&self) -> Vec<std::boxed::Box<dyn SimulationSpec>> {
-    //     vec![Box::new(PlaceUnits {
-    //         method: PlaceUnitsMethod::LinearBottomMiddle { attributes: None },
-    //     })]
-    // }
-
-    fn get_default_simulation_attributes(&self) -> Vec<SimulationAttributeValue> {
-        self.get_manifest().empty_simulation_attributes()
-    }
-    fn get_default_unit_entry_attributes(&self) -> Vec<UnitEntryAttributeValue> {
-        self.get_manifest().empty_unit_entry_attributes()
-    }
-    fn get_next_unit_resources(
-        &self,
-        entry: &UnitEntryData,
-        pos: &Position,
-        unit: &Unit,
-        world: &World,
-        tick_multiplier: u32,
-    ) -> UnitResources {
-        self.get_manifest().empty_unit_resources()
-    }
+        We can still have behaviors called specs defined outside a chemistry that can be shared across chemistries.
+        The order of specs will be hard-coded on a per-chemistry basis.
+        If we want to configure the behavior of those behaviors on a per-chemistry basis we can pass
+        in a configuration object into the chemistry itself.  The configuration object itself can be clonable.
+        The chemistry won't be cloneable because it is used as a trait object by the simulation struct.
+    */
+    // fn construct_specs(
+    //     &self,
+    //     unit_placement: &PlaceUnitsMethod,
+    // ) -> Vec<std::boxed::Box<dyn SimulationSpec>>;
 }

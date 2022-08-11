@@ -1,4 +1,3 @@
-use crate::chemistry::{BaseChemistry, CheeseChemistry};
 use crate::simulation::common::{
     Position, Simulation, SimulationConfig, SimulationControlEvent, SimulationControlEventSender,
     SimulationData,

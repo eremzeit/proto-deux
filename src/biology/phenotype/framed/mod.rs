@@ -127,6 +127,8 @@ pub mod test {
     use crate::biology::genome::framed::parsing::FramedGenomeParser;
     use crate::biology::genome::framed::render::render_frames;
     use crate::biology::genome::framed::*;
+    use crate::chemistry::helpers::place_units::PlaceUnitsMethod;
+    use crate::chemistry::variants::CheeseChemistry;
     use crate::simulation::common::*;
     use std::rc::Rc;
     pub fn count_units(world: &World) -> u64 {
@@ -158,12 +160,13 @@ pub mod test {
         let mut sim = SimulationBuilder::default()
             .size((3, 3))
             .iterations(100)
-            .chemistry(CheeseChemistry::construct())
+            .chemistry(CheeseChemistry::construct(
+                PlaceUnitsMethod::ManualSingleEntry {
+                    attributes: None,
+                    coords: vec![(1, 1)],
+                },
+            ))
             .headless(true)
-            .unit_placement(PlaceUnitsMethod::ManualSingleEntry {
-                attributes: None,
-                coords: vec![(1, 1)],
-            })
             .unit_manifest(UnitManifest {
                 units: vec![UnitEntryBuilder::default()
                     .species_name("main".to_string())

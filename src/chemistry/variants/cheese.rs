@@ -4,9 +4,11 @@ use crate::chemistry::properties::*;
 use crate::chemistry::reactions::*;
 use crate::chemistry::*;
 
+use crate::simulation::common::helpers::phenotype_execution::phenotype_execution;
+use crate::simulation::common::helpers::place_units::place_units;
+use crate::simulation::common::helpers::resource_allocation::allocate_stored_resources;
+use crate::simulation::common::helpers::resource_allocation::StoredResourceAllocationMethod;
 use crate::simulation::common::*;
-use crate::simulation::specs::place_units::PlaceUnits;
-use crate::simulation::specs::SimulationSpec;
 use crate::simulation::unit::*;
 use crate::simulation::world::World;
 use crate::simulation::Simulation;
@@ -55,6 +57,7 @@ pub mod constants {
 
 pub struct CheeseChemistry {
     manifest: ChemistryManifest,
+    place_units_method: PlaceUnitsMethod,
 }
 
 pub mod defs {
@@ -120,10 +123,15 @@ pub mod defs {
     //trace_macros!(false);
 }
 impl CheeseChemistry {
-    pub fn construct() -> ChemistryInstance {
+    pub fn construct(place_units_method: PlaceUnitsMethod) -> ChemistryInstance {
         wrap_chemistry!(CheeseChemistry {
             manifest: CheeseChemistry::default_manifest(),
+            place_units_method: place_units_method
         })
+    }
+
+    fn get_unit_placement(&self) -> PlaceUnitsMethod {
+        self.place_units_method.clone()
     }
 
     pub fn default_manifest() -> ChemistryManifest {
@@ -201,27 +209,24 @@ impl Chemistry for CheeseChemistry {
         "cheese".to_string()
     }
 
-    // fn default_specs(&self) -> Vec<std::boxed::Box<dyn SimulationSpec>> {
-    //     vec![Box::new(PlaceUnits {
-    //         method: PlaceUnitsMethod::LinearBottomMiddle { attributes: None },
-    //     })]
-    // }
-
-    fn construct_specs(
-        &self,
-        unit_placement: &PlaceUnitsMethod,
-    ) -> Vec<std::boxed::Box<dyn SimulationSpec>> {
-        vec![
-            Box::new(PlaceUnits {
-                method: unit_placement.clone(),
-            }),
-            Box::new(ResourceAllocation {
-                stored_method: StoredResourceAllocationMethod::Every,
-            }),
-            Box::new(PhenotypeExecution {}),
-            Box::new(specs::PostTick {}),
-        ]
+    fn get_unit_placement(&self) -> PlaceUnitsMethod {
+        self.place_units_method.clone()
     }
+    // fn construct_specs(
+    //     &self,
+    //     unit_placement: &PlaceUnitsMethod,
+    // ) -> Vec<std::boxed::Box<dyn SimulationSpec>> {
+    //     vec![
+    //         Box::new(PlaceUnits {
+    //             method: unit_placement.clone(),
+    //         }),
+    //         Box::new(ResourceAllocation {
+    //             stored_method: StoredResourceAllocationMethod::Every,
+    //         }),
+    //         Box::new(PhenotypeExecution {}),
+    //         Box::new(specs::PostTick {}),
+    //     ]
+    // }
     fn get_next_unit_resources(
         &self,
         entry: &UnitEntryData,
@@ -274,20 +279,53 @@ impl Chemistry for CheeseChemistry {
         &mut self.manifest
     }
 
-    fn get_base_streamed_resource_allocation(
-        &self,
-        world: &mut World,
-        coord: &Coord,
-    ) -> SomeUnitResources {
-        return self.manifest.unit_resources_of(vec![("air", 11)]);
+    // fn get_base_streamed_resource_allocation(
+    //     &self,
+    //     world: &mut World,
+    //     coord: &Coord,
+    // ) -> SomeUnitResources {
+    //     return self.manifest.unit_resources_of(vec![("air", 11)]);
+    // }
+
+    // fn get_base_stored_resource_allocation(
+    //     &self,
+    //     world: &mut World,
+    //     coord: &Coord,
+    // ) -> SomeUnitResources {
+    //     return self.manifest.unit_resources_of(vec![("cheese", 50)]);
+    // }
+
+    // fn on_simulation_init(&self, sim: &mut SimCell) {
+    //     self.init_pos_properties(&mut sim.world);
+    //     self.init_world_custom(&mut sim.world);
+    //     self.init_units(sim);
+    // }
+
+    fn on_simulation_tick(&self, sim: &mut SimCell) {
+        allocate_stored_resources(
+            sim,
+            sim.unit_manifest,
+            &StoredResourceAllocationMethod::Every,
+        );
+        phenotype_execution(sim);
+
+        let unit_resources = defs::UnitResourcesLookup::new();
+        for coord in CoordIterator::new(sim.world.size) {
+            let pos = sim.world.get_position_at(&coord).unwrap();
+            if let Some(unit) = sim.world.get_unit_at(&coord) {
+                let val = unit.get_resource(unit_resources.cheese);
+                if val <= 50 {
+                    //println!("destroying unit");
+                    sim.world.destroy_unit(&coord);
+                }
+            }
+        }
     }
 
-    fn get_base_stored_resource_allocation(
-        &self,
-        world: &mut World,
-        coord: &Coord,
-    ) -> SomeUnitResources {
-        return self.manifest.unit_resources_of(vec![("cheese", 50)]);
+    fn on_simulation_finish(&self, sim: &mut SimCell) {}
+
+    fn init_units(&self, sim: &mut SimCell) {
+        place_units(sim, &self.place_units_method);
     }
 
     fn init_world_custom(&self, world: &mut World) {
@@ -343,45 +381,13 @@ impl Chemistry for CheeseChemistry {
     }
 }
 
-mod specs {
-    use super::*;
-
-    pub struct PostTick {}
-
-    impl SimulationSpec for PostTick {
-        fn on_tick(&mut self, sim: &mut SimCell, context: &SpecContext) {
-            let unit_resources = defs::UnitResourcesLookup::new();
-
-            for coord in CoordIterator::new(sim.world.size) {
-                let pos = sim.world.get_position_at(&coord).unwrap();
-                if let Some(unit) = sim.world.get_unit_at(&coord) {
-                    let val = unit.get_resource(unit_resources.cheese);
-                    if val <= 50 {
-                        //println!("destroying unit");
-                        sim.world.destroy_unit(&coord);
-                    }
-                }
-            }
-        }
-
-        fn get_name(&self) -> String {
-            "Cheese::PostTick".to_string()
-        }
-    }
-    mod tests {
-        #[allow(unused_imports)]
-        use super::*;
-        use crate::chemistry::actions::*;
-    }
-}
-
 mod tests {
     #[allow(unused_imports)]
     use super::*;
     use crate::chemistry::actions::*;
     #[test]
     fn make_cheese_manifest() {
-        let cheese = CheeseChemistry::construct();
+        let cheese = CheeseChemistry::construct(PlaceUnitsMethod::Skip);
     }
     #[test]
     fn macros() {
@@ -407,12 +413,12 @@ mod tests {
             let action = actions.by_key("gobble_cheese");
 
             let src_coord = (2, 0);
-            let mut sim = fixtures::default_base(Some(vec![Box::new(PlaceUnits {
-                method: PlaceUnitsMethod::ManualSingleEntry {
+
+            let mut sim =
+                fixtures::default_base_with_unit_placement(PlaceUnitsMethod::ManualSingleEntry {
                     attributes: None,
                     coords: vec![src_coord],
-                },
-            })]));
+                });
 
             sim.world
                 .set_pos_resource_at(&(2, 0), position_resources.cheese, 10);

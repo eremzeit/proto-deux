@@ -3,7 +3,9 @@ use crate::chemistry::properties::*;
 use crate::chemistry::reactions::*;
 use crate::chemistry::*;
 
-use crate::simulation::specs::place_units::PlaceUnits;
+use crate::simulation::common::helpers::phenotype_execution::phenotype_execution;
+use crate::simulation::common::helpers::resource_allocation::allocate_stored_resources;
+use crate::simulation::common::helpers::resource_allocation::StoredResourceAllocationMethod;
 use crate::simulation::unit::*;
 use crate::simulation::world::World;
 use crate::simulation::Simulation;
@@ -11,12 +13,14 @@ use crate::util::Coord;
 
 pub struct NanobotsChemistry {
     manifest: ChemistryManifest,
+    place_units_method: PlaceUnitsMethod,
 }
 
 impl NanobotsChemistry {
-    pub fn construct() -> Box<NanobotsChemistry> {
+    pub fn construct(place_units_method: PlaceUnitsMethod) -> Box<NanobotsChemistry> {
         Box::new(NanobotsChemistry {
             manifest: NanobotsChemistry::default_manifest(),
+            place_units_method: place_units_method,
         })
     }
     pub fn default_manifest() -> ChemistryManifest {
@@ -60,6 +64,10 @@ impl Chemistry for NanobotsChemistry {
         "nanobots".to_string()
     }
 
+    fn get_unit_placement(&self) -> PlaceUnitsMethod {
+        self.place_units_method.clone()
+    }
+
     fn get_manifest(&self) -> &ChemistryManifest {
         &self.manifest
     }
@@ -76,15 +84,6 @@ impl Chemistry for NanobotsChemistry {
         self.get_manifest().empty_unit_entry_attributes()
     }
 
-    fn construct_specs(
-        &self,
-        unit_placement: &PlaceUnitsMethod,
-    ) -> Vec<std::boxed::Box<dyn SimulationSpec>> {
-        vec![Box::new(PlaceUnits {
-            method: unit_placement.clone(),
-        })]
-    }
-
     fn get_next_unit_resources(
         &self,
         entry: &UnitEntryData,
@@ -95,6 +94,17 @@ impl Chemistry for NanobotsChemistry {
     ) -> UnitResources {
         self.get_manifest().empty_unit_resources()
     }
+
+    fn on_simulation_tick(&self, sim: &mut SimCell) {
+        allocate_stored_resources(
+            sim,
+            sim.unit_manifest,
+            &StoredResourceAllocationMethod::Every,
+        );
+        phenotype_execution(sim);
+    }
+
+    fn on_simulation_finish(&self, sim: &mut SimCell) {}
 }
 
 mod tests {

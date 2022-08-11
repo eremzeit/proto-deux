@@ -13,17 +13,19 @@ use piston_window::Context;
 use piston_window::Transformed;
 use piston_window::Viewport;
 
+use crate::chemistry::variants::cheese;
+
 pub struct CheeseCellRenderer {}
 
 pub fn get_cheese_pct(pos: &Position, current_tick: u64) -> f64 {
-    let res_defs = chemistry::cheese::defs::PositionResourcesLookup::new();
+    let res_defs = cheese::defs::PositionResourcesLookup::new();
     let cheese = pos.get_resource(res_defs.cheese, current_tick);
 
     (cheese as f64 / 1000.0).min(1.0)
 }
 
 pub fn get_unit_cheese_size_ratio(pos: &Position) -> f64 {
-    let res_defs = chemistry::cheese::defs::UnitResourcesLookup::new();
+    let res_defs = cheese::defs::UnitResourcesLookup::new();
     let cheese = pos.get_unit_resource(res_defs.cheese);
 
     (cheese as f64 / 600.0).max(1.0).min(0.2)
@@ -77,7 +79,7 @@ impl CellRenderer for CheeseCellRenderer {
     ) {
         let pos = sim.grid[[x, y]].as_ref().unwrap();
 
-        let attr_defs = chemistry::cheese::defs::PositionAttributesLookup::new();
+        let attr_defs = chemistry::variants::cheese::defs::PositionAttributesLookup::new();
         let is_cheese_source = pos.get_attribute(attr_defs.is_cheese_source).unwrap_bool();
 
         // cell bg

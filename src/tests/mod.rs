@@ -3,13 +3,11 @@ pub mod fps;
 pub mod perf;
 
 use crate::chemistry::actions::{ActionDefinition, ActionParam};
-use crate::chemistry::{BaseChemistry, CheeseChemistry, Chemistry};
+use crate::chemistry::variants::{BaseChemistry, CheeseChemistry};
 use crate::simulation::common::*;
 use crate::simulation::config::SimulationConfig;
 use crate::simulation::config::*;
 use crate::simulation::executors::simple::SimpleSimulationExecutor;
-use crate::simulation::specs::place_units::*;
-use crate::simulation::specs::SimulationSpec;
 use crate::simulation::unit::{UnitAttributeValue, UnitAttributes};
 use crate::simulation::world::*;
 use std::rc::Rc;
@@ -37,17 +35,11 @@ pub fn test_framed_genome() {
 pub fn test_framed_genome2() {}
 
 pub mod fixtures {
+    use crate::simulation::common::helpers::place_units::PlaceUnitsMethod;
+
     use super::*;
 
-    pub fn default_base(_specs: Option<Vec<Box<dyn SimulationSpec>>>) -> Simulation {
-        let specs: Vec<Box<dyn SimulationSpec>> = match _specs {
-            None => vec![Box::new(PlaceUnits {
-                method: PlaceUnitsMethod::LinearBottomMiddle { attributes: None },
-            })],
-
-            Some(s) => s,
-        };
-
+    pub fn default_base_with_unit_placement(place_units_method: PlaceUnitsMethod) -> Simulation {
         let mut sim = SimulationBuilder::default()
             .unit_manifest(UnitManifest::from(&vec![UnitEntry::new(
                 "main",
@@ -55,8 +47,7 @@ pub mod fixtures {
             )]))
             .headless(true)
             .size((5, 5))
-            .chemistry_key("cheese".to_string())
-            .specs(specs)
+            .chemistry(CheeseChemistry::construct(place_units_method))
             .to_simulation();
 
         sim.init();
@@ -65,5 +56,9 @@ pub mod fixtures {
         sim.world.set_unit_resource_at(&(1, 0), 0, 10);
         sim.world.set_unit_resource_at(&(3, 0), 0, 5);
         sim
+    }
+
+    pub fn default_base() -> Simulation {
+        default_base_with_unit_placement(PlaceUnitsMethod::LinearBottomMiddle { attributes: None })
     }
 }

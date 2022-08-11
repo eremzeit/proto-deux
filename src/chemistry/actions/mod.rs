@@ -402,7 +402,10 @@ pub fn default_actions() -> ActionSet {
             // execute action
             Rc::new(
                 |sim_cell: &mut SimCell, context: &ActionExecutionContext| -> bool {
-                    let unit = sim_cell.world.get_unit_at(context.coord).unwrap();
+                    let unit = sim_cell
+                        .world
+                        .get_unit_at(context.coord)
+                        .expect("cant execute action where theres no unit");
                     let resource_idx =
                         context.params[0].to_unit_resource_index() as UnitResourceIndex;
                     let offset_amount =
