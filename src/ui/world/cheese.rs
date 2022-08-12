@@ -27,8 +27,8 @@ pub fn get_cheese_pct(pos: &Position, current_tick: u64) -> f64 {
 pub fn get_unit_cheese_size_ratio(pos: &Position) -> f64 {
     let res_defs = cheese::defs::UnitResourcesLookup::new();
     let cheese = pos.get_unit_resource(res_defs.cheese);
-
-    (cheese as f64 / 600.0).max(1.0).min(0.2)
+    println!("unit cheese: {}", cheese);
+    (cheese as f64 / 100.0).min(1.0).max(0.2)
 }
 
 pub fn calc_resource_rect(full_rect: [f64; 4], pct: f64, coord: &Coord) -> [f64; 4] {

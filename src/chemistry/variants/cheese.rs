@@ -295,11 +295,11 @@ impl Chemistry for CheeseChemistry {
     //     return self.manifest.unit_resources_of(vec![("cheese", 50)]);
     // }
 
-    // fn on_simulation_init(&self, sim: &mut SimCell) {
-    //     self.init_pos_properties(&mut sim.world);
-    //     self.init_world_custom(&mut sim.world);
-    //     self.init_units(sim);
-    // }
+    fn on_simulation_init(&self, sim: &mut SimCell) {
+        self.init_pos_properties(&mut sim.world);
+        self.init_world_custom(&mut sim.world);
+        self.init_units(sim);
+    }
 
     fn on_simulation_tick(&self, sim: &mut SimCell) {
         allocate_stored_resources(
@@ -320,6 +320,9 @@ impl Chemistry for CheeseChemistry {
                 }
             }
         }
+
+        let pos_resources = defs::UnitResourcesLookup::new();
+        let cheese = sim.world.get_pos_resource_at(&(0, 0), pos_resources.cheese);
     }
 
     fn on_simulation_finish(&self, sim: &mut SimCell) {}
@@ -342,18 +345,18 @@ impl Chemistry for CheeseChemistry {
 
             use rand::Rng;
             let mut rng = rand::thread_rng();
-            // let is_bottom_left = coord.0 == 0 && coord.1 == 0 || coord.0 == 1 && coord.1 == 0;
-            // if is_bottom_left || rng.gen_range(0..(coord.0 + coord.1) % 5 + 10) == 0 {
-            //     world.set_pos_attribute_at(
-            //         &coord,
-            //         self.get_manifest()
-            //             .position_attribute_by_key("is_cheese_source")
-            //             .id as usize,
-            //         PositionAttributeValue::Bool(true),
-            //     );
-            // }
+            let is_bottom_left = coord.0 == 0 && coord.1 == 0 || coord.0 == 1 && coord.1 == 0;
+            if is_bottom_left || rng.gen_range(0..(coord.0 + coord.1) % 5 + 10) == 0 {
+                world.set_pos_attribute_at(
+                    &coord,
+                    self.get_manifest()
+                        .position_attribute_by_key("is_cheese_source")
+                        .id as usize,
+                    PositionAttributeValue::Bool(true),
+                );
+            }
 
-            if rng.gen_range(0..(coord.0 + coord.1) % 5 + 5) == 0 {
+            if is_bottom_left || rng.gen_range(0..(coord.0 + coord.1) % 5 + 5) == 0 {
                 let position_resources = defs::PositionResourcesLookup::new();
                 world.set_pos_resource_tab_offset(&coord, position_resources.cheese, 2);
             }

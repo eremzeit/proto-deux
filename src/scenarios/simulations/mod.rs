@@ -33,6 +33,7 @@ pub fn get_simulation_scenario(sim_args: &SimulationRunnerArgs) -> Simulation {
 
     let mut builder = match (chemistry_key, sim_scenario_key) {
         ("cheese", "basic") => cheese::basic(sim_args),
+        ("cheese", "with_genome") => cheese::with_genome(sim_args),
         _ => panic!("Unsupported simulation scenario"),
     };
 

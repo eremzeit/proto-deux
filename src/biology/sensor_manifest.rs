@@ -32,7 +32,6 @@ use std;
 pub enum SensorType {
     // ie. UnitResource, UnitAttribute, PositionResource, PositionAttribute
     LocalChemicalProperty(PropertyId, SensorCoordOffset),
-
     SimulationProperty(PropertyId),
     Constant(SensorValue),
     Random(std::ops::Range<usize>),

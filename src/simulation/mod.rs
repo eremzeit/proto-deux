@@ -202,6 +202,8 @@ impl Simulation {
             chemistry: &self.chemistry,
         });
 
+        self.world.tick = self.world.tick + 1;
+
         // if self.world.tick < self.iterations {
         //     for (i, spec) in self.specs.iter_mut().enumerate() {
         //         //println!("spec tick: {}", spec.get_name());

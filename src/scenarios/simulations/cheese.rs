@@ -1,5 +1,9 @@
 use variants::CheeseChemistry;
 
+use crate::biology::genome::framed::builders::simple_convert_into_frames;
+use crate::biology::genome::framed::builders::FramedGenomeParser;
+use crate::biology::genome::framed::samples::legacy;
+use crate::biology::phenotype::framed::FramedGenomePhenotype;
 use crate::biology::phenotype::mouse::simple_mouse::SimpleMouse;
 use crate::biology::phenotype::mouse::*;
 use crate::runners::SimulationRunnerArgs;
@@ -14,14 +18,67 @@ pub fn basic(sim_args: &SimulationRunnerArgs) -> SimulationBuilder {
 
     SimulationBuilder::default()
         .chemistry(CheeseChemistry::construct(
-            PlaceUnitsMethod::ManualSingleEntry {
+            PlaceUnitsMethod::RandomRegionDrop {
                 attributes: None,
-                coords: vec![(10, 10)],
+                units_per_entry: 1,
+                region_pct_rect: (0.40, 0.40, 0.60, 0.60),
             },
         ))
         .unit_entries(get_unit_entries_for_cheese())
         .size((50, 50))
         .iterations(1000)
+}
+
+pub fn with_genome(sim_args: &SimulationRunnerArgs) -> SimulationBuilder {
+    let gm = GeneticManifest::new();
+    let cm = CheeseChemistry::default_manifest();
+    let sm = SensorManifest::with_default_sensors(&cm);
+    // how do i say, find an open square adjacent to me, and use that as a parameter?  is that what a register could be used for? ephemeral data?
+
+    use crate::biology::genome::framed::samples::get_genome1;
+    let frames1 = get_genome1(&cm, &sm, &gm);
+
+    let genome_values2 = legacy::get_genome2().build(&sm, &cm, &gm);
+    let frames2 = FramedGenomeParser::parse(
+        simple_convert_into_frames(genome_values2),
+        cm.clone(),
+        sm.clone(),
+        gm.clone(),
+    );
+    let genome_values3 = legacy::get_genome3().build(&sm, &cm, &gm);
+    let frames3 = FramedGenomeParser::parse(
+        simple_convert_into_frames(genome_values3),
+        cm.clone(),
+        sm.clone(),
+        gm.clone(),
+    );
+
+    let entry1 = UnitEntryBuilder::default()
+        .species_name("species1".to_string())
+        .phenotype(
+            FramedGenomePhenotype::new(frames1, gm.clone(), cm.clone(), sm.clone()).construct(),
+        )
+        .default_resources(vec![("cheese", 100)])
+        .build(&cm, None);
+
+    let entry2 = UnitEntryBuilder::default()
+        .species_name("species2".to_string())
+        .phenotype(
+            FramedGenomePhenotype::new(frames2, gm.clone(), cm.clone(), sm.clone()).construct(),
+        )
+        .default_resources(vec![("cheese", 100)])
+        .build(&cm, None);
+
+    SimulationBuilder::default()
+        //.size((50, 30))
+        .size((20, 20))
+        .chemistry(CheeseChemistry::construct(PlaceUnitsMethod::SimpleDrop {
+            attributes: None,
+        }))
+        .iterations(1000)
+        .unit_manifest(UnitManifest {
+            units: vec![entry1, entry2],
+        })
 }
 
 pub fn get_unit_entries_for_cheese() -> Vec<UnitEntryBuilder> {
