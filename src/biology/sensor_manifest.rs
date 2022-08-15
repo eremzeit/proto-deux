@@ -40,11 +40,17 @@ pub enum SensorType {
 
 pub type SensorId = usize;
 
+/**
+ * A sensor definition is a mapping between a genome sensor_id and how that sensor
+ * gets executed within the context of that specific unit_entry and chemistry.  This means that
+ * definitions need to be generated dynamically at the time that a unit_entry is initialized.
+ *
+ */
 #[derive(Clone)]
 pub struct SensorDefinition {
     pub id: SensorId,
     pub key: String,
-    pub prop_key: String,
+    pub prop_key: String, //for display purposes
     pub sensor_type: SensorType,
 }
 
@@ -67,7 +73,7 @@ impl SensorDefinition {
             SensorType::Random(range) => {
                 use rand::Rng;
 
-                // HTNS: this is probably slow
+                // AOEU: this is probably slow
                 let mut rng = rand::thread_rng();
                 use std::convert::TryInto;
                 rng.gen_range(range.clone()).try_into().unwrap()
@@ -145,8 +151,12 @@ pub fn calc_local_chemical_property(
     // SimulationAttributeId(SimulationAttributeIndex)
 }
 
+/**
+ * A sensor manifest is a list of sensors that are available to a specific unit_entry.  Over the course of the lifetime of
+ * a genome, the sensor manifest cannot change.  This would mean that if we added/removed/changed any sensors to the manifest
+ * then the genome would become invalid.  This means that tweaking the available sensors would invalidate any genomes that are currently stored.
+ */
 #[derive(Clone)]
-// is this on a per-species basis? or does it describe the entire simulation?
 pub struct SensorManifest {
     pub sensors: Vec<SensorDefinition>,
 }
@@ -172,6 +182,17 @@ impl SensorManifest {
             .collect::<Vec<_>>()
     }
 
+    /**
+     *  Construct a list of sensors available from the chemistry manifest.
+     *  Note, this assumes that *all* chemical properties are visible to the genome.
+     *
+     * We might eventually want to construct a sensor manifest that has only a subset of
+     * chemical properties.  This would require passing a list of property keys that are to be
+     * included/excluded.  Each unit_entry would have it's own unique sensor manifest.  
+     *
+     *
+     *
+     */
     pub fn default_sensors(chemistry_manifest: &ChemistryManifest) -> Vec<SensorDefinition> {
         let offsets = sensor_local_offsets(1);
         let mut sensors = vec![];

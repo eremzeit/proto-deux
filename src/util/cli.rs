@@ -60,6 +60,21 @@ pub fn parse_cli_args() -> RunMode {
         .get_matches();
 
     match matches.subcommand() {
+        // Some(("exp", sim_matches)) => {
+        //     let sim_scenario_key = sim_matches
+        //         .get_one::<String>("exp_scenario_key")
+        //         .expect("Experiment scenario key required");
+        //     let iterations = sim_matches.get_one::<u64>("iterations");
+
+        //     // let args = SimulationRunnerArgs {
+        //     //     chemistry_key: chemistry_key.clone(),
+        //     //     simulation_scenario_key: sim_scenario_key.clone(),
+        //     //     unit_entry_scenario_key: None,
+        //     //     iterations: iterations.map(|i| *i),
+        //     // };
+
+        //     // return RunMode::HeadlessSimulation(args);
+        // }
         Some(("sim", sim_matches)) => {
             let chemistry_key = sim_matches
                 .get_one::<String>("chemistry_key")

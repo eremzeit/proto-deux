@@ -70,8 +70,8 @@ pub fn with_genome(sim_args: &SimulationRunnerArgs) -> SimulationBuilder {
         .build(&cm, None);
 
     SimulationBuilder::default()
-        //.size((50, 30))
-        .size((20, 20))
+        .size((50, 30))
+        // .size((20, 20))
         .chemistry(CheeseChemistry::construct(PlaceUnitsMethod::SimpleDrop {
             attributes: None,
         }))

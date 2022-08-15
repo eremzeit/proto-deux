@@ -226,6 +226,7 @@ macro_rules! then_do {
         then_do!($op_key, $param1, $param2, 0)
     };
 
+    // TODO: extract this below logic into a single function.  The macro should just be syntactic sugar.
     ($op_key:ident, $param1:expr, $param2:expr, $param3:expr) => {{
         {
             use crate::biology::genome::framed::common::*;
@@ -247,12 +248,19 @@ macro_rules! then_do {
 
                     let operation_key = stringify!($op_key).to_string();
 
+                    // TODO: allow customizing which reactions and meta-reactions are available to this genome.
+                    // this means creating an object called something like GenomeOperationManifest, which is generated
+                    // as a subset of the chemistry manifest.  It would contain a list of entries that map from the operation manifest
+                    // to the metareaction manifest and reaction manifest.
+
                     let meta_reaction = MetaReaction::from_key(&operation_key);
                     println!("meta_reaction: {:?}", &meta_reaction);
                     if meta_reaction.is_some() {
                         operation_type = Some(operation::val_for_metareaction_operation_type());
                         operation_id = Some(meta_reaction.unwrap().to_val());
                     }
+
+
                     let reaction = cm.identify_reaction(&operation_key);
                     if reaction.is_some() {
                         let _reaction = reaction.unwrap();
@@ -346,7 +354,7 @@ pub mod parsing_v2 {
         let raw_conditional =
             conditional!(is_truthy, pos_attr::is_cheese_source(0, 0)).build(&sm, &cm, &gm);
 
-        let op_id = gm.operator_id_for_key("is_truthy") as FramedGenomeValue;
+        let operator_id = gm.operator_id_for_key("is_truthy") as FramedGenomeValue;
         let is_negated = 0 as FramedGenomeValue;
         let param1_meta = param_meta::val_for_sensor_lookup() as FramedGenomeValue;
         let sensor_id = sm
@@ -356,7 +364,7 @@ pub mod parsing_v2 {
         assert_eq!(raw_conditional.len(), 8);
         assert_eq!(
             raw_conditional,
-            vec![op_id, is_negated, param1_meta, sensor_id, 0, 0, 0, 0]
+            vec![operator_id, is_negated, param1_meta, sensor_id, 0, 0, 0, 0]
         );
     }
     #[test]

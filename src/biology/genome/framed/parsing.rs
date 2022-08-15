@@ -35,6 +35,8 @@ pub struct FramedGenomeParser {
     sensor_manifest: SensorManifest,
     chemistry_manifest: ChemistryManifest,
     raw_frames: Vec<RawFrame>,
+
+    // state variables for parsing
     current_frame: usize,
     idx: usize,
     current_channel: usize,

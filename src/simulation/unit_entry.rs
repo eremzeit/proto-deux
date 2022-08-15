@@ -44,6 +44,11 @@ impl UnitManifest {
 pub struct UnitEntry {
     pub info: UnitEntryData,
     pub phenotype: Rc<Box<dyn Phenotype>>,
+    /*
+        technically, the phenotype accesses the world via sensors, which might differ by unit_entry.
+        so the sensor manifest should be included in each unit_entry.
+    */
+    // sensor_manifest
 }
 
 impl UnitEntry {

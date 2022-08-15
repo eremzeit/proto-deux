@@ -39,6 +39,14 @@ macro_rules! flog {
     })
 }
 
+/**
+ * Converts a human-readable string describing a parameter to a conditional into an
+ * enum encoding that parameter.
+ *
+ * eg.
+ *
+ * "pos_attr::is_cheese_source"
+ */
 pub fn identify_raw_param_string(
     str_param: &String,
     sensor_manifest: &SensorManifest,

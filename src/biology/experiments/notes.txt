@@ -1,0 +1,124 @@
+
+        //fitness as ELO vs generated metric?
+
+        /*
+         *
+         *  possible scenarios calculation:
+         *      - a discrete victory over N opponents
+         *      - a calculated metric used as fitness
+         *
+         * ---------
+         * ELO for battle royale
+         * We assume at the end of each simulation there's a defined way to produce an ranked list
+         * of genomes performance, with each genome having a score based on some performance metric.
+         * Each variation of the world rules will maintain it's own ranking pool.  For each genome, we
+         * store it's most recent score metric and it's current rank.  Beating another genome causes
+         * the rank to increase to be above the other genome.
+         *
+         * In each environment we store the maximum score that has been achieve on that environment since the
+         * beginning of the simulation (or beginning of time).  This can be used as a reference point later
+         * to know if the gene pool in that environment is making progress.
+         *
+         *
+         *
+         *
+         *
+         * ------------
+         *
+         *
+         * phased challenges
+         *
+         * 1st phase
+         * In the first phase there are X different variations of the world and variations
+         * of fitness function, each with it's own gene pool.FramedGenome.  This means there's
+         * X total gene pools.
+         *
+         * 2nd phase
+         * The second phase only gets seeded from genomes that have been successful in one of
+         * the X possible gene pools.  The challenge is more open-ended in this phase, possibly just
+         * a combination somehow of the X world variations of the first phase.  The genomes in this
+         * second phase are evolved together in a single gene pool.  After a certain amount of time
+         * evolving this gene pool, genomes are selected to be copied into the gene pool of the 3rd phase.
+         *
+         * 3rd phase
+         *
+         * In this phase, the winners of the 1st and 2nd phases are divided again into X gene pools, each
+         * evolving within itself against a specific variation of the challenge, perhaps smaller in scope,
+         * to the point where certain abilities picked up in the 2nd phase are vistigial.
+         *
+         * 4th phase
+         * .... so are there just two phases that repeat, refining the population each time?
+         *
+         * The principle is that the selection pressure is switching from general to specific, which
+         * "drags" the genome through a wider possible search space, reducing the likelihood of finding a
+         * local maxima and increasing genetic diversity, also creating opportunities for the formation of "skills"
+         * to crystallize within the bounds of frames.
+         *
+         *
+         *
+         * <ComplexExperimentTemplate name="phase1_small_maps">
+         *   <ExperimentVariation name="low_starting_resources">
+         *      <ExperimentSettings gene_pool_size=4 />
+         *      <SimSettings iterations=200 x_size=5 y_size=5 >
+         *      <DefaultUnitAttributes>
+         *   </ExperimentVariation>
+         *   <ExperimentVariation name="high_starting_resources">
+         *     {/*...*/}
+         *   </ExperimentVariation>
+         *   <ExperimentVariation name="expensive_genome_expression">
+         *     {/*...*/}
+         *   </ExperimentVariation>
+         * </ComplexExperimentTemplate>
+         *
+         * <ComplexExperimentTemplate name="phase2_medium_maps">
+         *   <Settings
+         *     schedulingStrategy="balanced | greedy | antigreedy | manual_weights | quiessence"
+         *   />
+         *
+         *   <Variations>
+         *     <ExperimentVariation name="low_starting_resources">
+         *        <ExperimentSettings />
+         *        <SimSettings iterations=200 x_size=5 y_size=5 >
+         *        <DefaultUnitAttributes>
+         *     </ExperimentVariation>
+         *     <ExperimentVariation name="high_starting_resources">
+         *       {/*...*/}
+         *     </ExperimentVariation>
+         *     <ExperimentVariation name="expensive_genome_expression">
+         *       {/*...*/}
+         *     </ExperimentVariation>
+         *   </Variations>
+         * </ComplexExperimentTemplate>
+         *
+         *
+         * Quiessence detection?
+         * (or, should we instead just budget a fixed amount of resources per each phase of the pipeline.)
+         *
+         * Each phase of the pipeline will receive a fixed amount of processing resources, measured in the number of epochs it executes.  An epoch
+         * is just one "cycle" of evolution.  After a phase in a pipeline has executed it's configured number of epochs, it will probabilistically skim
+         * off the top X percent of the genomes, perhaps picking a random genepool and then picking a random gene (because there isn't a
+         * single ranking of genomes across each of the gene pools).  These selected genomes are then promoted to the next phase.  They are copied
+         * into a random gene pool.
+         *
+         *
+         * <UphillPushExperiment>
+         *          <RandomGenomeSeedGeneration minLength=50 maxLength=500/>
+         *   <Pipeline
+         *     schedulingStrategy="balanced | bias_lower_fitness | bias_higher_fitness | manual_weights"
+         *   >
+         *      <PipelinePhase>
+         *        <GenePoolExperiment template='phase0_weed_out' alienExternalInternalRatio="1/1/1" epochType="static" epochSize="10000" alteration_types="full_set">
+         *      </PipelinePhase>
+         *      <PipelinePhase>
+         *        <GenePoolExperiment template='phase1_small_maps' alienExternalInternalRatio="1/1/1" >
+         *      </PipelinePhase>
+         *      <PipelinePhase>
+         *        <GenePoolExperiment template='phase2_medium_maps'>
+         *      </PipelinePhase>
+         *   </Pipeline>
+         * </UphillExperiment>
+         *
+         * alien - from another phase of the pipeline
+         * external - from another gene pool in the same experiment
+         * internal - from the same gene pool
+         */

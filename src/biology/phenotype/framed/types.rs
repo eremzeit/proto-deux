@@ -35,6 +35,9 @@ pub type ParamedReactionCall = (
     ParsedGenomeParam,
 );
 
+/**
+ * Used to express a parameter that can be used for either in a conditional and reactions
+ */
 #[derive(Clone, Debug, PartialEq)]
 pub enum ParsedGenomeParam {
     Constant(OperatorParam),
@@ -129,6 +132,8 @@ impl Debug for ParamedMetaReactionCall {
 pub enum MetaReaction {
     JumpAheadFrames,
     SetRegister,
+
+    // question: when a channel changes during genome execution, does it change immediately or does it wait until the next frame?
     SetChannel,
     Nil,
 }
