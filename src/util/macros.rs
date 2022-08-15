@@ -210,10 +210,18 @@ macro_rules! reagent {
     };
 }
 
+// macro_rules! param_arg {
 #[macro_export]
-macro_rules! param_arg {
+macro_rules! phenotype_arg {
     ($x:ident) => {
-        ActionParam::Placeholder(ActionParamType::$x)
+        ActionParam::PhenotypeArgument(ActionParamType::$x)
+    };
+}
+
+#[macro_export]
+macro_rules! chemistry_arg {
+    ($param_key:ident, $type:ident) => {
+        ActionParam::ChemistryArgument(stringify!($param_key).to_string(), ActionParamType::$type)
     };
 }
 

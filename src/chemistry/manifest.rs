@@ -370,13 +370,17 @@ impl ChemistryManifest {
         }
         return None;
     }
+
+    /**
+     * Returns the number of parameters that the phenotype is supposed to supply for this execution
+     */
     pub fn get_required_params_for_reaction(&self, key: &String) -> usize {
         let reaction = self.identify_reaction(key).unwrap();
         let mut count = 0;
         for reagent in &reaction.reagents {
             for param in &reagent.params {
                 match &param {
-                    ActionParam::Placeholder(t) => {
+                    ActionParam::PhenotypeArgument(t) => {
                         count += 1;
                     }
                     _ => {}

@@ -14,14 +14,18 @@ use crate::util::Coord;
 pub struct NanobotsChemistry {
     manifest: ChemistryManifest,
     place_units_method: PlaceUnitsMethod,
+    configuration: ChemistryConfiguration,
 }
 
 impl NanobotsChemistry {
     pub fn construct(place_units_method: PlaceUnitsMethod) -> Box<NanobotsChemistry> {
-        Box::new(NanobotsChemistry {
+        let mut chemistry = NanobotsChemistry {
             manifest: NanobotsChemistry::default_manifest(),
             place_units_method: place_units_method,
-        })
+            configuration: ChemistryConfiguration::new(),
+        };
+        chemistry.init_manifest();
+        Box::new(chemistry)
     }
     pub fn default_manifest() -> ChemistryManifest {
         let reactions = vec![ReactionDefinition::new(
@@ -32,7 +36,7 @@ impl NanobotsChemistry {
                     param_value!(UnitResourceKey, "energy"),
                     param_value!(UnitResourceAmount, -10),
                 ),
-                reagent!("new_unit", param_arg!(Direction),),
+                reagent!("new_unit", phenotype_arg!(Direction),),
             ],
         )];
 
@@ -62,6 +66,10 @@ impl NanobotsChemistry {
 impl Chemistry for NanobotsChemistry {
     fn get_key(&self) -> String {
         "nanobots".to_string()
+    }
+
+    fn get_configuration(&self) -> ChemistryConfiguration {
+        self.configuration.clone()
     }
 
     fn get_unit_placement(&self) -> PlaceUnitsMethod {

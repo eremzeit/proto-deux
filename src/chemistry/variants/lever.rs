@@ -31,8 +31,9 @@ use std::collections::HashMap;
 pub mod constants {}
 
 pub struct LeverChemistry {
-    manifest: ChemistryManifest,
-    place_units_method: PlaceUnitsMethod,
+    pub manifest: ChemistryManifest,
+    pub place_units_method: PlaceUnitsMethod,
+    pub configuration: ChemistryConfiguration,
 }
 
 pub mod defs {
@@ -57,17 +58,20 @@ pub mod defs {
     def_reactions! {
         reaction!("pull_lever",
             reagent!("pull_lever",
-                param_arg!(ConstantNum),
+                phenotype_arg!(ConstantNum),
             ),
         ),
     }
 }
 impl LeverChemistry {
     pub fn construct(place_units_method: PlaceUnitsMethod) -> ChemistryInstance {
-        wrap_chemistry!(LeverChemistry {
+        let mut chemistry = LeverChemistry {
             manifest: LeverChemistry::default_manifest(),
-            place_units_method: place_units_method
-        })
+            place_units_method: place_units_method,
+            configuration: ChemistryConfiguration::new(),
+        };
+        chemistry.init_manifest();
+        wrap_chemistry!(chemistry)
     }
 
     pub fn default_manifest() -> ChemistryManifest {
@@ -113,6 +117,9 @@ impl LeverChemistry {
 impl Chemistry for LeverChemistry {
     fn get_key(&self) -> String {
         "lever".to_string()
+    }
+    fn get_configuration(&self) -> ChemistryConfiguration {
+        self.configuration.clone()
     }
 
     fn get_unit_placement(&self) -> PlaceUnitsMethod {

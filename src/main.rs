@@ -9,8 +9,7 @@
 #![allow(unused_macros)]
 #![allow(non_snake_case)]
 #![allow(unused_must_use)]
-
-//#![feature(trace_macros)]
+#![feature(trace_macros)]
 
 #[macro_use]
 extern crate derive_builder;

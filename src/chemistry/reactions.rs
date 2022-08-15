@@ -59,7 +59,8 @@ pub fn execute_reaction(
     unit_manifest: &UnitManifest,
     reaction_call: ReactionCall,
 ) {
-    let action_params: Vec<[ActionParam; 3]> = replace_placeholders(reaction, reaction_call);
+    let action_params: Vec<[ActionParam; 3]> =
+        replace_phenotype_placeholders(reaction, reaction_call);
 
     for (i, reagent) in reaction.reagents.iter().enumerate() {
         //println!("reagent: {:?} with INDEX {}", reagent, reagent.action_index);
@@ -84,7 +85,10 @@ pub fn execute_reaction(
     }
 }
 
-fn replace_placeholders(
+/**
+ * Executed during each reaction call to fill in parameters that are meant to be supplied by the phenotype
+ */
+fn replace_phenotype_placeholders(
     reaction: &ReactionDefinition,
     reaction_call: ReactionCall,
 ) -> Vec<[ActionParam; 3]> {
@@ -101,7 +105,7 @@ fn replace_placeholders(
             //println!("param: {}", i);
 
             match &param_def {
-                ActionParam::Placeholder(param_type) => {
+                ActionParam::PhenotypeArgument(param_type) => {
                     //println!("placeholder");
                     let param = get_param_by_index(reaction_call, param_idx);
                     params[i] = convert_raw_arg_val_to_param_val(param, param_type);
@@ -218,14 +222,14 @@ pub mod tests {
         /*
          * index replacement
          */
-        let action_params: Vec<[ActionParam; 3]> = replace_placeholders(
+        let action_params: Vec<[ActionParam; 3]> = replace_phenotype_placeholders(
             &reaction![
                 "foo_reaction",
                 reagent![
                     "foo_reagent",
                     param_value!(UnitResourceIndex, 0),
                     param_value!(UnitResourceIndex, 0),
-                    param_arg!(UnitResourceIndex)
+                    phenotype_arg!(UnitResourceIndex)
                 ],
             ],
             (0, 10, 0, 0),
@@ -243,18 +247,18 @@ pub mod tests {
 
     #[test]
     fn replace_placeholders__amount_replacement() {
-        let action_params = replace_placeholders(
+        let action_params = replace_phenotype_placeholders(
             &reaction![
                 "",
                 reagent![
                     "",
                     param_value!(UnitResourceIndex, 0),
-                    param_arg!(PositionResourceAmount),
-                    param_arg!(PositionResourceAmount)
+                    phenotype_arg!(PositionResourceAmount),
+                    phenotype_arg!(PositionResourceAmount)
                 ],
                 reagent![
                     "",
-                    param_arg!(PositionResourceAmount),
+                    phenotype_arg!(PositionResourceAmount),
                     param_value!(UnitResourceIndex, 0),
                     param_value!(UnitResourceIndex, 0)
                 ],

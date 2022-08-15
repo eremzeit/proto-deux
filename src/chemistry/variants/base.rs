@@ -66,7 +66,7 @@ pub mod defs {
                 param_value!(Boolean, false),
             ),
             reagent!("new_unit",
-                param_arg!(Direction),
+                phenotype_arg!(Direction),
             ),
         ),
     }
@@ -75,14 +75,19 @@ pub mod defs {
 pub struct BaseChemistry {
     pub manifest: ChemistryManifest,
     pub place_units_method: PlaceUnitsMethod,
+    pub configuration: ChemistryConfiguration,
 }
 
 impl BaseChemistry {
     pub fn construct(place_units_method: PlaceUnitsMethod) -> ChemistryInstance {
-        wrap_chemistry!(BaseChemistry {
+        let mut chemistry = BaseChemistry {
             manifest: BaseChemistry::default_manifest(),
-            place_units_method: place_units_method
-        })
+            place_units_method: place_units_method,
+            configuration: ChemistryConfiguration::new(),
+        };
+
+        chemistry.init_manifest();
+        wrap_chemistry!(chemistry)
     }
 
     pub fn default_manifest() -> ChemistryManifest {
@@ -111,6 +116,10 @@ impl BaseChemistry {
 impl Chemistry for BaseChemistry {
     fn get_unit_placement(&self) -> PlaceUnitsMethod {
         self.place_units_method.clone()
+    }
+
+    fn get_configuration(&self) -> ChemistryConfiguration {
+        self.configuration.clone()
     }
 
     fn get_key(&self) -> String {

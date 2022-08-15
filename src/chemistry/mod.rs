@@ -15,7 +15,10 @@ use crate::chemistry::actions::{
 };
 use crate::simulation::common::*;
 use crate::simulation::SimulationAttributes;
+use crate::util::macros_temp::convert_configurable_to_action_param;
+use crate::util::macros_temp::ChemistryConfigValue;
 use crate::util::{grid_direction_from_num, Coord};
+use std::collections::HashMap;
 use std::rc::Rc;
 use std::sync::Mutex;
 use std::time::Instant;
@@ -24,6 +27,7 @@ pub use crate::chemistry::manifest::*;
 
 pub type ReactionId = u8;
 pub type ChemistryInstance = Box<dyn Chemistry>;
+pub type ChemistryConfiguration = HashMap<String, ChemistryConfigValue>;
 
 /* used to pass values from the phenotype to the action execution
  * to replace placeholders */
@@ -38,8 +42,41 @@ pub fn get_chemistry_by_key(key: &str, place_units_method: PlaceUnitsMethod) -> 
 
 pub trait Chemistry {
     fn init_manifest(&mut self) {
+        let reactions = self.init_chemistry_action_params();
         let mut manifest = self.get_manifest_mut();
+        manifest.reactions = reactions;
         manifest.normalize_manifest();
+    }
+
+    fn get_configuration(&self) -> ChemistryConfiguration;
+
+    fn init_chemistry_action_params(&self) -> Vec<ReactionDefinition> {
+        let mut manifest = self.get_manifest();
+        let mut reactions = manifest.reactions.clone();
+        let config = &self.get_configuration();
+        for i in 0..reactions.len() {
+            let mut reaction = &mut reactions[i];
+            for j in 0..reaction.reagents.len() {
+                let mut reagent = &mut reaction.reagents[j];
+
+                reagent.params = reagent
+                    .params
+                    .clone()
+                    .iter()
+                    .map(|param| {
+                        if let ActionParam::ChemistryArgument(key, param_type) = param.clone() {
+                            let value = config.get(&key).unwrap();
+                            let action_param_value =
+                                convert_configurable_to_action_param(value.clone(), param_type);
+                            action_param_value
+                        } else {
+                            param.clone()
+                        }
+                    })
+                    .collect::<Vec<_>>();
+            }
+        }
+        reactions
     }
 
     fn get_unit_placement(&self) -> PlaceUnitsMethod;
@@ -57,9 +94,9 @@ pub trait Chemistry {
         unit: &Unit,
         world: &World,
         tick_multiplier: u32,
-    ) -> UnitResources; /* {
-                            self.get_manifest().empty_unit_resources()
-                        }*/
+    ) -> UnitResources {
+        self.get_manifest().empty_unit_resources()
+    }
 
     fn get_default_unit_seed_attributes(
         &self,

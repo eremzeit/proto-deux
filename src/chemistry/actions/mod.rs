@@ -99,7 +99,16 @@ pub enum ActionParam {
     Boolean(bool),
     Direction(GridDirection),
 
-    Placeholder(ActionParamType),
+    // Placeholder(ActionParamType),
+    /**
+     * Specifies when an argument is meant to be given by the phenotype.
+     */
+    PhenotypeArgument(ActionParamType),
+
+    /**
+     * Specifies when an argument is meant to be given by the chemistry.
+     */
+    ChemistryArgument(String, ActionParamType),
 
     Nil,
 }

@@ -58,10 +58,13 @@ pub mod constants {
 pub struct CheeseChemistry {
     manifest: ChemistryManifest,
     place_units_method: PlaceUnitsMethod,
+    configuration: ChemistryConfiguration,
 }
 
 pub mod defs {
     use super::*;
+
+    const CHEMISTRY_KEY: &str = "cheese";
 
     def_unit_entry_attributes! {[
         [total_cheese_consumed, Number]
@@ -105,7 +108,7 @@ pub mod defs {
                 param_value!(Boolean, false),
             ),
             reagent!("move_unit",
-                param_arg!(Direction)
+                phenotype_arg!(Direction)
             ),
         ),
 
@@ -116,7 +119,7 @@ pub mod defs {
                 param_value!(Boolean, false),
             ),
             reagent!("new_unit",
-                param_arg!(Direction),
+                phenotype_arg!(Direction),
             ),
         ),
     }
@@ -124,10 +127,14 @@ pub mod defs {
 }
 impl CheeseChemistry {
     pub fn construct(place_units_method: PlaceUnitsMethod) -> ChemistryInstance {
-        wrap_chemistry!(CheeseChemistry {
+        let mut chemistry = CheeseChemistry {
             manifest: CheeseChemistry::default_manifest(),
-            place_units_method: place_units_method
-        })
+            place_units_method: place_units_method,
+            configuration: ChemistryConfiguration::new(),
+        };
+
+        chemistry.init_manifest();
+        wrap_chemistry!(chemistry)
     }
 
     fn get_unit_placement(&self) -> PlaceUnitsMethod {
@@ -207,6 +214,10 @@ impl CheeseChemistry {
 impl Chemistry for CheeseChemistry {
     fn get_key(&self) -> String {
         "cheese".to_string()
+    }
+
+    fn get_configuration(&self) -> ChemistryConfiguration {
+        self.configuration.clone()
     }
 
     fn get_unit_placement(&self) -> PlaceUnitsMethod {
