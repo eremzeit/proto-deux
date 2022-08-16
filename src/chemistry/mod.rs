@@ -1,4 +1,7 @@
 pub mod actions;
+
+#[macro_use]
+pub mod config;
 pub mod helpers;
 pub mod manifest;
 pub mod properties;
@@ -15,8 +18,9 @@ use crate::chemistry::actions::{
 };
 use crate::simulation::common::*;
 use crate::simulation::SimulationAttributes;
-use crate::util::macros_temp::convert_configurable_to_action_param;
-use crate::util::macros_temp::ChemistryConfigValue;
+
+use crate::chemistry::config::convert_configurable_to_action_param;
+use crate::chemistry::config::ChemistryConfigValue;
 use crate::util::{grid_direction_from_num, Coord};
 use std::collections::HashMap;
 use std::rc::Rc;

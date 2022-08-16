@@ -4,9 +4,6 @@ pub mod text_grid;
 #[macro_use]
 pub mod macros;
 
-#[macro_use]
-pub mod macros_temp;
-
 use std::cmp::{max, min};
 use std::time::{Duration, Instant};
 

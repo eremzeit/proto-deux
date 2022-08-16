@@ -1,11 +1,3 @@
-// def_configurable_parameters! {
-//     ["move_cost", Number]
-//     ["new_unit_cost", Number]
-//     ["max_gobble_amount", Number]
-//     ["max_cheese_unit_storage", Number]
-// }
-//
-
 use std::collections::HashMap;
 
 use crate::chemistry::actions::ActionSet;
@@ -143,7 +135,6 @@ pub struct FooChemistry {
     configuration: HashMap<String, ChemistryConfigValue>,
 }
 
-trace_macros!(true);
 pub mod defs {
     use super::*;
 
@@ -186,10 +177,8 @@ pub mod defs {
             ),
         ),
     }
-    //trace_macros!(false);
 }
 
-trace_macros!(false);
 impl FooChemistry {
     pub fn construct(mut config: ChemistryConfiguration) -> ChemistryInstance {
         if !config.contains_key("move_unit_cost") {
@@ -280,7 +269,7 @@ impl Chemistry for FooChemistry {
 }
 
 pub mod tests {
-    use crate::util::macros_temp::ChemistryConfigValue;
+    use crate::simulation::common::config::ChemistryConfigValue;
 
     use super::{ChemistryConfiguration, FooChemistry};
 
@@ -314,15 +303,5 @@ pub mod tests {
             1337
         );
         // assert_eq!(12, 1337);
-    }
-
-    #[test]
-    pub fn my_test() {
-
-        // trace_macros!(true);
-        // def_configurable_parameters! {[
-        //     [FooAttribute,"foo_attribute" u32]
-        // ]}
-        // trace_macros!(false);
     }
 }
