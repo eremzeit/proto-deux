@@ -25,7 +25,7 @@ pub struct SimulationUiRunnerArgs {
 
 pub struct ExperimentRunnerArgs {
     pub experiment_scenario_key: String,
-    pub experiment_name: String,
+    pub experiment_name_key: String,
 }
 
 pub enum RunMode {
@@ -33,6 +33,14 @@ pub enum RunMode {
     GuiSimulation(SimulationRunnerArgs, SimulationUiRunnerArgs),
     HeadlessExperiment(ExperimentRunnerArgs),
     GuiExperiment(ExperimentRunnerArgs),
+}
+
+pub fn start_headless_experiment(sim_runner_args: SimulationRunnerArgs) {
+    let mut sim = get_simulation_scenario(&sim_runner_args);
+
+    println!("Starting headless simulation");
+    let mut executor = SimpleSimulationExecutor::new(sim);
+    executor.start();
 }
 
 pub fn start_headless_sim(sim_runner_args: SimulationRunnerArgs) {

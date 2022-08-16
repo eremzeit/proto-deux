@@ -1,4 +1,5 @@
 pub mod framed;
+pub mod lever;
 pub mod mouse;
 
 use crate::biology::genetic_manifest::predicates::Operator;

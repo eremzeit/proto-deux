@@ -1,4 +1,4 @@
-use crate::runners::{RunMode, SimulationRunnerArgs, SimulationUiRunnerArgs};
+use crate::runners::{ExperimentRunnerArgs, RunMode, SimulationRunnerArgs, SimulationUiRunnerArgs};
 use clap::{Arg, ArgAction, Command};
 
 pub fn parse_cli_args() -> RunMode {
@@ -23,10 +23,30 @@ pub fn parse_cli_args() -> RunMode {
         .action(ArgAction::Set)
         .number_of_values(1);
 
+    let exp_scenario_key_arg = Arg::new("exp_scenario_key")
+        .short('s')
+        .long("scenario")
+        .help("A key that selects a predefined experiment configuration (required)")
+        .action(ArgAction::Set)
+        .number_of_values(1);
+
+    let exp_name_key_arg = Arg::new("exp_scenario_key")
+        .short('n')
+        .long("name")
+        .help("Specifies a unique key for this specific run of the experiment")
+        .action(ArgAction::Set)
+        .number_of_values(1);
+
     let matches = Command::new("proto-molecule")
         .about("A framework for evolving 2d agents")
         .subcommand_required(true)
         .arg_required_else_help(true)
+        .subcommand(
+            Command::new("exp")
+                .about("Run an experiment")
+                .arg(exp_scenario_key_arg.clone())
+                .arg(exp_name_key_arg.clone()),
+        )
         .subcommand(
             Command::new("sim")
                 .about("Run a single simulation")
@@ -60,21 +80,22 @@ pub fn parse_cli_args() -> RunMode {
         .get_matches();
 
     match matches.subcommand() {
-        // Some(("exp", sim_matches)) => {
-        //     let sim_scenario_key = sim_matches
-        //         .get_one::<String>("exp_scenario_key")
-        //         .expect("Experiment scenario key required");
-        //     let iterations = sim_matches.get_one::<u64>("iterations");
+        Some(("exp", matches)) => {
+            let scenario_key = matches
+                .get_one::<String>("scenario_key")
+                .expect("Experiment scenario key required");
+            let iterations = matches.get_one::<u64>("iterations");
 
-        //     // let args = SimulationRunnerArgs {
-        //     //     chemistry_key: chemistry_key.clone(),
-        //     //     simulation_scenario_key: sim_scenario_key.clone(),
-        //     //     unit_entry_scenario_key: None,
-        //     //     iterations: iterations.map(|i| *i),
-        //     // };
+            let default_name_key = "default".to_string();
+            let name_key = matches
+                .get_one::<String>("name_key")
+                .unwrap_or(&default_name_key);
 
-        //     // return RunMode::HeadlessSimulation(args);
-        // }
+            return RunMode::HeadlessExperiment(ExperimentRunnerArgs {
+                experiment_scenario_key: scenario_key.clone(),
+                experiment_name_key: name_key.clone(),
+            });
+        }
         Some(("sim", sim_matches)) => {
             let chemistry_key = sim_matches
                 .get_one::<String>("chemistry_key")

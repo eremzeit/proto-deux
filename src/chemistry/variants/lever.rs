@@ -208,55 +208,43 @@ impl Chemistry for LeverChemistry {
 mod tests {
     #[allow(unused_imports)]
     use super::*;
+    use crate::biology::phenotype::lever::SimpleLever;
+    use crate::chemistry::actions::tests::execute_action;
     use crate::chemistry::actions::*;
+    use crate::tests::fixtures;
 
     #[test]
-    fn make_cheese_manifest() {
-        let cheese = LeverChemistry::construct(PlaceUnitsMethod::Skip);
-    }
+    fn do_action() {
+        let mut sim = SimulationBuilder::default()
+            .chemistry(LeverChemistry::construct(PlaceUnitsMethod::SimpleDrop {
+                attributes: None,
+            }))
+            .unit_entries(vec![UnitEntryBuilder::default()
+                .species_name("main".to_string())
+                .phenotype(Rc::new(Box::new(SimpleLever::construct())))])
+            .size((1, 1))
+            .iterations(10)
+            .to_simulation();
 
-    #[test]
-    fn macros() {
-        let unit_resources = defs::UnitResourcesLookup::make_defs();
-        let unit_attributes = defs::UnitAttributesLookup::make_defs();
-        let position_attributes = defs::PositionAttributesLookup::make_defs();
-        let position_resources = defs::PositionResourcesLookup::make_defs();
-    }
+        assert!(sim.world.has_unit_at(&(0, 0)));
 
-    mod gobble_cheese {
-        use super::*;
-        use crate::chemistry::actions::tests::execute_action;
-        use crate::tests::fixtures;
+        let actions = LeverChemistry::custom_actions();
+        let action = actions.by_key("pull_lever");
 
-        #[test]
-        fn do_action() {
-            let unit_attributes = defs::UnitAttributesLookup::new();
-            let position_attributes = defs::PositionAttributesLookup::new();
-            let sim_attributes = defs::SimulationAttributesLookup::new();
-            let position_resources = defs::PositionResourcesLookup::new();
-            let unit_resources = defs::UnitResourcesLookup::new();
+        assert!(execute_action(
+            &action,
+            &(0, 0),
+            &mut sim,
+            vec![ActionParam::Constant(1)].as_slice()
+        ));
+        assert_eq!(sim.unit_entry_attributes[0][0].unwrap_integer(), 1);
 
-            let actions = LeverChemistry::custom_actions();
-            let action = actions.by_key("pull_lever");
-
-            let src_coord = (2, 0);
-
-            let mut sim =
-                fixtures::default_base_with_unit_placement(PlaceUnitsMethod::ManualSingleEntry {
-                    attributes: None,
-                    coords: vec![src_coord],
-                });
-
-            assert_eq!(sim.unit_entry_attributes[0][0].unwrap_integer(), 0);
-            let params = vec![ActionParam::Constant(1)];
-            assert!(execute_action(
-                &action,
-                &src_coord,
-                &mut sim,
-                params.as_slice()
-            ));
-
-            assert_eq!(sim.unit_entry_attributes[0][0].unwrap_integer(), 1);
-        }
+        assert!(execute_action(
+            &action,
+            &(0, 0),
+            &mut sim,
+            vec![ActionParam::Constant(10)].as_slice()
+        ));
+        assert_eq!(sim.unit_entry_attributes[0][0].unwrap_integer(), 11);
     }
 }

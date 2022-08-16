@@ -49,3 +49,18 @@ pub fn calculate_fitness(
         .unwrap();
     (fitnessDef.execute)(unit_entry_id, sim)
 }
+
+pub mod tests {
+    use crate::{runners::SimulationRunnerArgs, scenarios::simulations::get_simulation_scenario};
+
+    #[test]
+
+    pub fn test_lever_pull_fitness() {
+        let sim_args = SimulationRunnerArgs {
+            chemistry_key: "lever".to_string(),
+            simulation_scenario_key: "test_fitness".to_string(),
+            unit_entry_scenario_key: Some("single".to_string()),
+            iterations: Some(10),
+        };
+    }
+}
