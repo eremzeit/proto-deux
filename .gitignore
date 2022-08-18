@@ -9,3 +9,5 @@ Cargo.lock
 .idea
 
 data/
+
+.DS_Store
