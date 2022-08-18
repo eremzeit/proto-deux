@@ -75,12 +75,14 @@ mod tests {
     fn test_stored_resource_allocation() {
         let mut sim = SimulationBuilder::default()
             .size((5, 5))
-            .chemistry(BaseChemistry::construct(
-                PlaceUnitsMethod::ManualSingleEntry {
+            .specs(SimulationSpecs {
+                chemistry_key: "base".to_string(),
+                place_units_method: PlaceUnitsMethod::ManualSingleEntry {
                     attributes: None,
                     coords: vec![(2, 0)],
                 },
-            ))
+                ..Default::default()
+            })
             .headless(true)
             .unit_manifest(UnitManifest {
                 units: vec![UnitEntry::new("main", EmptyPhenotype::construct())],

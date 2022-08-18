@@ -64,11 +64,14 @@ pub mod defs {
     }
 }
 impl LeverChemistry {
-    pub fn construct(place_units_method: PlaceUnitsMethod) -> ChemistryInstance {
+    pub fn construct(
+        place_units_method: PlaceUnitsMethod,
+        config: ChemistryConfiguration,
+    ) -> ChemistryInstance {
         let mut chemistry = LeverChemistry {
             manifest: LeverChemistry::default_manifest(),
             place_units_method: place_units_method,
-            configuration: ChemistryConfiguration::new(),
+            configuration: config,
         };
         chemistry.init_manifest();
         wrap_chemistry!(chemistry)
@@ -101,7 +104,8 @@ impl LeverChemistry {
 
                     let uea_lookup = defs::UnitEntryAttributesLookup::new();
                     let to_add = context.params[0].to_constant();
-                    println!("pulling lever");
+                    // println!("pulling lever: {}", to_add);
+                    // panic!("pulled a lever");
                     let existing = sim_cell.unit_entry_attributes[entry_id as usize]
                         [uea_lookup.lever_pulls]
                         .unwrap_integer();
@@ -125,19 +129,6 @@ impl Chemistry for LeverChemistry {
     fn get_unit_placement(&self) -> PlaceUnitsMethod {
         self.place_units_method.clone()
     }
-
-    // fn construct_specs(
-    //     &self,
-    //     unit_placement: &PlaceUnitsMethod,
-    // ) -> Vec<std::boxed::Box<dyn SimulationSpec>> {
-    //     vec![
-    //         Box::new(PlaceUnits {
-    //             method: unit_placement.clone(),
-    //         }),
-    //         Box::new(PhenotypeExecution {}),
-    //         Box::new(specs::PostTick {}),
-    //     ]
-    // }
 
     fn get_next_unit_resources(
         &self,
@@ -199,6 +190,7 @@ impl Chemistry for LeverChemistry {
             sim.unit_manifest,
             &StoredResourceAllocationMethod::Every,
         );
+
         phenotype_execution(sim);
     }
 
@@ -215,10 +207,14 @@ mod tests {
 
     #[test]
     fn do_action() {
+        let specs = SimulationSpecs {
+            chemistry_key: "lever".to_string(),
+            place_units_method: PlaceUnitsMethod::SimpleDrop { attributes: None },
+            ..Default::default()
+        };
+
         let mut sim = SimulationBuilder::default()
-            .chemistry(LeverChemistry::construct(PlaceUnitsMethod::SimpleDrop {
-                attributes: None,
-            }))
+            .specs(specs)
             .unit_entries(vec![UnitEntryBuilder::default()
                 .species_name("main".to_string())
                 .phenotype(Rc::new(Box::new(SimpleLever::construct())))])

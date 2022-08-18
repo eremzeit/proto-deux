@@ -1,5 +1,7 @@
 use crate::{
-    scenarios::simulations::get_simulation_scenario,
+    scenarios::{
+        experiments::lever::get_experiment_scenario, simulations::get_simulation_scenario,
+    },
     simulation::{
         executors::{simple::SimpleSimulationExecutor, threaded::ThreadedSimulationExecutor},
         simulation_data::{new_threaded_simulation_reference, SimulationData},
@@ -23,6 +25,7 @@ pub struct SimulationUiRunnerArgs {
     pub max_ticks_per_second: Option<u32>,
 }
 
+#[derive(Clone)]
 pub struct ExperimentRunnerArgs {
     pub experiment_scenario_key: String,
     pub experiment_name_key: String,
@@ -33,14 +36,13 @@ pub enum RunMode {
     GuiSimulation(SimulationRunnerArgs, SimulationUiRunnerArgs),
     HeadlessExperiment(ExperimentRunnerArgs),
     GuiExperiment(ExperimentRunnerArgs),
+    OneOff(String),
 }
+pub fn start_headless_experiment(exp_runner_args: ExperimentRunnerArgs) {
+    let mut exp = get_experiment_scenario(exp_runner_args);
 
-pub fn start_headless_experiment(sim_runner_args: SimulationRunnerArgs) {
-    let mut sim = get_simulation_scenario(&sim_runner_args);
-
-    println!("Starting headless simulation");
-    let mut executor = SimpleSimulationExecutor::new(sim);
-    executor.start();
+    println!("Starting headless experiment");
+    exp.start();
 }
 
 pub fn start_headless_sim(sim_runner_args: SimulationRunnerArgs) {

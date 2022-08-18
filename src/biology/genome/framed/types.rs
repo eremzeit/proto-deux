@@ -16,6 +16,7 @@ use std::fmt::{Debug, Formatter, Result};
 pub type GenomeBoolResult = bool;
 pub type FramedGenomeWord = u64;
 pub type FramedGenomeValue = u16;
+pub type RawFramedGenome = Vec<FramedGenomeWord>;
 pub type RegisterId = usize;
 
 pub const NUM_CHANNELS: usize = 4;

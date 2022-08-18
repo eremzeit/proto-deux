@@ -8,9 +8,12 @@ use crate::biology::phenotype::framed::*;
 use crate::simulation::common::helpers::place_units::PlaceUnitsMethod;
 
 pub fn test_with_genome() {
-    let gm = GeneticManifest::new();
-    let cm = CheeseChemistry::default_manifest();
-    let sm = SensorManifest::with_default_sensors(&cm);
+    let specs = SimulationSpecs {
+        chemistry_key: "cheese".to_string(),
+        place_units_method: PlaceUnitsMethod::SimpleDrop { attributes: None },
+        ..Default::default()
+    };
+    let (cm, sm, gm) = specs.context();
 
     let genome_values1 = get_genome1().build(&sm, &cm, &gm);
     let frames1 = FramedGenomeParser::parse(
@@ -24,9 +27,6 @@ pub fn test_with_genome() {
         .headless(true)
         .size((20, 20))
         .iterations(10000)
-        .chemistry(CheeseChemistry::construct(PlaceUnitsMethod::SimpleDrop {
-            attributes: None,
-        }))
         .unit_manifest(UnitManifest {
             units: vec![UnitEntryBuilder::default()
                 .species_name("species1".to_string())

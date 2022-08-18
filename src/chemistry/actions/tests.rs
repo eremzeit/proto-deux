@@ -26,12 +26,17 @@ pub mod set_unit_resource {
 
     #[test]
     fn test__evaluate() {
+        let specs = SimulationSpecs {
+            chemistry_key: "nanobots".to_string(),
+            place_units_method: PlaceUnitsMethod::ManualSingleEntry {
+                attributes: None,
+                coords: vec![(1, 1)],
+            },
+            ..Default::default()
+        };
+
         let actions = default_actions();
         let action = actions.by_key("set_unit_resource");
-        let chemistry = NanobotsChemistry::construct(PlaceUnitsMethod::ManualSingleEntry {
-            attributes: None,
-            coords: vec![(1, 1)],
-        });
 
         let unit_manifest = UnitManifest {
             units: vec![UnitEntry::new("main", EmptyPhenotype::construct())],
@@ -39,7 +44,7 @@ pub mod set_unit_resource {
         let mut sim = SimulationBuilder::default()
             .size((5, 5))
             .headless(true)
-            .chemistry(chemistry)
+            .specs(specs)
             .unit_manifest(unit_manifest)
             .to_simulation();
 
@@ -65,18 +70,22 @@ pub mod offset_unit_resource {
 
     #[test]
     fn test_evaluate_strict() {
+        let specs = SimulationSpecs {
+            chemistry_key: "nanobots".to_string(),
+            place_units_method: PlaceUnitsMethod::ManualSingleEntry {
+                attributes: None,
+                coords: vec![(2, 2)],
+            },
+            ..Default::default()
+        };
+
         let actions = default_actions();
         let action = actions.by_key("offset_unit_resource");
 
         let mut sim = SimulationBuilder::default()
             .size((5, 5))
             .headless(true)
-            .chemistry(NanobotsChemistry::construct(
-                PlaceUnitsMethod::ManualSingleEntry {
-                    attributes: None,
-                    coords: vec![(2, 2)],
-                },
-            ))
+            .specs(specs)
             .unit_manifest(UnitManifest {
                 units: vec![UnitEntry::new("main", EmptyPhenotype::construct())],
             })

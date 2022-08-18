@@ -1,16 +1,19 @@
+use crate::biology::experiments::variants::simple::utils::{
+    CullStrategy, ExperimentSimSettings, SimpleExperimentSettings,
+};
+use crate::biology::experiments::variants::simple::SimpleExperiment;
 use crate::biology::experiments::*;
 use crate::simulation::common::helpers::place_units::PlaceUnitsMethod;
 use crate::simulation::common::*;
 
 pub fn evolve_lever() {
-    let chemistry_key = "lever".to_string();
-    let chemistry = get_chemistry_by_key(
-        &chemistry_key,
-        PlaceUnitsMethod::SimpleDrop { attributes: None },
-    );
-    let gm = GeneticManifest::new();
-    let cm = chemistry.get_manifest();
-    let sm = SensorManifest::with_default_sensors(&cm);
+    let specs = SimulationSpecs {
+        chemistry_key: "lever".to_string(),
+        place_units_method: PlaceUnitsMethod::SimpleDrop { attributes: None },
+        ..Default::default()
+    };
+
+    let (cm, sm, gm) = specs.context();
 
     let settings = SimpleExperimentSettings {
         cull_strategy: CullStrategy::WorstFirst,
@@ -20,16 +23,15 @@ pub fn evolve_lever() {
             num_simulation_ticks: 1,
             grid_size: (10, 1),
             num_genomes_per_sim: 3,
-            iterations: 5,
             default_unit_resources: vec![],
             default_unit_attr: vec![],
         },
 
-        iterations: 1,
-        genetic_manifest: gm.clone(),
-        sensor_manifest: sm.clone(),
-        chemistry_key,
-        alteration_set: alterations::default_alterations(),
+        iterations: 10000,
+        specs: specs,
+        alteration_set: alterations::default_alteration_set(),
+        experiment_key: "my_experiment".to_string(),
+        logging_settings: None,
     };
 
     let mut exp = SimpleExperiment::new(settings);

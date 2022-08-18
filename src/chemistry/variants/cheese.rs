@@ -126,11 +126,14 @@ pub mod defs {
     //trace_macros!(false);
 }
 impl CheeseChemistry {
-    pub fn construct(place_units_method: PlaceUnitsMethod) -> ChemistryInstance {
+    pub fn construct(
+        place_units_method: PlaceUnitsMethod,
+        config: ChemistryConfiguration,
+    ) -> ChemistryInstance {
         let mut chemistry = CheeseChemistry {
             manifest: CheeseChemistry::default_manifest(),
             place_units_method: place_units_method,
-            configuration: ChemistryConfiguration::new(),
+            configuration: config,
         };
 
         chemistry.init_manifest();
@@ -332,8 +335,8 @@ impl Chemistry for CheeseChemistry {
             }
         }
 
-        let pos_resources = defs::UnitResourcesLookup::new();
-        let cheese = sim.world.get_pos_resource_at(&(0, 0), pos_resources.cheese);
+        // let pos_resources = defs::UnitResourcesLookup::new();
+        // let cheese = sim.world.get_pos_resource_at(&(0, 0), pos_resources.cheese);
     }
 
     fn on_simulation_finish(&self, sim: &mut SimCell) {}
@@ -401,7 +404,8 @@ mod tests {
     use crate::chemistry::actions::*;
     #[test]
     fn make_cheese_manifest() {
-        let cheese = CheeseChemistry::construct(PlaceUnitsMethod::Skip);
+        let cheese =
+            CheeseChemistry::construct(PlaceUnitsMethod::Skip, ChemistryConfiguration::new());
     }
     #[test]
     fn macros() {

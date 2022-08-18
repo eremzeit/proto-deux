@@ -213,6 +213,28 @@ macro_rules! conditional {
 }
 
 #[macro_export]
+macro_rules! if_any {
+    ($($x:expr),+) => ({
+        if_any(vec![
+            $($x),+
+        ])
+    })
+}
+
+#[macro_export]
+macro_rules! if_all {
+    ($($x:expr),+) => ({
+        {
+            let mut v = vec![
+                $($x),+
+            ];
+
+            if_all(v)
+        }
+    })
+}
+
+#[macro_export]
 macro_rules! then_do {
     ($op_key:ident) => {
         then_do!($op_key, 0, 0, 0)
@@ -254,7 +276,6 @@ macro_rules! then_do {
                     // to the metareaction manifest and reaction manifest.
 
                     let meta_reaction = MetaReaction::from_key(&operation_key);
-                    println!("meta_reaction: {:?}", &meta_reaction);
                     if meta_reaction.is_some() {
                         operation_type = Some(operation::val_for_metareaction_operation_type());
                         operation_id = Some(meta_reaction.unwrap().to_val());
@@ -314,6 +335,7 @@ macro_rules! then_do {
     }};
 }
 
+// TODO: rename this to reflect that it's not a generalized utility
 macro_rules! flat_vec {
     ($($val:expr),*) => (
         vec![

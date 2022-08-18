@@ -40,14 +40,20 @@ pub mod fixtures {
     use super::*;
 
     pub fn default_base_with_unit_placement(place_units_method: PlaceUnitsMethod) -> Simulation {
+        let specs = SimulationSpecs {
+            chemistry_key: "cheese".to_string(),
+            place_units_method: place_units_method,
+            ..Default::default()
+        };
+
         let mut sim = SimulationBuilder::default()
+            .specs(specs)
             .unit_manifest(UnitManifest::from(&vec![UnitEntry::new(
                 "main",
                 EmptyPhenotype::construct(),
             )]))
             .headless(true)
             .size((5, 5))
-            .chemistry(CheeseChemistry::construct(place_units_method))
             .to_simulation();
 
         sim.init();

@@ -57,7 +57,7 @@ impl Phenotype for FramedGenomePhenotype {
         );
 
         let reactions = execution_context.execute();
-        //println!("REACTIONS AOEUAOEU: {:?}", &reactions);
+        // println!("EXECUTING reactions: {:?}", &reactions);
         //println!("consumed_compute_points: {}", execution_context.consumed_compute_points);
 
         PhenotypeResult {
@@ -144,9 +144,16 @@ pub mod test {
 
     #[test]
     fn genome_execution__execute() {
-        let gm = GeneticManifest::new();
-        let cm = CheeseChemistry::default_manifest();
-        let sm = SensorManifest::with_default_sensors(&cm);
+        let specs = SimulationSpecs {
+            chemistry_key: "cheese".to_string(),
+            place_units_method: PlaceUnitsMethod::ManualSingleEntry {
+                attributes: None,
+                coords: vec![(1, 1)],
+            },
+            ..Default::default()
+        };
+
+        let (cm, sm, gm) = specs.context();
 
         let genome_values = genome!(gene(
             if_any(all((is_truthy, 1, 0, 0))),
@@ -155,17 +162,17 @@ pub mod test {
         .build(&sm, &cm, &gm);
 
         let framed_vals = simple_convert_into_frames(genome_values);
-        let frames = FramedGenomeParser::parse(framed_vals, cm.clone(), sm.clone(), gm.clone());
+        let frames = FramedGenomeParser::parse(
+            framed_vals,
+            specs.chemistry_manifest(),
+            specs.sensors(),
+            specs.genetic_manifest(),
+        );
 
         let mut sim = SimulationBuilder::default()
             .size((3, 3))
             .iterations(100)
-            .chemistry(CheeseChemistry::construct(
-                PlaceUnitsMethod::ManualSingleEntry {
-                    attributes: None,
-                    coords: vec![(1, 1)],
-                },
-            ))
+            .specs(specs)
             .headless(true)
             .unit_manifest(UnitManifest {
                 units: vec![UnitEntryBuilder::default()

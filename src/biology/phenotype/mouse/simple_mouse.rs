@@ -92,23 +92,18 @@ pub mod tests {
 
     #[test]
     pub fn basic() {
+        let specs = SimulationSpecs {
+            chemistry_key: "cheese".to_string(),
+            place_units_method: PlaceUnitsMethod::ManualSingleEntry {
+                attributes: None,
+                coords: vec![(2, 0)],
+            },
+            ..Default::default()
+        };
         let mut sim = SimulationBuilder::default()
             .size((5, 5))
-            .chemistry(CheeseChemistry::construct(
-                PlaceUnitsMethod::ManualSingleEntry {
-                    attributes: None,
-                    coords: vec![(2, 0)],
-                },
-            ))
+            .specs(specs)
             .headless(true)
-            // .specs(vec![
-            //     Box::new(PlaceUnits {
-            //         method: ,
-            //     }),
-            //     Box::new(ResourceAllocation {
-            //         stored_method: StoredResourceAllocationMethod::Every,
-            //     }),
-            // ])
             .unit_manifest(UnitManifest {
                 units: vec![UnitEntry::new("main", EmptyPhenotype::construct())],
             })

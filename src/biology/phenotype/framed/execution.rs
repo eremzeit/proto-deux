@@ -174,7 +174,12 @@ impl<'a> GenomeExecutionContext<'a> {
             }
             ParsedGenomeParam::Random(max_val) => {
                 let mut rng = rand::thread_rng();
-                rng.gen_range(0..*max_val as usize) as i32
+
+                if max_val == &0 {
+                    0 as i32
+                } else {
+                    rng.gen_range(0..*max_val as usize) as i32
+                }
             }
         }
     }

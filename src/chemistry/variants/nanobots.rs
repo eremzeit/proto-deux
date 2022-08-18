@@ -18,11 +18,14 @@ pub struct NanobotsChemistry {
 }
 
 impl NanobotsChemistry {
-    pub fn construct(place_units_method: PlaceUnitsMethod) -> Box<NanobotsChemistry> {
+    pub fn construct(
+        place_units_method: PlaceUnitsMethod,
+        config: ChemistryConfiguration,
+    ) -> Box<NanobotsChemistry> {
         let mut chemistry = NanobotsChemistry {
             manifest: NanobotsChemistry::default_manifest(),
             place_units_method: place_units_method,
-            configuration: ChemistryConfiguration::new(),
+            configuration: config,
         };
         chemistry.init_manifest();
         Box::new(chemistry)

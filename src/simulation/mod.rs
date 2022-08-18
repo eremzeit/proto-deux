@@ -134,7 +134,7 @@ impl Simulation {
         simulation
     }
     pub fn init(&mut self) {
-        self.world.tick = 1;
+        self.world.tick = 1; // we start at one.  zero means pre-initialized.
         sim_log!("INIT SIMULATION: {}", self.chemistry.get_key());
 
         let entries = self
@@ -189,11 +189,15 @@ impl Simulation {
         });
     }
 
-    pub fn tick(&mut self) {
-        if self.world.tick % 1000 == 0 {
-            println!("tick: {}", self.world.tick);
-        }
+    /**
+     * Returns true if finished
+     */
+    pub fn tick(&mut self) -> bool {
+        // if self.world.tick % 1000 == 0 {
+        //     println!("tick: {}", self.world.tick);
+        // }
 
+        // println!("TICK");
         self.chemistry.on_simulation_tick(&mut SimCell {
             attributes: &mut self.attributes,
             world: &mut self.world,
@@ -245,8 +249,14 @@ impl Simulation {
 
         // self.world.tick = self.world.tick + 1;
         // }
-        if self.world.tick >= self.iterations - 1 {
+
+        // note: the zeroith tick means pre-initialized.  Our first real tick starts at 1
+        // so our ending conditional is plus one (ie. >= the iteration count)
+        if self.world.tick >= self.iterations {
             self.finish();
+            true
+        } else {
+            false
         }
     }
     pub fn to_data(&self) -> SimulationData {
@@ -347,12 +357,14 @@ mod tests {
     fn test_attribute_initialization() {
         let mut sim = SimulationBuilder::default()
             .size((5, 5))
-            .chemistry(CheeseChemistry::construct(
-                PlaceUnitsMethod::ManualSingleEntry {
+            .specs(SimulationSpecs {
+                chemistry_key: "cheese".to_string(),
+                place_units_method: PlaceUnitsMethod::ManualSingleEntry {
                     attributes: None,
                     coords: vec![(1, 1)],
                 },
-            ))
+                ..Default::default()
+            })
             .headless(true)
             .unit_manifest(UnitManifest {
                 units: vec![UnitEntry::new("main", EmptyPhenotype::construct())],

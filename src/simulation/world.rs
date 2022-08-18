@@ -412,7 +412,13 @@ pub mod tests {
 
     #[test]
     pub fn set_some_resources() {
-        let chemistry: ChemistryInstance = CheeseChemistry::construct(PlaceUnitsMethod::Skip);
+        let specs = SimulationSpecs {
+            chemistry_key: "cheese".to_string(),
+            place_units_method: PlaceUnitsMethod::Skip,
+            ..Default::default()
+        };
+
+        let chemistry: ChemistryInstance = specs.construct_chemistry();
         let mut world = World::new((5, 5), &chemistry);
         let unit_entry = UnitEntry::new("foo_unit", EmptyPhenotype::construct());
         let coord = (2, 2);

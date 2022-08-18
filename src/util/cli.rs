@@ -2,35 +2,35 @@ use crate::runners::{ExperimentRunnerArgs, RunMode, SimulationRunnerArgs, Simula
 use clap::{Arg, ArgAction, Command};
 
 pub fn parse_cli_args() -> RunMode {
-    let iterations_arg = Arg::new("iterations")
+    let iterations_arg = Arg::new("num_iterations")
         .short('i')
-        .long("--iterations")
+        .long("iterations")
         .help("Specifies how many ticks to execute")
         .action(ArgAction::Set)
         .number_of_values(1);
 
     let chemistry_key_arg = Arg::new("chemistry_key")
         .short('c')
-        .long("--chemistry")
+        .long("chemistry")
         .help("A key that selects a chemistry")
         .action(ArgAction::Set)
         .number_of_values(1);
 
-    let sim_scenario_key_arg = Arg::new("sim_scenario_key")
+    let scenario_key_arg = Arg::new("scenario_key")
         .short('s')
         .long("scenario")
-        .help("A key that selects a predefined simulation configuration (required)")
+        .help("A key that selects a predefined configuration (either for a simulation or an experiment)")
         .action(ArgAction::Set)
         .number_of_values(1);
 
-    let exp_scenario_key_arg = Arg::new("exp_scenario_key")
-        .short('s')
-        .long("scenario")
-        .help("A key that selects a predefined experiment configuration (required)")
-        .action(ArgAction::Set)
-        .number_of_values(1);
+    // let exp_scenario_key_arg = Arg::new("exp_scenario_key")
+    //     .short('s')
+    //     .long("scenario")
+    //     .help("A key that selects a predefined experiment configuration (required)")
+    //     .action(ArgAction::Set)
+    //     .number_of_values(1);
 
-    let exp_name_key_arg = Arg::new("exp_scenario_key")
+    let exp_name_key_arg = Arg::new("name_key")
         .short('n')
         .long("name")
         .help("Specifies a unique key for this specific run of the experiment")
@@ -42,23 +42,33 @@ pub fn parse_cli_args() -> RunMode {
         .subcommand_required(true)
         .arg_required_else_help(true)
         .subcommand(
+            Command::new("one_off").about("Run an experiment").arg(
+                Arg::new("scenario_key")
+                    .short('s')
+                    .long("scenario_key")
+                    .help("Specifies a unique key for this specific run of the experiment")
+                    .action(ArgAction::Set)
+                    .number_of_values(1),
+            ),
+        )
+        .subcommand(
             Command::new("exp")
                 .about("Run an experiment")
-                .arg(exp_scenario_key_arg.clone())
+                .arg(scenario_key_arg.clone())
                 .arg(exp_name_key_arg.clone()),
         )
         .subcommand(
             Command::new("sim")
                 .about("Run a single simulation")
                 .arg(chemistry_key_arg.clone())
-                .arg(sim_scenario_key_arg.clone())
+                .arg(scenario_key_arg.clone())
                 .arg(iterations_arg.clone()),
         )
         .subcommand(
             Command::new("sim_ui")
                 .about("Run a single simulation")
                 .arg(chemistry_key_arg.clone())
-                .arg(sim_scenario_key_arg.clone())
+                .arg(scenario_key_arg.clone())
                 .arg(
                     Arg::new("sim_ticks_per_second")
                         .short('t')
@@ -80,11 +90,19 @@ pub fn parse_cli_args() -> RunMode {
         .get_matches();
 
     match matches.subcommand() {
+        Some(("one_off", matches)) => {
+            let scenario_key = matches
+                .get_one::<String>("scenario_key")
+                .expect("One off scenario key required");
+
+            return RunMode::OneOff(scenario_key.clone());
+        }
         Some(("exp", matches)) => {
             let scenario_key = matches
                 .get_one::<String>("scenario_key")
                 .expect("Experiment scenario key required");
-            let iterations = matches.get_one::<u64>("iterations");
+
+            // let iterations = matches.get_one::<u64>("num_iterations");
 
             let default_name_key = "default".to_string();
             let name_key = matches
@@ -102,9 +120,9 @@ pub fn parse_cli_args() -> RunMode {
                 .expect("chemistry key required");
 
             let sim_scenario_key = sim_matches
-                .get_one::<String>("sim_scenario_key")
+                .get_one::<String>("scenario_key")
                 .expect("Scenario key required");
-            let iterations = sim_matches.get_one::<u64>("iterations");
+            let iterations = sim_matches.get_one::<u64>("num_iterations");
 
             let args = SimulationRunnerArgs {
                 chemistry_key: chemistry_key.clone(),
@@ -117,7 +135,7 @@ pub fn parse_cli_args() -> RunMode {
         }
         Some(("sim_ui", sim_matches)) => {
             let sim_scenario_key = sim_matches
-                .get_one::<String>("sim_scenario_key")
+                .get_one::<String>("scenario_key")
                 .expect("Scenario key required");
 
             let mut sim_ticks_per_second = sim_matches
@@ -126,7 +144,7 @@ pub fn parse_cli_args() -> RunMode {
             let mut ui_frame_rate = sim_matches
                 .get_one::<String>("ui_frame_rate")
                 .map(|x| x.parse::<u32>().unwrap());
-            let iterations = sim_matches.get_one::<u64>("iterations");
+            let iterations = sim_matches.get_one::<u64>("num_iterations");
 
             // the tps should be at least the frame rate
             sim_ticks_per_second = sim_ticks_per_second.or(ui_frame_rate);

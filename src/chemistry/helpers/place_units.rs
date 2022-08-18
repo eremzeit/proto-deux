@@ -11,7 +11,7 @@ use rand::Rng;
 use std::sync::Arc;
 use typemap::{CloneMap, Key};
 
-#[derive(Clone)]
+#[derive(Clone, Default)]
 pub enum PlaceUnitsMethod {
     LinearBottomMiddle {
         attributes: Option<UnitAttributes>,
@@ -33,6 +33,8 @@ pub enum PlaceUnitsMethod {
     },
 
     Skip,
+
+    #[default]
     Default,
 }
 
@@ -132,7 +134,7 @@ pub fn place_pct_region(
         (world.size.0 as f32 * region_pct_rect.2) as usize,
         (world.size.1 as f32 * region_pct_rect.3) as usize,
     ];
-    println!("[PlaceUnits] placing units in region: {:?}", rect);
+    // println!("[PlaceUnits] placing units in region: {:?}", rect);
 
     let max_attempts = manifest.units.len() * units_per_entry as usize * 5;
 
@@ -169,13 +171,15 @@ pub fn place_manual(
     attributes: &Option<UnitAttributes>,
     chemistry: &ChemistryInstance,
 ) {
-    println!("[PlaceUnits] placing units at coords: {:?}", coords);
+    // println!("[PlaceUnits] placing units at coords: {:?}", coords);
     for coord in coords {
         world.seed_unit_at(coord, unit_entry, attributes.clone(), &chemistry);
     }
 }
 
 mod tests {
+    use crate::simulation::specs::SimulationSpecs;
+
     #[allow(unused_imports)]
     use super::*;
 
@@ -183,9 +187,11 @@ mod tests {
     fn test_place_units() {
         let mut sim = SimulationBuilder::default()
             .size((5, 5))
-            .chemistry(CheeseChemistry::construct(
-                PlaceUnitsMethod::LinearBottomMiddle { attributes: None },
-            ))
+            .specs(SimulationSpecs {
+                chemistry_key: "cheese".to_string(),
+                place_units_method: PlaceUnitsMethod::LinearBottomMiddle { attributes: None },
+                ..Default::default()
+            })
             .headless(true)
             .unit_manifest(UnitManifest {
                 units: vec![UnitEntry::new("main", EmptyPhenotype::construct())],
@@ -199,14 +205,16 @@ mod tests {
     fn test_random_region_drop() {
         let mut sim = SimulationBuilder::default()
             .size((100, 100))
-            .chemistry(CheeseChemistry::construct(
-                PlaceUnitsMethod::RandomRegionDrop {
+            .specs(SimulationSpecs {
+                chemistry_key: "cheese".to_string(),
+                place_units_method: PlaceUnitsMethod::RandomRegionDrop {
                     attributes: None,
                     units_per_entry: 2,
                     region_pct_rect: (0.25, 0.25, 0.75, 0.75),
                 },
-            ))
-            .headless(true)
+                ..Default::default()
+            })
+            // .headless(true)
             .unit_manifest(UnitManifest {
                 units: vec![
                     UnitEntry::new("main", EmptyPhenotype::construct()),

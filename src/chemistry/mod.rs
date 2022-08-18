@@ -12,6 +12,7 @@ use self::helpers::place_units::place_units;
 use self::helpers::place_units::PlaceUnitsMethod;
 use self::properties::*;
 use self::reactions::*;
+use self::variants::BaseChemistry;
 use self::variants::LeverChemistry;
 use crate::chemistry::actions::{
     default_actions, ActionDefinition, ActionParam, ActionParamType, ActionSet,
@@ -36,11 +37,17 @@ pub type ChemistryConfiguration = HashMap<String, ChemistryConfigValue>;
 /* used to pass values from the phenotype to the action execution
  * to replace placeholders */
 pub type ActionArgValue = u32;
-pub fn get_chemistry_by_key(key: &str, place_units_method: PlaceUnitsMethod) -> Box<dyn Chemistry> {
+pub fn get_chemistry_by_key(
+    key: &str,
+    place_units_method: PlaceUnitsMethod,
+    config: ChemistryConfiguration,
+) -> Box<dyn Chemistry> {
     match key {
-        "cheese" => CheeseChemistry::construct(place_units_method),
-        "lever" => LeverChemistry::construct(place_units_method),
-        _ => CheeseChemistry::construct(place_units_method),
+        "cheese" => CheeseChemistry::construct(place_units_method, config),
+        "lever" => LeverChemistry::construct(place_units_method, config),
+        "nanobots" => NanobotsChemistry::construct(place_units_method, config),
+        "base" => BaseChemistry::construct(place_units_method),
+        _ => panic!("chemistry key not found: {}", key),
     }
 }
 

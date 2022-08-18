@@ -93,11 +93,16 @@ mod tests {
 
     #[test]
     fn test() {
+        let specs = SimulationSpecs {
+            chemistry_key: "cheese".to_string(),
+            // can we leave this commented ?
+            // place_units_method: PlaceUnitsMethod::LinearBottomMiddle { attributes: None },
+            ..Default::default()
+        };
+
         let mut sim = SimulationBuilder::default()
             .size((5, 5))
-            .chemistry(CheeseChemistry::construct(
-                PlaceUnitsMethod::LinearBottomMiddle { attributes: None },
-            ))
+            .specs(specs)
             .headless(true)
             .unit_manifest(UnitManifest {
                 units: vec![UnitEntry::new("main", EmptyPhenotype::construct())],

@@ -14,28 +14,35 @@ use crate::simulation::executors::threaded::ThreadedSimulationExecutor;
 use std::rc::Rc;
 
 pub fn basic(sim_args: &SimulationRunnerArgs) -> SimulationBuilder {
-    let chemistry_key = "cheese".to_string();
+    let specs = SimulationSpecs {
+        chemistry_key: "cheese".to_string(),
+        place_units_method: PlaceUnitsMethod::RandomRegionDrop {
+            attributes: None,
+            units_per_entry: 1,
+            region_pct_rect: (0.40, 0.40, 0.60, 0.60),
+        },
+        ..Default::default()
+    };
 
     SimulationBuilder::default()
-        .chemistry(CheeseChemistry::construct(
-            PlaceUnitsMethod::RandomRegionDrop {
-                attributes: None,
-                units_per_entry: 1,
-                region_pct_rect: (0.40, 0.40, 0.60, 0.60),
-            },
-        ))
+        .specs(specs)
         .unit_entries(get_unit_entries_for_cheese())
         .size((50, 50))
         .iterations(1000)
 }
 
 pub fn with_genome(sim_args: &SimulationRunnerArgs) -> SimulationBuilder {
-    let gm = GeneticManifest::new();
-    let cm = CheeseChemistry::default_manifest();
-    let sm = SensorManifest::with_default_sensors(&cm);
+    let specs = SimulationSpecs {
+        chemistry_key: "cheese".to_string(),
+        place_units_method: PlaceUnitsMethod::SimpleDrop { attributes: None },
+        ..Default::default()
+    };
+
+    let (cm, sm, gm) = specs.context();
+
     // how do i say, find an open square adjacent to me, and use that as a parameter?  is that what a register could be used for? ephemeral data?
 
-    use crate::biology::genome::framed::samples::get_genome1;
+    use crate::biology::genome::framed::samples::cheese::get_genome1;
     let frames1 = get_genome1(&cm, &sm, &gm);
 
     let genome_values2 = legacy::get_genome2().build(&sm, &cm, &gm);
@@ -70,11 +77,8 @@ pub fn with_genome(sim_args: &SimulationRunnerArgs) -> SimulationBuilder {
         .build(&cm, None);
 
     SimulationBuilder::default()
+        .specs(specs)
         .size((50, 30))
-        // .size((20, 20))
-        .chemistry(CheeseChemistry::construct(PlaceUnitsMethod::SimpleDrop {
-            attributes: None,
-        }))
         .iterations(1000)
         .unit_manifest(UnitManifest {
             units: vec![entry1, entry2],

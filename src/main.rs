@@ -48,6 +48,7 @@ use common::ThreadedSimulationExecutor;
 use ndarray::*;
 use ndarray::{Array2, Dim, Shape};
 use runners::RunMode;
+use scenarios::one_offs::run_one_off;
 use serde_json::{Result, Value};
 use simulation::simulation_data::new_threaded_simulation_reference;
 use std::collections::HashMap;
@@ -68,11 +69,17 @@ fn main() {
     let args = util::cli::parse_cli_args();
 
     match args {
+        RunMode::HeadlessExperiment(args) => {
+            runners::start_headless_experiment(args);
+        }
         RunMode::HeadlessSimulation(sim_args) => {
             runners::start_headless_sim(sim_args);
         }
         RunMode::GuiSimulation(sim_args, gui_args) => {
             runners::start_sim_with_gui(sim_args, gui_args);
+        }
+        RunMode::OneOff(scenario_key) => {
+            run_one_off(&scenario_key);
         }
         _ => panic!("Run mode not implemented yet"),
     }
