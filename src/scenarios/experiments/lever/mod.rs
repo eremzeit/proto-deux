@@ -45,17 +45,16 @@ pub fn simple_experiment(runner_args: ExperimentRunnerArgs) -> SimpleExperiment 
     let settings = SimpleExperimentSettings {
         cull_strategy: CullStrategy::WorstFirst,
         fitness_calculation_key: "lever_pulls".to_string(),
-        num_genomes: 3,
+        num_genomes: 10,
         sim_settings: ExperimentSimSettings {
-            num_simulation_ticks: 1,
-            grid_size: (10, 1),
-            num_genomes_per_sim: 3,
-            // iterations: 5,
+            num_simulation_ticks: 10,
+            grid_size: (10, 10),
+            num_genomes_per_sim: 10,
             default_unit_resources: vec![],
             default_unit_attr: vec![],
         },
 
-        iterations: 10000,
+        iterations: 1000,
         specs: specs,
         alteration_set: alterations(),
         experiment_key: runner_args.experiment_name_key.to_string(),

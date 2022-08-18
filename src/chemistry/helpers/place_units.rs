@@ -39,6 +39,21 @@ pub enum PlaceUnitsMethod {
 }
 
 pub fn place_units(sim: &mut SimCell, method: &PlaceUnitsMethod) {
+    let max_units_possible = sim.world.size.0 * sim.world.size.1;
+
+    let mut total_units = 0;
+    for entry in sim.unit_manifest.units.iter() {
+        // for now we assume 1 unit dropped per entry, but it might not always be like this
+        total_units += 1;
+    }
+
+    if total_units > max_units_possible {
+        panic!(
+            "World has {} cells so cant place {} units",
+            max_units_possible, total_units
+        );
+    }
+
     match method {
         PlaceUnitsMethod::LinearBottomMiddle { attributes } => {
             place_linear_middle_bottom(
@@ -67,9 +82,13 @@ pub fn place_units(sim: &mut SimCell, method: &PlaceUnitsMethod) {
         PlaceUnitsMethod::SimpleDrop { attributes } => {
             let manifest = sim.unit_manifest.clone();
             for (i, unit) in manifest.units.iter().enumerate() {
+                // fill from the left to right, bottom to top
+                let x = i % sim.world.size.0;
+                let y = i / sim.world.size.0;
+
                 place_manual(
                     &unit.info,
-                    &vec![(i, 0)],
+                    &vec![(x, y)],
                     &mut sim.world,
                     attributes,
                     sim.chemistry,

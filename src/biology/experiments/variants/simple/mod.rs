@@ -73,7 +73,10 @@ impl SimpleExperiment {
         }
 
         if self.settings.num_genomes < self.settings.sim_settings.num_genomes_per_sim {
-            panic!("Number of genomes in pool must be larger than genomes in a single sim");
+            panic!(
+                "Number of genomes in pool must be larger than genomes in a single sim: ({}, {})",
+                self.settings.num_genomes, self.settings.sim_settings.num_genomes_per_sim
+            );
         }
 
         self.populate_initial_genomes();
@@ -134,8 +137,19 @@ impl SimpleExperiment {
     }
 
     pub fn resume(&mut self) {
-        if self.is_initialized {
+        if !self.is_initialized {
             panic!("Experiment hasn't been initialized");
+        }
+
+        let (cm, sm, gm) = self.settings.specs.context();
+        if let Some(logger) = &self._logger  && self.current_tick == 0{
+            logger._log_checkpoint(
+                self.current_tick as usize,
+                &self.genome_entries,
+                &sm,
+                &cm,
+                &gm,
+            );
         }
 
         while self.current_tick < self.settings.iterations as u64 {
@@ -566,14 +580,11 @@ impl SimpleExperiment {
         if let Some(logger) = &self._logger {
             logger._log_fitness_percentiles(self.current_tick as usize, &self.genome_entries);
 
-            if self.current_tick % logger.settings.checkpoint_interval as u64 == 0 {
-                logger._log_checkpoint(
-                    self.current_tick as usize,
-                    &self.genome_entries,
-                    &sm,
-                    &cm,
-                    &gm,
-                )
+            let _tick = self.current_tick + 1;
+            let should_log_checkpoint = _tick % logger.settings.checkpoint_interval as u64 == 0
+                || _tick >= self.settings.iterations as u64;
+            if should_log_checkpoint {
+                logger._log_checkpoint(_tick as usize, &self.genome_entries, &sm, &cm, &gm)
             }
         }
     }
