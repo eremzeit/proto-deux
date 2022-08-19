@@ -11,7 +11,7 @@ use crate::{
 };
 
 use crate::biology::genome::framed::builders::*;
-use crate::biology::phenotype::framed::common::*;
+use crate::biology::unit_behavior::framed::common::*;
 use crate::simulation::common::*;
 use std::rc::Rc;
 

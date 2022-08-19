@@ -4,20 +4,20 @@ use crate::simulation::{
     SimulationAttributes,
 };
 
-use super::{Phenotype, PhenotypeResult};
+use super::{UnitBehavior, UnitBehaviorResult};
 
 pub struct SimpleLever {}
-impl Phenotype for SimpleLever {
+impl UnitBehavior for SimpleLever {
     fn get_behavior(
         &self,
         coord: &Coord,
         sim_attr: &SimulationAttributes,
         world: &World,
         chemistry: &ChemistryInstance,
-    ) -> PhenotypeResult {
+    ) -> UnitBehaviorResult {
         let reactions = &chemistry.get_manifest().reactions;
 
-        return PhenotypeResult {
+        return UnitBehaviorResult {
             reactions: vec![(
                 0, //pull lever
                 1, // pull 1 time

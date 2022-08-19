@@ -1,4 +1,4 @@
-use crate::biology::phenotype::NUM_REACTION_PARAMS;
+use crate::biology::unit_behavior::NUM_REACTION_PARAMS;
 use crate::chemistry::actions::{ActionDefinitionIndex, ActionParam, ActionParamType, ActionSet};
 use crate::chemistry::ReactionId;
 use crate::simulation::common::*;
@@ -60,7 +60,7 @@ pub fn execute_reaction(
     reaction_call: ReactionCall,
 ) {
     let action_params: Vec<[ActionParam; 3]> =
-        replace_phenotype_placeholders(reaction, reaction_call);
+        replace_unit_behavior_placeholders(reaction, reaction_call);
 
     for (i, reagent) in reaction.reagents.iter().enumerate() {
         //println!("reagent: {:?} with INDEX {}", reagent, reagent.action_index);
@@ -86,9 +86,10 @@ pub fn execute_reaction(
 }
 
 /**
- * Executed during each reaction call to fill in parameters that are meant to be supplied by the phenotype
+ * Executed during each reaction call to fill in parameters that are meant
+ * to be supplied by the unit behavior.
  */
-fn replace_phenotype_placeholders(
+fn replace_unit_behavior_placeholders(
     reaction: &ReactionDefinition,
     reaction_call: ReactionCall,
 ) -> Vec<[ActionParam; 3]> {
@@ -105,7 +106,7 @@ fn replace_phenotype_placeholders(
             //println!("param: {}", i);
 
             match &param_def {
-                ActionParam::PhenotypeArgument(param_type) => {
+                ActionParam::UnitBehaviorArgument(param_type) => {
                     //println!("placeholder");
                     let param = get_param_by_index(reaction_call, param_idx);
                     params[i] = convert_raw_arg_val_to_param_val(param, param_type);
@@ -222,14 +223,14 @@ pub mod tests {
         /*
          * index replacement
          */
-        let action_params: Vec<[ActionParam; 3]> = replace_phenotype_placeholders(
+        let action_params: Vec<[ActionParam; 3]> = replace_unit_behavior_placeholders(
             &reaction![
                 "foo_reaction",
                 reagent![
                     "foo_reagent",
                     param_value!(UnitResourceIndex, 0),
                     param_value!(UnitResourceIndex, 0),
-                    phenotype_arg!(UnitResourceIndex)
+                    unit_behavior_arg!(UnitResourceIndex)
                 ],
             ],
             (0, 10, 0, 0),
@@ -247,18 +248,18 @@ pub mod tests {
 
     #[test]
     fn replace_placeholders__amount_replacement() {
-        let action_params = replace_phenotype_placeholders(
+        let action_params = replace_unit_behavior_placeholders(
             &reaction![
                 "",
                 reagent![
                     "",
                     param_value!(UnitResourceIndex, 0),
-                    phenotype_arg!(PositionResourceAmount),
-                    phenotype_arg!(PositionResourceAmount)
+                    unit_behavior_arg!(PositionResourceAmount),
+                    unit_behavior_arg!(PositionResourceAmount)
                 ],
                 reagent![
                     "",
-                    phenotype_arg!(PositionResourceAmount),
+                    unit_behavior_arg!(PositionResourceAmount),
                     param_value!(UnitResourceIndex, 0),
                     param_value!(UnitResourceIndex, 0)
                 ],

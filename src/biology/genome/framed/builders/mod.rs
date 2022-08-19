@@ -260,7 +260,7 @@ macro_rules! then_do {
                  gm: &GeneticManifest|
                  -> Vec<FramedGenomeValue> {
                     pub use crate::biology::genetic_manifest::predicates::OperatorParam;
-                    use crate::biology::phenotype::framed::MetaReaction;
+                    use crate::biology::unit_behavior::framed::MetaReaction;
 
                     let v: Vec<BooleanVariable> = vec![];
                     let op_key = stringify!($op_key).to_string();
@@ -363,7 +363,7 @@ pub mod parsing_v2 {
     //use super::convert::param_meta;
     //use super::*;
     use crate::biology::genome::framed::common::*;
-    use crate::biology::phenotype::framed::common::*;
+    use crate::biology::unit_behavior::framed::common::*;
     use crate::simulation::common::variants::CheeseChemistry;
     use crate::simulation::common::*;
 

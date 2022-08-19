@@ -420,7 +420,7 @@ pub mod tests {
 
         let chemistry: ChemistryInstance = specs.construct_chemistry();
         let mut world = World::new((5, 5), &chemistry);
-        let unit_entry = UnitEntry::new("foo_unit", EmptyPhenotype::construct());
+        let unit_entry = UnitEntry::new("foo_unit", NullBehavior::construct());
         let coord = (2, 2);
         world.seed_unit_at(&coord, &unit_entry.info, None, &chemistry);
 

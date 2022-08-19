@@ -3,36 +3,35 @@ pub mod lever;
 pub mod mouse;
 
 use crate::biology::genetic_manifest::predicates::Operator;
-pub use crate::biology::phenotype::framed::ParsedGenomeParam;
+pub use crate::biology::unit_behavior::framed::ParsedGenomeParam;
 use crate::chemistry::reactions::ReactionCall;
 use crate::simulation::common::*;
 use std::fmt::{Debug, Formatter, Result};
 use std::rc::Rc;
 
-pub trait Phenotype {
+pub trait UnitBehavior {
     fn get_behavior(
         &self,
         coord: &Coord,
         sim_attr: &SimulationAttributes,
         world: &World,
         chemistry: &ChemistryInstance,
-    ) -> PhenotypeResult {
-        PhenotypeResult { reactions: vec![] }
+    ) -> UnitBehaviorResult {
+        UnitBehaviorResult { reactions: vec![] }
     }
 }
 
-#[derive(Clone)]
-pub struct EmptyPhenotype {}
+// #[derive(Clone)]
 
 pub const NUM_REACTION_PARAMS: u32 = 3;
 
 #[derive(PartialEq, Debug)]
-pub struct PhenotypeResult {
+pub struct UnitBehaviorResult {
     pub reactions: Vec<ReactionCall>,
     //pub register_changes: PhenotypeRegisterChanges,
 }
 
-impl PhenotypeResult {
+impl UnitBehaviorResult {
     pub fn display(&self, chemistry_manifest: &ChemistryManifest) -> String {
         let mut s = "".to_string();
         for reaction_call in &self.reactions {
@@ -50,12 +49,13 @@ impl PhenotypeResult {
     }
 }
 
-impl Phenotype for EmptyPhenotype {}
+pub struct NullBehavior {}
+impl UnitBehavior for NullBehavior {}
 
-pub type BoxedPhenotype = Rc<Box<dyn Phenotype>>;
+pub type BoxedUnitBehavior = Rc<Box<dyn UnitBehavior>>;
 
-impl EmptyPhenotype {
-    pub fn construct() -> BoxedPhenotype {
+impl NullBehavior {
+    pub fn construct() -> BoxedUnitBehavior {
         Rc::new(Box::new(Self {}))
     }
 }

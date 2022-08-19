@@ -212,9 +212,9 @@ macro_rules! reagent {
 
 // macro_rules! param_arg {
 #[macro_export]
-macro_rules! phenotype_arg {
+macro_rules! unit_behavior_arg {
     ($x:ident) => {
-        ActionParam::PhenotypeArgument(ActionParamType::$x)
+        ActionParam::UnitBehaviorArgument(ActionParamType::$x)
     };
 }
 

@@ -34,7 +34,7 @@ pub type ReactionId = u8;
 pub type ChemistryInstance = Box<dyn Chemistry>;
 pub type ChemistryConfiguration = HashMap<String, ChemistryConfigValue>;
 
-/* used to pass values from the phenotype to the action execution
+/* used to pass values from the unit_behavior to the action execution
  * to replace placeholders */
 pub type ActionArgValue = u32;
 pub fn get_chemistry_by_key(

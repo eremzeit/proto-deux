@@ -39,7 +39,7 @@ pub mod set_unit_resource {
         let action = actions.by_key("set_unit_resource");
 
         let unit_manifest = UnitManifest {
-            units: vec![UnitEntry::new("main", EmptyPhenotype::construct())],
+            units: vec![UnitEntry::new("main", NullBehavior::construct())],
         };
         let mut sim = SimulationBuilder::default()
             .size((5, 5))
@@ -87,7 +87,7 @@ pub mod offset_unit_resource {
             .headless(true)
             .specs(specs)
             .unit_manifest(UnitManifest {
-                units: vec![UnitEntry::new("main", EmptyPhenotype::construct())],
+                units: vec![UnitEntry::new("main", NullBehavior::construct())],
             })
             .to_simulation();
 

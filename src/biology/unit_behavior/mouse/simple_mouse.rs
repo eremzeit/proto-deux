@@ -1,5 +1,5 @@
 use crate::biology::genetic_manifest::predicates::Operator;
-use crate::biology::phenotype::Phenotype;
+use crate::biology::unit_behavior::UnitBehavior;
 use crate::chemistry::variants::cheese::defs;
 use crate::chemistry::{ChemistryInstance, ReactionId};
 use crate::simulation::common::*;
@@ -10,27 +10,27 @@ use crate::util::{grid_direction_to_num, Coord, GridDirection};
 use rand::Rng;
 
 pub struct SimpleMouse {}
-impl Phenotype for SimpleMouse {
+impl UnitBehavior for SimpleMouse {
     fn get_behavior(
         &self,
         coord: &Coord,
         sim_attr: &SimulationAttributes,
         world: &World,
         chemistry: &ChemistryInstance,
-    ) -> PhenotypeResult {
+    ) -> UnitBehaviorResult {
         let reactions = &chemistry.get_manifest().reactions;
 
         let pos_resources = defs::PositionResourcesLookup::new();
 
         if world.get_pos_resource_at(coord, pos_resources.cheese) > 10 {
-            return PhenotypeResult {
+            return UnitBehaviorResult {
                 reactions: vec![(defs::REACTION_ID_GOBBLE_CHEESE, 0, 0, 0)],
             };
         }
 
         for (_coord, _dir) in CoordOffsetIterator::new(coord, &world.size) {
             if world.get_pos_resource_at(&_coord, pos_resources.cheese) > 10 {
-                return PhenotypeResult {
+                return UnitBehaviorResult {
                     reactions: vec![(
                         defs::REACTION_ID_MOVE_UNIT,
                         grid_direction_to_num(_dir) as u16,
@@ -41,7 +41,7 @@ impl Phenotype for SimpleMouse {
             }
         }
 
-        PhenotypeResult {
+        UnitBehaviorResult {
             reactions: vec![(
                 defs::REACTION_ID_MOVE_UNIT,
                 grid_direction_to_num(GridDirection::Up) as u16,
@@ -105,7 +105,7 @@ pub mod tests {
             .specs(specs)
             .headless(true)
             .unit_manifest(UnitManifest {
-                units: vec![UnitEntry::new("main", EmptyPhenotype::construct())],
+                units: vec![UnitEntry::new("main", NullBehavior::construct())],
             })
             .to_simulation();
 

@@ -1,5 +1,5 @@
 use crate::biology::experiments::alterations;
-use crate::biology::phenotype::framed::common::*;
+use crate::biology::unit_behavior::framed::common::*;
 use crate::simulation::common::*;
 use crate::{
     biology::genome::framed::common::*, simulation::common::helpers::place_units::PlaceUnitsMethod,

@@ -149,7 +149,7 @@ mod tests {
             .specs(specs)
             .headless(true)
             .unit_manifest(UnitManifest {
-                units: vec![UnitEntry::new("main", EmptyPhenotype::construct())],
+                units: vec![UnitEntry::new("main", NullBehavior::construct())],
             })
             .to_simulation();
 

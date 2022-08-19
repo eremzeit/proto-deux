@@ -1,6 +1,6 @@
 use crate::simulation::common::{
-    AttributeIndex, Chemistry, ChemistryManifest, Phenotype, PhenotypeId, UnitAttributeValue,
-    UnitAttributes, UnitResourceAmount, UnitResources,
+    AttributeIndex, Chemistry, ChemistryManifest, PhenotypeId, UnitAttributeValue, UnitAttributes,
+    UnitBehavior, UnitResourceAmount, UnitResources,
 };
 use crate::simulation::unit::util::convert_maybe_resources_to_resources;
 use std::boxed::Box;
@@ -43,16 +43,16 @@ impl UnitManifest {
 #[derive(Clone)]
 pub struct UnitEntry {
     pub info: UnitEntryData,
-    pub phenotype: Rc<Box<dyn Phenotype>>,
+    pub behavior: Rc<Box<dyn UnitBehavior>>,
     /*
-        technically, the phenotype accesses the world via sensors, which might differ by unit_entry.
+        technically, the unit_behavior accesses the world via sensors, which might differ by unit_entry.
         so the sensor manifest should be included in each unit_entry.
     */
     // sensor_manifest
 }
 
 impl UnitEntry {
-    pub fn new(species_name: &'static str, phenotype: Rc<Box<dyn Phenotype>>) -> Self {
+    pub fn new(species_name: &'static str, unit_behavior: Rc<Box<dyn UnitBehavior>>) -> Self {
         Self {
             info: UnitEntryData {
                 species_name: species_name.to_string(),
@@ -62,7 +62,7 @@ impl UnitEntry {
                 id: 0,
             },
 
-            phenotype,
+            behavior: unit_behavior,
         }
     }
 
@@ -136,7 +136,7 @@ pub mod builder {
     #[builder(pattern = "owned", setter(strip_option))]
     #[builder(build_fn(skip))]
     pub struct UnitEntry {
-        pub phenotype: Rc<Box<dyn Phenotype>>,
+        pub behavior: Rc<Box<dyn UnitBehavior>>,
         pub species_name: String,
         pub default_attributes: Vec<(&'static str, UnitAttributeValue)>,
         pub default_resources: Vec<(&'static str, UnitResourceAmount)>,
@@ -173,7 +173,7 @@ pub mod builder {
                     default_entry_attributes: default_attributes,
                 },
 
-                phenotype: self.phenotype.unwrap(),
+                behavior: self.behavior.unwrap(),
             }
         }
     }

@@ -4,7 +4,7 @@ use crate::biology::genetic_manifest::predicates::{
 use crate::biology::genetic_manifest::GeneticManifest;
 use crate::biology::genome::framed::common::*;
 use crate::biology::genome::framed::types::NUM_META_REACTIONS;
-use crate::biology::phenotype::Phenotype;
+use crate::biology::unit_behavior::UnitBehavior;
 use crate::chemistry;
 use crate::chemistry::{ChemistryInstance, ReactionId};
 use crate::simulation::common::*;
@@ -13,10 +13,10 @@ use std::rc::Rc;
 pub use crate::chemistry::properties::RawPropertyId;
 use crate::util::Coord;
 use std::fmt::{Debug, Formatter, Result};
-//use crate::biology::phenotype::{ParamedReactionCall};
+//use crate::biology::unit_behavior::{ParamedReactionCall};
 
 use crate::biology::genome::framed::*;
-use crate::biology::phenotype::framed::types::*;
+use crate::biology::unit_behavior::framed::types::*;
 use crate::chemistry::reactions::ReactionCall;
 use std::convert::TryInto;
 

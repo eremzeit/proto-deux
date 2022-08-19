@@ -3,10 +3,10 @@ use variants::CheeseChemistry;
 use crate::biology::genome::framed::builders::simple_convert_into_frames;
 use crate::biology::genome::framed::builders::FramedGenomeParser;
 use crate::biology::genome::framed::samples::legacy;
-use crate::biology::phenotype::framed::FramedGenomePhenotype;
-use crate::biology::phenotype::lever::SimpleLever;
-use crate::biology::phenotype::mouse::simple_mouse::SimpleMouse;
-use crate::biology::phenotype::mouse::*;
+use crate::biology::unit_behavior::framed::FramedGenomeUnitBehavior;
+use crate::biology::unit_behavior::lever::SimpleLever;
+use crate::biology::unit_behavior::mouse::simple_mouse::SimpleMouse;
+use crate::biology::unit_behavior::mouse::*;
 use crate::runners::SimulationRunnerArgs;
 use crate::simulation::common::helpers::place_units::PlaceUnitsMethod;
 use crate::simulation::common::variants::LeverChemistry;
@@ -45,8 +45,8 @@ pub fn with_genome(sim_args: &SimulationRunnerArgs) -> SimulationBuilder {
 
     let entry1 = UnitEntryBuilder::default()
         .species_name("species1".to_string())
-        .phenotype(
-            FramedGenomePhenotype::new(_genome1, gm.clone(), cm.clone(), sm.clone()).construct(),
+        .behavior(
+            FramedGenomeUnitBehavior::new(_genome1, gm.clone(), cm.clone(), sm.clone()).construct(),
         )
         .build(&cm, None);
 
@@ -62,5 +62,5 @@ pub fn with_genome(sim_args: &SimulationRunnerArgs) -> SimulationBuilder {
 pub fn get_unit_entries_for_lever() -> Vec<UnitEntryBuilder> {
     vec![UnitEntryBuilder::default()
         .species_name("main".to_string())
-        .phenotype(Rc::new(Box::new(SimpleLever::construct())))]
+        .behavior(Rc::new(Box::new(SimpleLever::construct())))]
 }

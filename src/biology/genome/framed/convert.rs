@@ -7,9 +7,9 @@ use crate::biology::genetic_manifest::predicates::{
     Operator, OperatorId, OperatorParam, OperatorParamDefinition, OperatorParamType, OperatorSet,
 };
 use crate::biology::genetic_manifest::GeneticManifest;
-use crate::biology::phenotype::framed::ParsedGenomeParam;
-use crate::biology::phenotype::Phenotype;
 use crate::biology::sensor_manifest::SensorManifest;
+use crate::biology::unit_behavior::framed::ParsedGenomeParam;
+use crate::biology::unit_behavior::UnitBehavior;
 use crate::chemistry::properties::AttributeIndex;
 use crate::chemistry::{ChemistryInstance, ReactionId};
 use crate::simulation::common::*;

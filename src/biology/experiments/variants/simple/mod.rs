@@ -5,7 +5,7 @@ use crate::biology::experiments::alterations;
 use crate::biology::experiments::variants::simple::utils::{
     ExperimentGenomeUid, GenomeExperimentEntry,
 };
-use crate::biology::phenotype::framed::common::*;
+use crate::biology::unit_behavior::framed::common::*;
 use crate::perf::{perf_timer_start, perf_timer_stop};
 use crate::simulation::common::*;
 use crate::{
@@ -269,8 +269,8 @@ impl SimpleExperiment {
 
             let unit_entry = UnitEntryBuilder::default()
                 .species_name(format!("species: {}", count))
-                .phenotype(
-                    FramedGenomePhenotype::new(
+                .behavior(
+                    FramedGenomeUnitBehavior::new(
                         genome,
                         self.settings.specs.genetic_manifest(),
                         cm.clone(),
@@ -633,7 +633,7 @@ pub mod tests {
         CullStrategy, ExperimentSimSettings,
     };
     use crate::biology::genome::framed::common::*;
-    use crate::biology::phenotype::framed::common::*;
+    use crate::biology::unit_behavior::framed::common::*;
     use crate::simulation::common::helpers::place_units::PlaceUnitsMethod;
     use crate::simulation::common::*;
 

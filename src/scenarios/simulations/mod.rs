@@ -1,7 +1,7 @@
 pub mod cheese;
 pub mod lever;
 
-use crate::biology::phenotype::mouse::*;
+use crate::biology::unit_behavior::mouse::*;
 use crate::runners::SimulationRunnerArgs;
 use crate::simulation::common::*;
 use crate::simulation::config::*;

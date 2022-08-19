@@ -69,7 +69,7 @@
 //                 param_value!(UnitResourceAmount, -MOVE_COST!()),
 //             ),
 //             reagent!("move",
-//                 phenotype_arg!(Direction)
+//                 unit_behavior_arg!(Direction)
 //             ),
 //         ),
 //
@@ -79,7 +79,7 @@
 //                 param_value!(UnitResourceAmount, -NEW_UNIT_COST!()),
 //             ),
 //             reagent!("new_unit",
-//                 phenotype_arg!(Direction),
+//                 unit_behavior_arg!(Direction),
 //             ),
 //         ),
 //     }

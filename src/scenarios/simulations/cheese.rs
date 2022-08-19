@@ -3,9 +3,9 @@ use variants::CheeseChemistry;
 use crate::biology::genome::framed::builders::simple_convert_into_frames;
 use crate::biology::genome::framed::builders::FramedGenomeParser;
 use crate::biology::genome::framed::samples::legacy;
-use crate::biology::phenotype::framed::FramedGenomePhenotype;
-use crate::biology::phenotype::mouse::simple_mouse::SimpleMouse;
-use crate::biology::phenotype::mouse::*;
+use crate::biology::unit_behavior::framed::FramedGenomeUnitBehavior;
+use crate::biology::unit_behavior::mouse::simple_mouse::SimpleMouse;
+use crate::biology::unit_behavior::mouse::*;
 use crate::runners::SimulationRunnerArgs;
 use crate::simulation::common::helpers::place_units::PlaceUnitsMethod;
 use crate::simulation::common::*;
@@ -62,16 +62,16 @@ pub fn with_genome(sim_args: &SimulationRunnerArgs) -> SimulationBuilder {
 
     let entry1 = UnitEntryBuilder::default()
         .species_name("species1".to_string())
-        .phenotype(
-            FramedGenomePhenotype::new(frames1, gm.clone(), cm.clone(), sm.clone()).construct(),
+        .behavior(
+            FramedGenomeUnitBehavior::new(frames1, gm.clone(), cm.clone(), sm.clone()).construct(),
         )
         .default_resources(vec![("cheese", 100)])
         .build(&cm, None);
 
     let entry2 = UnitEntryBuilder::default()
         .species_name("species2".to_string())
-        .phenotype(
-            FramedGenomePhenotype::new(frames2, gm.clone(), cm.clone(), sm.clone()).construct(),
+        .behavior(
+            FramedGenomeUnitBehavior::new(frames2, gm.clone(), cm.clone(), sm.clone()).construct(),
         )
         .default_resources(vec![("cheese", 100)])
         .build(&cm, None);
@@ -88,6 +88,6 @@ pub fn with_genome(sim_args: &SimulationRunnerArgs) -> SimulationBuilder {
 pub fn get_unit_entries_for_cheese() -> Vec<UnitEntryBuilder> {
     vec![UnitEntryBuilder::default()
         .species_name("main".to_string())
-        .phenotype(Rc::new(Box::new(SimpleMouse::construct())))
+        .behavior(Rc::new(Box::new(SimpleMouse::construct())))
         .default_resources(vec![("cheese", 200)])]
 }

@@ -12,8 +12,10 @@ pub use super::{
     SimulationResourceAmount, SimulationResourceIndex,
 };
 
-pub use crate::biology::phenotype::{BoxedPhenotype, EmptyPhenotype, Phenotype, PhenotypeResult};
 pub use crate::biology::sensor_manifest::{SensorContext, SensorManifest};
+pub use crate::biology::unit_behavior::{
+    BoxedUnitBehavior, NullBehavior, UnitBehavior, UnitBehaviorResult,
+};
 
 pub use crate::biology::genetic_manifest::GeneticManifest;
 

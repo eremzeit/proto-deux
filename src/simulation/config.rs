@@ -1,9 +1,9 @@
 use crate::chemistry::*;
 use crate::simulation;
 use crate::simulation::common::{
-    get_chemistry_by_key, EmptyPhenotype, Phenotype, SimulationControlEvent,
-    SimulationControlEventReceiver, UnitAttributeValue, UnitEntry, UnitEntryBuilder, UnitEntryData,
-    UnitManifest, UnitResourceAmount,
+    get_chemistry_by_key, NullBehavior, SimulationControlEvent, SimulationControlEventReceiver,
+    UnitAttributeValue, UnitBehavior, UnitEntry, UnitEntryBuilder, UnitEntryData, UnitManifest,
+    UnitResourceAmount,
 };
 use crate::simulation::fitness::*;
 use crate::simulation::unit::util::convert_maybe_resources_to_resources;
@@ -83,7 +83,7 @@ pub mod builder {
 
             if self.unit_manifest.is_none() {
                 self.unit_manifest = Some(UnitManifest {
-                    units: vec![UnitEntry::new("default", EmptyPhenotype::construct())],
+                    units: vec![UnitEntry::new("default", NullBehavior::construct())],
                 });
             }
 

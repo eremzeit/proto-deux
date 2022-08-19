@@ -1,6 +1,6 @@
 use crate::biology::genetic_manifest::predicates::OperatorParam;
 use crate::biology::genome::framed::common::*;
-use crate::biology::phenotype::framed::common::*;
+use crate::biology::unit_behavior::framed::common::*;
 use crate::simulation::common::*;
 use crate::util::{grid_direction_from_string, grid_direction_to_num};
 

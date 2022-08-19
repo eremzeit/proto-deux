@@ -7,10 +7,10 @@ use crate::chemistry::reactions::*;
 use crate::chemistry::*;
 
 use crate::chemistry::reactions::*;
-use crate::simulation::common::helpers::phenotype_execution::phenotype_execution;
 use crate::simulation::common::helpers::place_units::place_units;
 use crate::simulation::common::helpers::resource_allocation::allocate_stored_resources;
 use crate::simulation::common::helpers::resource_allocation::StoredResourceAllocationMethod;
+use crate::simulation::common::helpers::unit_behavior_execution::behavior_execution;
 use crate::simulation::common::*;
 use crate::simulation::common::*;
 use crate::simulation::unit::*;
@@ -173,7 +173,7 @@ pub mod defs {
                 param_value!(Boolean, false),
             ),
             reagent!("move_unit",
-                phenotype_arg!(Direction)
+                unit_behavior_arg!(Direction)
             ),
         ),
     }

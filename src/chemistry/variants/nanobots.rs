@@ -3,9 +3,9 @@ use crate::chemistry::properties::*;
 use crate::chemistry::reactions::*;
 use crate::chemistry::*;
 
-use crate::simulation::common::helpers::phenotype_execution::phenotype_execution;
 use crate::simulation::common::helpers::resource_allocation::allocate_stored_resources;
 use crate::simulation::common::helpers::resource_allocation::StoredResourceAllocationMethod;
+use crate::simulation::common::helpers::unit_behavior_execution::behavior_execution;
 use crate::simulation::unit::*;
 use crate::simulation::world::World;
 use crate::simulation::Simulation;
@@ -39,7 +39,7 @@ impl NanobotsChemistry {
                     param_value!(UnitResourceKey, "energy"),
                     param_value!(UnitResourceAmount, -10),
                 ),
-                reagent!("new_unit", phenotype_arg!(Direction),),
+                reagent!("new_unit", unit_behavior_arg!(Direction),),
             ],
         )];
 
@@ -112,7 +112,7 @@ impl Chemistry for NanobotsChemistry {
             sim.unit_manifest,
             &StoredResourceAllocationMethod::Every,
         );
-        phenotype_execution(sim);
+        behavior_execution(sim);
     }
 
     fn on_simulation_finish(&self, sim: &mut SimCell) {}

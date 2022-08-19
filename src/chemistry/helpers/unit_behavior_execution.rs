@@ -14,7 +14,7 @@ use std::sync::Arc;
 use std::time::{Duration, Instant};
 use typemap::{CloneMap, Key};
 
-pub fn phenotype_execution(sim: &mut SimCell) {
+pub fn behavior_execution(sim: &mut SimCell) {
     //let mut rng = rand::thread_rng();
 
     for coord in CoordIterator::new(sim.world.size) {
@@ -49,7 +49,7 @@ pub fn phenotype_execution(sim: &mut SimCell) {
 
         let result =
             entry
-                .phenotype
+                .behavior
                 .get_behavior(&coord, &sim.attributes, &sim.world, sim.chemistry);
 
         for i in 0..result.reactions.len().min(1) {

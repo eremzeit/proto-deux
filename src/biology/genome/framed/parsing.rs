@@ -9,14 +9,14 @@ use crate::biology::genome::framed::common::{
     NUM_CHANNELS, NUM_META_REACTIONS,
 };
 use crate::biology::genome::framed::convert::{RawFrame, RawFrameParser};
-use crate::biology::phenotype::framed::common::*;
+use crate::biology::unit_behavior::framed::common::*;
 use crate::perf::{perf_timer_start, perf_timer_stop};
 
 use super::convert;
 use super::convert::param_meta;
 
 use crate::biology::genome::framed::*;
-use crate::biology::phenotype::framed::*;
+use crate::biology::unit_behavior::framed::*;
 
 use crate::biology::genome::framed::render::{
     render_conjunction, render_disjunction, render_gene_operation,

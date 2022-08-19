@@ -1,5 +1,5 @@
 use crate::biology::genome::framed::common::*;
-use crate::biology::phenotype::framed::common::*;
+use crate::biology::unit_behavior::framed::common::*;
 use crate::simulation::common::*;
 
 use crate::biology::genome::framed::builders::*;

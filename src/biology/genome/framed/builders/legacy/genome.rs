@@ -137,7 +137,7 @@ macro_rules! __gene_bool_var {
     ($sm:expr, $cm:expr, $gm:expr, ($op_key:expr, $param1:expr, $param2:expr, $param3:expr)) => ({
         {
             use crate::biology::genome::framed::types::{BooleanVariable, FramedGenomeValue};
-            use crate::biology::phenotype::framed::{ParsedGenomeParam};
+            use crate::biology::unit_behavior::framed::{ParsedGenomeParam};
 
             let v: Vec<BooleanVariable> = vec![];
             let op_key = stringify!($op_key).to_string();
@@ -197,7 +197,7 @@ macro_rules! __then_do {
             use crate::biology::genome::framed::util;
             use crate::biology::genetic_manifest::predicates::{OperatorParam};
             use std::convert::TryInto;
-            use crate::biology::phenotype::framed::{ParsedGenomeParam, MetaReaction};
+            use crate::biology::unit_behavior::framed::{ParsedGenomeParam, MetaReaction};
 
             let mut operation_id = None;
             let mut operation_type = None;                

@@ -8,10 +8,10 @@ use crate::biology::genetic_manifest::GeneticManifest;
 use crate::biology::genome::framed::types::{
     BooleanVariable, DisjunctiveClause, Frame, FramedGenome, FramedGenomeWord,
 };
-pub use crate::biology::phenotype::framed::execution::GenomeExecutionContext;
-pub use crate::biology::phenotype::framed::types::*;
-use crate::biology::phenotype::Phenotype;
 use crate::biology::sensor_manifest::SensorId;
+pub use crate::biology::unit_behavior::framed::execution::GenomeExecutionContext;
+pub use crate::biology::unit_behavior::framed::types::*;
+use crate::biology::unit_behavior::UnitBehavior;
 use crate::chemistry;
 use crate::chemistry::reactions::ReactionCallParam;
 use crate::chemistry::{ChemistryInstance, ReactionId};
@@ -21,25 +21,25 @@ use crate::util::Coord;
 use std::rc::Rc;
 
 pub mod common {
-    pub use super::FramedGenomePhenotype;
-    pub use crate::biology::phenotype::framed::types::*;
+    pub use super::FramedGenomeUnitBehavior;
+    pub use crate::biology::unit_behavior::framed::types::*;
 }
 
-pub struct FramedGenomePhenotype {
+pub struct FramedGenomeUnitBehavior {
     pub genome: FramedGenome,
     pub chemistry_manifest: ChemistryManifest,
     pub sensor_manifest: SensorManifest,
     pub genetic_manifest: GeneticManifest,
 }
 
-impl Phenotype for FramedGenomePhenotype {
+impl UnitBehavior for FramedGenomeUnitBehavior {
     fn get_behavior(
         &self,
         coord: &Coord,
         sim_attr: &SimulationAttributes,
         world: &World,
         chemistry: &ChemistryInstance,
-    ) -> PhenotypeResult {
+    ) -> UnitBehaviorResult {
         let sensor_context = SensorContext::from(world, sim_attr, coord);
 
         //let computation_points = if world.tick > 5000 { 20 } else { 100 };
@@ -60,7 +60,7 @@ impl Phenotype for FramedGenomePhenotype {
         // println!("EXECUTING reactions: {:?}", &reactions);
         //println!("consumed_compute_points: {}", execution_context.consumed_compute_points);
 
-        PhenotypeResult {
+        UnitBehaviorResult {
             reactions: reactions.clone(),
         }
     }
@@ -100,7 +100,7 @@ impl Phenotype for FramedGenomePhenotype {
 //     }
 // }
 
-impl FramedGenomePhenotype {
+impl FramedGenomeUnitBehavior {
     pub fn new(
         genome: FramedGenome,
         genetic_manifest: GeneticManifest,
@@ -115,13 +115,13 @@ impl FramedGenomePhenotype {
         }
     }
 
-    pub fn construct(self) -> BoxedPhenotype {
+    pub fn construct(self) -> BoxedUnitBehavior {
         Rc::new(Box::new(self))
     }
 }
 
 pub mod test {
-    use super::{FramedGenomePhenotype, GenomeExecutionContext};
+    use super::{FramedGenomeUnitBehavior, GenomeExecutionContext};
     use crate::biology::genome::framed::common::*;
     use crate::biology::genome::framed::convert::simple_convert_into_frames;
     use crate::biology::genome::framed::parsing::FramedGenomeParser;
@@ -177,8 +177,8 @@ pub mod test {
             .unit_manifest(UnitManifest {
                 units: vec![UnitEntryBuilder::default()
                     .species_name("main".to_string())
-                    .phenotype(
-                        FramedGenomePhenotype::new(frames, gm.clone(), cm.clone(), sm.clone())
+                    .behavior(
+                        FramedGenomeUnitBehavior::new(frames, gm.clone(), cm.clone(), sm.clone())
                             .construct(),
                     )
                     .default_resources(vec![("cheese", 1000)])

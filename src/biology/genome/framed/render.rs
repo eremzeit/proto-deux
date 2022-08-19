@@ -4,8 +4,8 @@ use crate::biology::genetic_manifest::predicates::{
     Operator, OperatorId, OperatorParam, OperatorParamDefinition, OperatorParamType, OperatorSet,
 };
 use crate::biology::genetic_manifest::GeneticManifest;
-use crate::biology::phenotype::Phenotype;
 use crate::biology::sensor_manifest::SensorManifest;
+use crate::biology::unit_behavior::UnitBehavior;
 use crate::chemistry;
 use crate::chemistry::properties::AttributeIndex;
 use crate::chemistry::{ChemistryInstance, ReactionId};
@@ -14,7 +14,7 @@ use crate::simulation::world::World;
 use crate::util::Coord;
 use std::fmt::{Debug, Formatter, Result};
 
-use crate::biology::phenotype::framed::{GeneOperationCall, ParsedGenomeParam};
+use crate::biology::unit_behavior::framed::{GeneOperationCall, ParsedGenomeParam};
 
 pub fn render_param(param: &ParsedGenomeParam, sensor_manifest: &SensorManifest) -> String {
     match param {
@@ -194,7 +194,7 @@ pub mod tests {
     use super::*;
     use crate::biology::genetic_manifest::predicates::default_operators;
     use crate::biology::genome::framed::*;
-    use crate::biology::phenotype::framed::*;
+    use crate::biology::unit_behavior::framed::*;
     use crate::simulation::common::*;
 
     #[test]

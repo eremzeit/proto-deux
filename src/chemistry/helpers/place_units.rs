@@ -1,7 +1,7 @@
 use crate::chemistry::variants::{BaseChemistry, CheeseChemistry};
 use crate::simulation::common::{
-    ChemistryInstance, Coord, EmptyPhenotype, GridSize2D, SimCell, Simulation,
-    SimulationAttributes, UnitEntry, UnitEntryData, UnitManifest,
+    ChemistryInstance, Coord, GridSize2D, NullBehavior, SimCell, Simulation, SimulationAttributes,
+    UnitEntry, UnitEntryData, UnitManifest,
 };
 use crate::simulation::config::SimulationConfig;
 use crate::simulation::config::*;
@@ -213,7 +213,7 @@ mod tests {
             })
             .headless(true)
             .unit_manifest(UnitManifest {
-                units: vec![UnitEntry::new("main", EmptyPhenotype::construct())],
+                units: vec![UnitEntry::new("main", NullBehavior::construct())],
             })
             .to_simulation();
         assert_eq!(sim.world.has_unit_at(&(2, 0)), true);
@@ -236,8 +236,8 @@ mod tests {
             // .headless(true)
             .unit_manifest(UnitManifest {
                 units: vec![
-                    UnitEntry::new("main", EmptyPhenotype::construct()),
-                    UnitEntry::new("main", EmptyPhenotype::construct()),
+                    UnitEntry::new("main", NullBehavior::construct()),
+                    UnitEntry::new("main", NullBehavior::construct()),
                 ],
             })
             .to_simulation();

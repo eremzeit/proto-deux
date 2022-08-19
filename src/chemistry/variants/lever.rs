@@ -7,9 +7,9 @@ use crate::chemistry::*;
 use crate::perf::perf_timer_start;
 use crate::perf::perf_timer_stop;
 use crate::perf::PERF_TIMER;
-use crate::simulation::common::helpers::phenotype_execution::phenotype_execution;
 use crate::simulation::common::helpers::resource_allocation::allocate_stored_resources;
 use crate::simulation::common::helpers::resource_allocation::StoredResourceAllocationMethod;
+use crate::simulation::common::helpers::unit_behavior_execution::behavior_execution;
 use crate::simulation::common::*;
 use crate::simulation::unit::*;
 use crate::simulation::world::World;
@@ -61,7 +61,7 @@ pub mod defs {
     def_reactions! {
         reaction!("pull_lever",
             reagent!("pull_lever",
-                phenotype_arg!(ConstantNum),
+                unit_behavior_arg!(ConstantNum),
             ),
         ),
     }
@@ -196,9 +196,9 @@ impl Chemistry for LeverChemistry {
         );
         perf_timer_stop!("allocate_stored_resources");
 
-        perf_timer_start!("phenotype_execution");
-        phenotype_execution(sim);
-        perf_timer_stop!("phenotype_execution");
+        perf_timer_start!("unit_behavior_execution");
+        behavior_execution(sim);
+        perf_timer_stop!("unit_behavior_execution");
     }
 
     fn on_simulation_finish(&self, sim: &mut SimCell) {}
@@ -207,7 +207,7 @@ impl Chemistry for LeverChemistry {
 mod tests {
     #[allow(unused_imports)]
     use super::*;
-    use crate::biology::phenotype::lever::SimpleLever;
+    use crate::biology::unit_behavior::lever::SimpleLever;
     use crate::chemistry::actions::tests::execute_action;
     use crate::chemistry::actions::*;
     use crate::tests::fixtures;
@@ -224,7 +224,7 @@ mod tests {
             .specs(specs)
             .unit_entries(vec![UnitEntryBuilder::default()
                 .species_name("main".to_string())
-                .phenotype(Rc::new(Box::new(SimpleLever::construct())))])
+                .behavior(Rc::new(Box::new(SimpleLever::construct())))])
             .size((1, 1))
             .iterations(10)
             .to_simulation();

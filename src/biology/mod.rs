@@ -4,7 +4,7 @@ pub mod sensor_manifest;
 #[macro_use]
 pub mod genome;
 
-pub mod phenotype;
+pub mod unit_behavior;
 
 pub mod experiments;
 

@@ -7,7 +7,7 @@ use crate::simulation::simulation_data::{
 
 use crate::biology::genome::framed::builders::legacy::util::GenomeBuilder;
 use crate::biology::genome::framed::*;
-use crate::biology::phenotype::framed::*;
+use crate::biology::unit_behavior::framed::*;
 use crate::simulation::common::UnitEntryBuilder;
 
 pub fn get_genome1() -> GenomeBuilder {

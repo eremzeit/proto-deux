@@ -101,9 +101,9 @@ pub enum ActionParam {
 
     // Placeholder(ActionParamType),
     /**
-     * Specifies when an argument is meant to be given by the phenotype.
+     * Specifies when an argument is meant to be given by the unit_behavior.
      */
-    PhenotypeArgument(ActionParamType),
+    UnitBehaviorArgument(ActionParamType),
 
     /**
      * Specifies when an argument is meant to be given by the chemistry.

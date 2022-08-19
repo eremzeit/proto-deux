@@ -3,8 +3,8 @@ use crate::biology::genetic_manifest::predicates::{
 };
 use crate::biology::genetic_manifest::GeneticManifest;
 use crate::biology::genome::framed::common::FramedGenomeValue;
-use crate::biology::phenotype::Phenotype;
 use crate::biology::sensor_manifest::SensorManifest;
+use crate::biology::unit_behavior::UnitBehavior;
 use crate::chemistry;
 use crate::chemistry::properties::AttributeIndex;
 use crate::chemistry::{ChemistryInstance, ReactionId};

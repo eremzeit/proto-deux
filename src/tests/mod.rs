@@ -14,7 +14,7 @@ use std::rc::Rc;
 use std::sync::Arc;
 use typemap::{CloneMap, Key};
 
-use crate::biology::phenotype::mouse::*;
+use crate::biology::unit_behavior::mouse::*;
 use crate::simulation::common::*;
 use crate::simulation::config::*;
 use crate::simulation::executors::threaded::ThreadedSimulationExecutor;
@@ -50,7 +50,7 @@ pub mod fixtures {
             .specs(specs)
             .unit_manifest(UnitManifest::from(&vec![UnitEntry::new(
                 "main",
-                EmptyPhenotype::construct(),
+                NullBehavior::construct(),
             )]))
             .headless(true)
             .size((5, 5))

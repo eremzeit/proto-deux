@@ -4,7 +4,7 @@ use crate::biology::genome::framed::samples::legacy::get_genome1;
 use crate::simulation::common::*;
 //use crate::biology::genome::framed::macros::util::GenomeBuilder;
 use crate::biology::genome::framed::*;
-use crate::biology::phenotype::framed::*;
+use crate::biology::unit_behavior::framed::*;
 use crate::simulation::common::helpers::place_units::PlaceUnitsMethod;
 
 pub fn test_with_genome() {
@@ -30,8 +30,8 @@ pub fn test_with_genome() {
         .unit_manifest(UnitManifest {
             units: vec![UnitEntryBuilder::default()
                 .species_name("species1".to_string())
-                .phenotype(
-                    FramedGenomePhenotype::new(frames1, gm.clone(), cm.clone(), sm.clone())
+                .behavior(
+                    FramedGenomeUnitBehavior::new(frames1, gm.clone(), cm.clone(), sm.clone())
                         .construct(),
                 )
                 .default_resources(vec![("cheese", 100)])

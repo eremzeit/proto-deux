@@ -4,8 +4,8 @@ use crate::biology::genetic_manifest::predicates::{
 };
 use crate::biology::genetic_manifest::GeneticManifest;
 use crate::biology::genome::framed::types::NUM_META_REACTIONS;
-use crate::biology::phenotype::Phenotype;
 use crate::biology::sensor_manifest::SensorId;
+use crate::biology::unit_behavior::UnitBehavior;
 use crate::chemistry;
 pub use crate::chemistry::properties::RawPropertyId;
 use crate::chemistry::{ChemistryInstance, ReactionId};

@@ -1,7 +1,7 @@
 use rand::Rng;
 
 use crate::biology::genetic_manifest::predicates::Operator;
-use crate::biology::phenotype::Phenotype;
+use crate::biology::unit_behavior::UnitBehavior;
 use crate::chemistry::variants::cheese::defs;
 use crate::chemistry::{ChemistryInstance, ReactionId};
 use crate::simulation::common::variants::cheese::constants::MAX_GOBBLE_AMOUNT;
@@ -24,27 +24,27 @@ where
 }
 
 pub struct SmartMouse {}
-impl Phenotype for SmartMouse {
+impl UnitBehavior for SmartMouse {
     fn get_behavior(
         &self,
         coord: &Coord,
         sim_attr: &SimulationAttributes,
         world: &World,
         chemistry: &ChemistryInstance,
-    ) -> PhenotypeResult {
+    ) -> UnitBehaviorResult {
         let reactions = &chemistry.get_manifest().reactions;
         let pos_resources = defs::PositionResourcesLookup::new();
         let pos_attributes = defs::PositionAttributesLookup::new();
 
         if world.get_pos_resource_at(coord, pos_resources.cheese) > MAX_GOBBLE_AMOUNT / 2 {
-            return PhenotypeResult {
+            return UnitBehaviorResult {
                 reactions: vec![(defs::REACTION_ID_GOBBLE_CHEESE, 0, 0, 0)],
             };
         }
 
         for (_coord, _dir) in CoordOffsetIterator::new(coord, &world.size) {
             if world.get_pos_resource_at(&_coord, pos_resources.cheese) > 10 {
-                return PhenotypeResult {
+                return UnitBehaviorResult {
                     reactions: vec![(
                         defs::REACTION_ID_MOVE_UNIT,
                         grid_direction_to_num(_dir) as u16,
@@ -61,7 +61,7 @@ impl Phenotype for SmartMouse {
         });
 
         if let Some(dir) = dir_of_cheese_source {
-            return PhenotypeResult {
+            return UnitBehaviorResult {
                 reactions: vec![(
                     defs::REACTION_ID_MOVE_UNIT,
                     grid_direction_to_num(dir) as u16,
@@ -73,7 +73,7 @@ impl Phenotype for SmartMouse {
 
         let mut rnd = rand::thread_rng();
         let direction = rnd.gen_range(0..4);
-        PhenotypeResult {
+        UnitBehaviorResult {
             reactions: vec![(defs::REACTION_ID_MOVE_UNIT, direction as u16, 0, 0)],
         }
     }

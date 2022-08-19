@@ -4,10 +4,10 @@ use crate::chemistry::properties::*;
 use crate::chemistry::reactions::*;
 use crate::chemistry::*;
 
-use crate::simulation::common::helpers::phenotype_execution::phenotype_execution;
 use crate::simulation::common::helpers::place_units::place_units;
 use crate::simulation::common::helpers::resource_allocation::allocate_stored_resources;
 use crate::simulation::common::helpers::resource_allocation::StoredResourceAllocationMethod;
+use crate::simulation::common::helpers::unit_behavior_execution::behavior_execution;
 use crate::simulation::common::*;
 use crate::simulation::unit::*;
 use crate::simulation::world::World;
@@ -108,7 +108,7 @@ pub mod defs {
                 param_value!(Boolean, false),
             ),
             reagent!("move_unit",
-                phenotype_arg!(Direction)
+                unit_behavior_arg!(Direction)
             ),
         ),
 
@@ -119,7 +119,7 @@ pub mod defs {
                 param_value!(Boolean, false),
             ),
             reagent!("new_unit",
-                phenotype_arg!(Direction),
+                unit_behavior_arg!(Direction),
             ),
         ),
     }
@@ -329,7 +329,7 @@ impl Chemistry for CheeseChemistry {
             sim.unit_manifest,
             &StoredResourceAllocationMethod::Every,
         );
-        phenotype_execution(sim);
+        behavior_execution(sim);
 
         let unit_resources = defs::UnitResourcesLookup::new();
         for coord in CoordIterator::new(sim.world.size) {

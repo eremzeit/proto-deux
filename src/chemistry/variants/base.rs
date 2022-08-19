@@ -7,9 +7,9 @@ use crate::simulation::{
     common::{
         default_actions,
         helpers::{
-            phenotype_execution::phenotype_execution,
             place_units::PlaceUnitsMethod,
             resource_allocation::{allocate_stored_resources, StoredResourceAllocationMethod},
+            unit_behavior_execution::behavior_execution,
         },
         properties::{
             AttributeDefinitionType, PositionAttributeDefinition, UnitResourceDefinition,
@@ -66,7 +66,7 @@ pub mod defs {
                 param_value!(Boolean, false),
             ),
             reagent!("new_unit",
-                phenotype_arg!(Direction),
+                unit_behavior_arg!(Direction),
             ),
         ),
     }
@@ -190,7 +190,7 @@ impl Chemistry for BaseChemistry {
             sim.unit_manifest,
             &StoredResourceAllocationMethod::Every,
         );
-        phenotype_execution(sim);
+        behavior_execution(sim);
     }
 
     fn on_simulation_finish(&self, sim: &mut SimCell) {}
