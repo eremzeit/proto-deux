@@ -1,15 +1,14 @@
-pub mod execution;
 pub mod types;
 
 use crate::biology::genetic_manifest::predicates::{
     Operator, OperatorParam, OperatorParamDefinition, OperatorParamType, OperatorSet,
 };
 use crate::biology::genetic_manifest::GeneticManifest;
+pub use crate::biology::genome::framed::execution::GenomeExecutionContext;
 use crate::biology::genome::framed::types::{
-    BooleanVariable, DisjunctiveClause, Frame, FramedGenome, FramedGenomeWord,
+    BooleanVariable, CompiledFramedGenome, DisjunctiveClause, Frame, FramedGenomeWord,
 };
 use crate::biology::sensor_manifest::SensorId;
-pub use crate::biology::unit_behavior::framed::execution::GenomeExecutionContext;
 pub use crate::biology::unit_behavior::framed::types::*;
 use crate::biology::unit_behavior::UnitBehavior;
 use crate::chemistry;
@@ -26,7 +25,7 @@ pub mod common {
 }
 
 pub struct FramedGenomeUnitBehavior {
-    pub genome: FramedGenome,
+    pub genome: CompiledFramedGenome,
     pub chemistry_manifest: ChemistryManifest,
     pub sensor_manifest: SensorManifest,
     pub genetic_manifest: GeneticManifest,
@@ -102,7 +101,7 @@ impl UnitBehavior for FramedGenomeUnitBehavior {
 
 impl FramedGenomeUnitBehavior {
     pub fn new(
-        genome: FramedGenome,
+        genome: CompiledFramedGenome,
         genetic_manifest: GeneticManifest,
         chemistry_manifest: ChemistryManifest,
         sensor_manifest: SensorManifest,

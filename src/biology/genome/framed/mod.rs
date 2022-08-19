@@ -13,6 +13,7 @@ pub mod render;
 
 pub mod parsing;
 
+pub mod execution;
 pub mod samples;
 
 pub mod common {

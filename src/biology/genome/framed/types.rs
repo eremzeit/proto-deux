@@ -33,17 +33,17 @@ pub const MIN_FRAME_SIZE: usize = 4;
 pub const NUM_META_REACTIONS: FramedGenomeValue = 4;
 
 #[derive(Clone)]
-pub struct FramedGenomeWithRaw {
-    pub raw_genome: RawFramedGenome,
-    pub frames: Vec<Frame>,
+pub struct FramedGenome {
+    pub genotype: RawFramedGenome,
+    pub phenotype: CompiledFramedGenome,
 }
 
 #[derive(Clone)]
-pub struct FramedGenome {
+pub struct CompiledFramedGenome {
     pub frames: Vec<Frame>,
 }
 
-impl FramedGenome {
+impl CompiledFramedGenome {
     pub fn display(
         &self,
         sm: &SensorManifest,
@@ -54,7 +54,7 @@ impl FramedGenome {
     }
 
     pub fn new(frames: Vec<Frame>) -> Self {
-        FramedGenome { frames }
+        CompiledFramedGenome { frames }
     }
 }
 

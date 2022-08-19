@@ -55,7 +55,7 @@
 
 */
 
-use super::framed::builders::{Frame, FramedGenome};
+use super::framed::builders::{CompiledFramedGenome, Frame};
 
 // /**
 //  * The parsed version of a genome that can be executed.
@@ -73,7 +73,7 @@ pub struct FramedGenomeWithStats {
  * The parsed version of a genome that can be executed.  
  */
 pub struct FramedGenomeWithContext {
-    frames: FramedGenome,
+    frames: CompiledFramedGenome,
     execution_stats: usize,
 }
 

@@ -4,9 +4,9 @@ use crate::biology::genetic_manifest::predicates::{
 use crate::biology::genetic_manifest::GeneticManifest;
 
 use crate::biology::genome::framed::common::{
-    BooleanVariable, ConjunctiveClause, DisjunctiveClause, Frame, FramedGenome, FramedGenomeValue,
-    FramedGenomeWord, Gene, CHANNEL_ZERO, FIXED_NUM_CONDITIONAL_PARAMS, FRAME_META_DATA_SIZE,
-    NUM_CHANNELS, NUM_META_REACTIONS,
+    BooleanVariable, CompiledFramedGenome, ConjunctiveClause, DisjunctiveClause, Frame,
+    FramedGenomeValue, FramedGenomeWord, Gene, CHANNEL_ZERO, FIXED_NUM_CONDITIONAL_PARAMS,
+    FRAME_META_DATA_SIZE, NUM_CHANNELS, NUM_META_REACTIONS,
 };
 use crate::biology::genome::framed::convert::{RawFrame, RawFrameParser};
 use crate::biology::unit_behavior::framed::common::*;
@@ -51,7 +51,7 @@ impl FramedGenomeParser {
         chemistry_manifest: ChemistryManifest,
         sensor_manifest: SensorManifest,
         genetic_manifest: GeneticManifest,
-    ) -> FramedGenome {
+    ) -> CompiledFramedGenome {
         flog!("Parsing genome of size {}", raw_values.len());
         flog!("raw genome values: {:?}", &raw_values);
         let cm = chemistry_manifest.clone();
@@ -61,7 +61,7 @@ impl FramedGenomeParser {
         let frames = s.compile_frames();
         perf_timer_stop!("genome_parsing");
         flog!("FINISHED COMPILING FRAMES");
-        FramedGenome { frames }
+        CompiledFramedGenome { frames }
     }
 
     pub fn new(
