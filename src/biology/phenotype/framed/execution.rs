@@ -95,12 +95,12 @@ impl<'a> GenomeExecutionContext<'a> {
                 let result = self.execute_operation(op);
 
                 if result.is_some() {
-                    let s = render_gene(
-                        gene,
-                        &self.chemistry_manifest,
-                        &self.genetic_manifest,
-                        &self.sensor_manifest,
-                    );
+                    // let s = render_gene(
+                    //     gene,
+                    //     &self.chemistry_manifest,
+                    //     &self.genetic_manifest,
+                    //     &self.sensor_manifest,
+                    // );
                     //flog!("Gene {} triggered: {:?}", i, &s);
                     return result;
                 }
@@ -198,11 +198,11 @@ impl<'a> GenomeExecutionContext<'a> {
                 let param_val2 = self.eval_param(param2);
                 let param_val3 = self.eval_param(param3);
 
-                let op_str = (op.render)(&[
-                    param_val1.to_string(),
-                    param_val2.to_string(),
-                    param_val3.to_string(),
-                ]);
+                // let op_str = (op.render)(&[
+                //     param_val1.to_string(),
+                //     param_val2.to_string(),
+                //     param_val3.to_string(),
+                // ]);
 
                 let result = (op.evaluate)(&[param_val1, param_val2, param_val3]);
                 //println!("BOOL: {} = {}", &op_str, &result);

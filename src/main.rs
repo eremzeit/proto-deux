@@ -30,8 +30,11 @@ extern crate typemap;
 
 extern crate fps_counter;
 extern crate image as im;
+extern crate once_cell;
 extern crate opengl_graphics;
 extern crate piston_window;
+
+pub mod perf;
 
 #[macro_use]
 pub mod util;
@@ -47,10 +50,12 @@ pub mod ui;
 use common::ThreadedSimulationExecutor;
 use ndarray::*;
 use ndarray::{Array2, Dim, Shape};
+use perf::{perf_timer_print, perf_timer_start, perf_timer_stop};
 use runners::RunMode;
 use scenarios::one_offs::run_one_off;
 use serde_json::{Result, Value};
 use simulation::simulation_data::new_threaded_simulation_reference;
+use std::cell::RefCell;
 use std::collections::HashMap;
 
 use crate::biology::*;
@@ -64,10 +69,8 @@ fn main() {
 
     //tests::fps::test_with_genome();
     //tests::perf::test_multithreading2();
-    //tests::experiments::evolve_lever();
-
+    perf_timer_start("main");
     let args = util::cli::parse_cli_args();
-
     match args {
         RunMode::HeadlessExperiment(args) => {
             runners::start_headless_experiment(args);
@@ -83,4 +86,7 @@ fn main() {
         }
         _ => panic!("Run mode not implemented yet"),
     }
+
+    perf_timer_stop("main");
+    perf_timer_print();
 }

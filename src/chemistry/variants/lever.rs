@@ -4,6 +4,9 @@ use crate::chemistry::properties::*;
 use crate::chemistry::reactions::*;
 use crate::chemistry::*;
 
+use crate::perf::perf_timer_start;
+use crate::perf::perf_timer_stop;
+use crate::perf::PERF_TIMER;
 use crate::simulation::common::helpers::phenotype_execution::phenotype_execution;
 use crate::simulation::common::helpers::resource_allocation::allocate_stored_resources;
 use crate::simulation::common::helpers::resource_allocation::StoredResourceAllocationMethod;
@@ -185,13 +188,17 @@ impl Chemistry for LeverChemistry {
     }
 
     fn on_simulation_tick(&self, sim: &mut SimCell) {
+        perf_timer_start("allocate_stored_resources");
         allocate_stored_resources(
             sim,
             sim.unit_manifest,
             &StoredResourceAllocationMethod::Every,
         );
+        perf_timer_stop("allocate_stored_resources");
 
+        perf_timer_start("phenotype_execution");
         phenotype_execution(sim);
+        perf_timer_stop("phenotype_execution");
     }
 
     fn on_simulation_finish(&self, sim: &mut SimCell) {}

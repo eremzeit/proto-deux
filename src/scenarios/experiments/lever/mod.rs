@@ -47,14 +47,14 @@ pub fn simple_experiment(runner_args: ExperimentRunnerArgs) -> SimpleExperiment 
         fitness_calculation_key: "lever_pulls".to_string(),
         num_genomes: 10,
         sim_settings: ExperimentSimSettings {
-            num_simulation_ticks: 10,
-            grid_size: (10, 10),
+            num_simulation_ticks: 100,
+            grid_size: (100, 100),
             num_genomes_per_sim: 10,
             default_unit_resources: vec![],
             default_unit_attr: vec![],
         },
 
-        iterations: 1000,
+        iterations: 5000,
         specs: specs,
         alteration_set: alterations(),
         experiment_key: runner_args.experiment_name_key.to_string(),

@@ -28,6 +28,7 @@ use crate::chemistry::properties::UnitEntryAttributeDefinition;
 use crate::chemistry::properties::{AttributeIndex, AttributeValue, ResourceAmount, ResourceIndex};
 use crate::chemistry::variants::cheese::CheeseChemistry;
 use crate::chemistry::{Chemistry, ChemistryInstance, ChemistryManifest};
+use crate::perf::{perf_timer_start, perf_timer_stop};
 use crate::util::{Coord, GridSize2D};
 
 use std::cell::RefCell;
@@ -198,6 +199,8 @@ impl Simulation {
         // }
 
         // println!("TICK");
+
+        perf_timer_start("sim_tick");
         self.chemistry.on_simulation_tick(&mut SimCell {
             attributes: &mut self.attributes,
             world: &mut self.world,
@@ -205,6 +208,7 @@ impl Simulation {
             unit_manifest: &self.unit_manifest,
             chemistry: &self.chemistry,
         });
+        perf_timer_stop("sim_tick");
 
         self.world.tick = self.world.tick + 1;
 

@@ -10,6 +10,7 @@ use crate::biology::genome::framed::common::{
 };
 use crate::biology::genome::framed::convert::{RawFrame, RawFrameParser};
 use crate::biology::phenotype::framed::common::*;
+use crate::perf::{perf_timer_start, perf_timer_stop};
 
 use super::convert;
 use super::convert::param_meta;
@@ -55,8 +56,10 @@ impl FramedGenomeParser {
         flog!("raw genome values: {:?}", &raw_values);
         let cm = chemistry_manifest.clone();
 
+        perf_timer_start("genome_parsing");
         let mut s = Self::new(raw_values, sensor_manifest, cm, genetic_manifest);
         let frames = s.compile_frames();
+        perf_timer_stop("genome_parsing");
         flog!("FINISHED COMPILING FRAMES");
         FramedGenome { frames }
     }
