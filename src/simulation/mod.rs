@@ -200,7 +200,7 @@ impl Simulation {
 
         // println!("TICK");
 
-        perf_timer_start("sim_tick");
+        perf_timer_start!("sim_tick");
         self.chemistry.on_simulation_tick(&mut SimCell {
             attributes: &mut self.attributes,
             world: &mut self.world,
@@ -208,7 +208,7 @@ impl Simulation {
             unit_manifest: &self.unit_manifest,
             chemistry: &self.chemistry,
         });
-        perf_timer_stop("sim_tick");
+        perf_timer_stop!("sim_tick");
 
         self.world.tick = self.world.tick + 1;
 

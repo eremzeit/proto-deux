@@ -172,10 +172,11 @@ impl CheeseChemistry {
                     let unit_resources = defs::UnitResourcesLookup::new();
                     let pos_resources = defs::PositionResourcesLookup::new();
                     let sim_attributes = defs::SimulationAttributesLookup::new();
+                    let unit_entry_attributes = defs::UnitEntryAttributesLookup::new();
 
                     let max_gobble_amount = constants::MAX_GOBBLE_AMOUNT;
                     let pos = sim_cell.world.get_position_at(context.coord).unwrap();
-
+                    let entry_id = &pos.unit.as_ref().unwrap().entry_id.clone();
                     let pos_cheese_amount =
                         pos.get_resource(pos_resources.cheese, sim_cell.world.tick);
 
@@ -200,6 +201,13 @@ impl CheeseChemistry {
                     );
 
                     //println!("before: {:?}", sim_attr[sim_attributes.total_cheese_consumed]);
+                    let next_val = sim_cell.unit_entry_attributes[*entry_id]
+                        [unit_entry_attributes.total_cheese_consumed]
+                        .unwrap_integer()
+                        + amount;
+                    sim_cell.unit_entry_attributes[*entry_id]
+                        [unit_entry_attributes.total_cheese_consumed] =
+                        UnitEntryAttributeValue::Integer(next_val);
 
                     let next_val = sim_cell.attributes[sim_attributes.total_cheese_consumed]
                         .unwrap_integer()

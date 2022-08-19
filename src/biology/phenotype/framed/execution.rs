@@ -67,6 +67,7 @@ impl<'a> GenomeExecutionContext<'a> {
         while self.current_frame < self.frames.len()
             && self.consumed_compute_points < self.allotted_compute_points
         {
+            // println!("frame {:?}", &self.frames[self.current_frame]);
             let result = self.execute_frame();
             if result.is_some() {
                 reactions.push(result.unwrap())
@@ -85,6 +86,7 @@ impl<'a> GenomeExecutionContext<'a> {
 
         for (i, gene) in genes.iter().enumerate() {
             let cond = &gene.conditional;
+            // println!("executing conditional: {:?}", &cond);
             let cond_result = self.execute_conditional(&cond);
             if self.consumed_compute_points > self.allotted_compute_points {
                 return None;
@@ -168,6 +170,7 @@ impl<'a> GenomeExecutionContext<'a> {
             }
 
             ParsedGenomeParam::Register(register_id) => {
+                panic!("registers not supported yet");
                 // TODO!
                 //self.registers[*register_id as usize] as i32
                 0

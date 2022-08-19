@@ -56,10 +56,10 @@ impl FramedGenomeParser {
         flog!("raw genome values: {:?}", &raw_values);
         let cm = chemistry_manifest.clone();
 
-        perf_timer_start("genome_parsing");
+        perf_timer_start!("genome_parsing");
         let mut s = Self::new(raw_values, sensor_manifest, cm, genetic_manifest);
         let frames = s.compile_frames();
-        perf_timer_stop("genome_parsing");
+        perf_timer_stop!("genome_parsing");
         flog!("FINISHED COMPILING FRAMES");
         FramedGenome { frames }
     }

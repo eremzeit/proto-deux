@@ -44,11 +44,6 @@ pub struct SimpleExperimentSettings {
     pub num_genomes: usize,
     pub iterations: usize,
     pub sim_settings: ExperimentSimSettings,
-    // pub genetic_manifest: GeneticManifest,
-    // pub sensor_manifest: SensorManifest,
-    // pub chemistry_key: String,
-    // pub chemistry_configuration: ChemistryConfiguration,
-    // pub place_units_method: PlaceUnitsMethod,
     pub alteration_set: alterations::AlterationTypeSet,
     pub fitness_calculation_key: String, // needed?  should this be a trait object?  how will fitness calculation change?
     pub cull_strategy: CullStrategy,

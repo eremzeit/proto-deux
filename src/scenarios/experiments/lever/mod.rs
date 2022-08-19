@@ -18,13 +18,6 @@ use crate::{
     tests::GeneticManifest,
 };
 
-pub fn get_experiment_scenario(runner_args: ExperimentRunnerArgs) -> SimpleExperiment {
-    match runner_args.experiment_scenario_key.as_str() {
-        "simple" => simple_experiment(runner_args.clone()),
-        _ => panic!("scenario not defined"),
-    }
-}
-
 pub fn alterations() -> AlterationTypeSet {
     AlterationTypeSet::from_keys(&vec![
         "insertion".to_string(),
@@ -47,7 +40,7 @@ pub fn simple_experiment(runner_args: ExperimentRunnerArgs) -> SimpleExperiment 
         fitness_calculation_key: "lever_pulls".to_string(),
         num_genomes: 10,
         sim_settings: ExperimentSimSettings {
-            num_simulation_ticks: 100,
+            num_simulation_ticks: 10,
             grid_size: (100, 100),
             num_genomes_per_sim: 10,
             default_unit_resources: vec![],

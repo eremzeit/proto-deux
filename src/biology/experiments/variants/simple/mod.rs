@@ -154,9 +154,9 @@ impl SimpleExperiment {
         }
 
         while self.current_tick < self.settings.iterations as u64 {
-            perf_timer_start("experiment_tick");
+            perf_timer_start!("experiment_tick");
             self.tick();
-            perf_timer_stop("experiment_tick");
+            perf_timer_stop!("experiment_tick");
             self.current_tick += 1;
         }
         explog!("FINAL STATUS: {:?}", &self.__gather_status());
@@ -256,7 +256,7 @@ impl SimpleExperiment {
 
         let mut count = 0;
         for uid in uids {
-            perf_timer_start("building_unit_entries");
+            perf_timer_start!("building_unit_entries");
             let maybe_idx = self._find_by_uid(*uid);
             let idx = maybe_idx.unwrap();
             let genome_vals = self.genome_entries[idx].genome.clone();
@@ -281,7 +281,7 @@ impl SimpleExperiment {
                 .default_resources(self.settings.sim_settings.default_unit_resources.clone())
                 .default_attributes(self.settings.sim_settings.default_unit_attr.clone())
                 .build(&cm, None);
-            perf_timer_stop("building_unit_entries");
+            perf_timer_stop!("building_unit_entries");
 
             unit_entries.push(unit_entry);
             count += 1;
@@ -295,16 +295,16 @@ impl SimpleExperiment {
         genome_uids: &Vec<ExperimentGenomeUid>,
         specs: &SimulationSpecs,
     ) -> Vec<TrialResultItem> {
-        perf_timer_start("get_unit_entries");
+        perf_timer_start!("get_unit_entries");
         let unit_entries = self._get_unit_entries_for_uids(
             genome_uids.as_slice(),
             &self.settings.specs.chemistry_manifest(),
         );
-        perf_timer_stop("get_unit_entries");
+        perf_timer_stop!("get_unit_entries");
 
         explog!("EVAL fitness for genomes: {:?}", genome_uids);
 
-        perf_timer_start("sim_build");
+        perf_timer_start!("sim_build");
         let mut sim = SimulationBuilder::default()
             .headless(self.is_headless)
             .size(self.settings.sim_settings.grid_size.clone())
@@ -314,12 +314,12 @@ impl SimpleExperiment {
                 units: unit_entries,
             })
             .to_simulation();
-        perf_timer_stop("sim_build");
+        perf_timer_stop!("sim_build");
 
-        perf_timer_start("sim_eval");
+        perf_timer_start!("sim_eval");
         let mut executor = SimpleSimulationExecutor::new(sim);
         executor.start();
-        perf_timer_stop("sim_eval");
+        perf_timer_stop!("sim_eval");
 
         // println!(
         //     "unit_entry_attributes: {:?}",
@@ -328,7 +328,7 @@ impl SimpleExperiment {
 
         // panic!("AOEU"); // unit_entry_attributes arent' being calculated
 
-        perf_timer_start("experiment_fitness_tally");
+        perf_timer_start!("experiment_fitness_tally");
         let mut fitness_scores = vec![];
         let unit_entries = executor.simulation.unit_manifest.units.clone();
 
@@ -356,7 +356,7 @@ impl SimpleExperiment {
             };
             fitness_scores.push(resultItem);
         }
-        perf_timer_stop("experiment_fitness_tally");
+        perf_timer_stop!("experiment_fitness_tally");
 
         fitness_scores
     }
@@ -567,27 +567,27 @@ impl SimpleExperiment {
             println!("EXPERIMENT TICK: {}", self.current_tick);
         }
 
-        perf_timer_start("experiment_partition");
+        perf_timer_start!("experiment_partition");
         let groups = self.partition_into_groups();
         explog!("groups: {:?}", &groups);
-        perf_timer_stop("experiment_partition");
+        perf_timer_stop!("experiment_partition");
 
         let specs = self.settings.specs.clone();
 
-        perf_timer_start("experiment_sim_eval");
+        perf_timer_start!("experiment_sim_eval");
         for group in groups {
             let fitness_result = self.run_evaluation_for_uids(&group, &specs);
             // println!("fitness_scores: {:?}", fitness_result);
-            perf_timer_start("adjust_ranks");
+            perf_timer_start!("adjust_ranks");
             self.adjust_ranks_based_on_result(&fitness_result);
-            perf_timer_stop("adjust_ranks");
+            perf_timer_stop!("adjust_ranks");
         }
-        perf_timer_stop("experiment_sim_eval");
+        perf_timer_stop!("experiment_sim_eval");
 
         explog!("status after adjusting: {:?}", &self.__gather_status());
-        perf_timer_start("experiment_cull_and_replace");
+        perf_timer_start!("experiment_cull_and_replace");
         self.cull_and_replace();
-        perf_timer_stop("experiment_cull_and_replace");
+        perf_timer_stop!("experiment_cull_and_replace");
         explog!("status after culling: {:?}", &self.__gather_status());
 
         let mut max_scores = self
@@ -600,7 +600,7 @@ impl SimpleExperiment {
 
         let (cm, sm, gm) = self.settings.specs.context();
         if let Some(logger) = &self._logger {
-            perf_timer_start("experiment_logging");
+            perf_timer_start!("experiment_logging");
             logger._log_fitness_percentiles(self.current_tick as usize, &self.genome_entries);
 
             let _tick = self.current_tick + 1;
@@ -609,7 +609,7 @@ impl SimpleExperiment {
             if should_log_checkpoint {
                 logger._log_checkpoint(_tick as usize, &self.genome_entries, &sm, &cm, &gm)
             }
-            perf_timer_stop("experiment_logging");
+            perf_timer_stop!("experiment_logging");
         }
     }
 }

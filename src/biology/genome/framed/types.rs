@@ -2,6 +2,7 @@ use crate::biology::genetic_manifest::predicates::{
     Operator, OperatorId, OperatorParam, OperatorParamDefinition, OperatorParamType, OperatorSet,
 };
 use crate::biology::genetic_manifest::GeneticManifest;
+use crate::biology::genome::framed::render::render_frames;
 use crate::biology::genome::framed::*;
 use crate::biology::phenotype::framed::*;
 use crate::biology::phenotype::Phenotype;
@@ -32,10 +33,15 @@ pub const MIN_FRAME_SIZE: usize = 4;
 pub const NUM_META_REACTIONS: FramedGenomeValue = 4;
 
 #[derive(Clone)]
+pub struct FramedGenomeWithRaw {
+    pub raw_genome: RawFramedGenome,
+    pub frames: Vec<Frame>,
+}
+
+#[derive(Clone)]
 pub struct FramedGenome {
     pub frames: Vec<Frame>,
 }
-use crate::biology::genome::framed::render::render_frames;
 
 impl FramedGenome {
     pub fn display(
@@ -55,7 +61,7 @@ impl FramedGenome {
 #[derive(Debug, Clone)]
 pub struct Frame {
     pub channels: [Vec<Gene>; NUM_CHANNELS],
-    pub default_channel: u8,
+    pub default_channel: u8, // question: is this something given by the raw genome, or is this meant to be a run-time configuration?
 }
 
 #[derive(Debug, Clone)]

@@ -41,6 +41,33 @@ impl TimerCache {
 
 pub static PERF_TIMER: Lazy<Mutex<TimerCache>> = Lazy::new(|| Mutex::new(TimerCache::new()));
 
+#[macro_export]
+macro_rules! perf_timer_start {
+    ($x:expr) => {{
+        if cfg!(not(test)) {
+            perf_timer_start($x);
+        }
+    }};
+}
+
+#[macro_export]
+macro_rules! perf_timer_stop {
+    ($x:expr) => {{
+        if cfg!(not(test)) {
+            perf_timer_stop($x);
+        }
+    }};
+}
+
+#[macro_export]
+macro_rules! perf_timers_print {
+    () => {{
+        if cfg!(not(test)) {
+            perf_timer_print();
+        }
+    }};
+}
+
 pub fn perf_timer_start(key: &str) {
     PERF_TIMER.lock().unwrap().start(key);
 }

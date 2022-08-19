@@ -128,15 +128,23 @@ pub fn calc_local_chemical_property(
 
     match prop_id {
         PropertyId::UnitAttributeId(idx) => {
-            return Some(
-                context
-                    .world
-                    .get_unit_attribute_at(&coord, *idx)
-                    .coerce_unwrap_to_integer(),
-            )
+            if !context.world.has_unit_at(&coord) {
+                return None;
+            } else {
+                return Some(
+                    context
+                        .world
+                        .get_unit_attribute_at(&coord, *idx)
+                        .coerce_unwrap_to_integer(),
+                );
+            }
         }
         PropertyId::UnitResourceId(idx) => {
-            return Some(context.world.get_unit_resource_at(&coord, *idx))
+            if context.world.has_unit_at(&coord) {
+                return Some(context.world.get_unit_resource_at(&coord, *idx));
+            } else {
+                return None;
+            }
         }
         _ => {}
     };

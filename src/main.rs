@@ -34,6 +34,7 @@ extern crate once_cell;
 extern crate opengl_graphics;
 extern crate piston_window;
 
+#[macro_use]
 pub mod perf;
 
 #[macro_use]
@@ -69,7 +70,7 @@ fn main() {
 
     //tests::fps::test_with_genome();
     //tests::perf::test_multithreading2();
-    perf_timer_start("main");
+    perf_timer_start!("main");
     let args = util::cli::parse_cli_args();
     match args {
         RunMode::HeadlessExperiment(args) => {
@@ -87,6 +88,6 @@ fn main() {
         _ => panic!("Run mode not implemented yet"),
     }
 
-    perf_timer_stop("main");
-    perf_timer_print();
+    perf_timer_stop!("main");
+    perf_timers_print!();
 }

@@ -188,17 +188,17 @@ impl Chemistry for LeverChemistry {
     }
 
     fn on_simulation_tick(&self, sim: &mut SimCell) {
-        perf_timer_start("allocate_stored_resources");
+        perf_timer_start!("allocate_stored_resources");
         allocate_stored_resources(
             sim,
             sim.unit_manifest,
             &StoredResourceAllocationMethod::Every,
         );
-        perf_timer_stop("allocate_stored_resources");
+        perf_timer_stop!("allocate_stored_resources");
 
-        perf_timer_start("phenotype_execution");
+        perf_timer_start!("phenotype_execution");
         phenotype_execution(sim);
-        perf_timer_stop("phenotype_execution");
+        perf_timer_stop!("phenotype_execution");
     }
 
     fn on_simulation_finish(&self, sim: &mut SimCell) {}

@@ -1,7 +1,5 @@
 use crate::{
-    scenarios::{
-        experiments::lever::get_experiment_scenario, simulations::get_simulation_scenario,
-    },
+    scenarios::{experiments::get_experiment_scenario, simulations::get_simulation_scenario},
     simulation::{
         executors::{simple::SimpleSimulationExecutor, threaded::ThreadedSimulationExecutor},
         simulation_data::{new_threaded_simulation_reference, SimulationData},
@@ -38,6 +36,9 @@ pub enum RunMode {
     GuiExperiment(ExperimentRunnerArgs),
     OneOff(String),
 }
+
+// use crate::scenarios::experiments::get_experiment_scenario;
+
 pub fn start_headless_experiment(exp_runner_args: ExperimentRunnerArgs) {
     let mut exp = get_experiment_scenario(exp_runner_args);
 
