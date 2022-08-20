@@ -20,14 +20,13 @@ macro_rules! genome {
             //println!("Building genome...");
 
             let build_fn: GenomeBuildFunction = Rc::new(
-                |sensor_manifest: &SensorManifest, chemistry_manifest: &ChemistryManifest,
-                genetic_manifest: &GeneticManifest| -> Vec<FramedGenomeValue> {
+                |genetic_manifest: &GeneticManifest| -> Vec<FramedGenomeValue> {
                     let mut values = vec![];
 
                     $(
                         //println!("IF_ANY: {}", stringify!($if_any));
                         //println!("THEN_DO: {}", stringify!($then_do));
-                        let mut gene_vals = __gene!(sensor_manifest, chemistry_manifest, genetic_manifest, $if_any, $then_do);
+                        let mut gene_vals = __gene!(genetic_manifest, $if_any, $then_do);
                         values.append(&mut gene_vals);
                     )*
 
@@ -40,13 +39,14 @@ macro_rules! genome {
 
 #[macro_export]
 macro_rules! __gene {
-    ($sm:expr, $cm:expr, $gm:expr, 
+    ($gm:expr, 
         $if_any:tt,
         $operation:tt
     ) => ({
         {
-            let mut v1 = __gene_if_any!($sm, $cm, $gm, $if_any);
-            let mut v2 = __then_do!($sm, $cm, $gm, $operation);
+            let _gm: &GeneticManifest = $gm;
+            let mut v1 = __gene_if_any!(_gm, $if_any);
+            let mut v2 = __then_do!(_gm, $operation);
 
             v1.append(&mut v2);
 
@@ -61,13 +61,13 @@ macro_rules! __gene {
 */
 #[macro_export]
 macro_rules! __gene_if_any {
-    ($sm:expr, $cm:expr, $gm:expr, ($(all$all_item:tt),*)) => ({
+    ($gm:expr, ($(all$all_item:tt),*)) => ({
         {
             use crate::biology::genome::framed::types::{FramedGenomeValue};
             let mut size = 0;
             let mut values__any: Vec<FramedGenomeValue> = vec![
                 $({
-                    let all_items = __gene__all!($sm, $cm, $gm, $all_item);
+                    let all_items = __gene__all!($gm, $all_item);
 
                     size += 1;
                     all_items
@@ -90,7 +90,7 @@ macro_rules! __gene_if_any {
 */
 #[macro_export]
 macro_rules! __gene__all{
-    ($sm:expr, $cm:expr, $gm:expr, ($($cond_item:tt),*)) => ({
+    ($gm:expr, ($($cond_item:tt),*)) => ({
         {
             use crate::biology::genome::framed::types::{FramedGenomeValue, FIXED_NUM_CONDITIONAL_PARAMS};
 
@@ -102,7 +102,7 @@ macro_rules! __gene__all{
                     assert_eq!(FIXED_NUM_CONDITIONAL_PARAMS, 3);
                     //println!("inside __gene_all {}", stringify!($cond_item));
 
-                    let bool_var_items = __gene_bool_var!($sm, $cm, $gm, $cond_item);
+                    let bool_var_items = __gene_bool_var!($gm, $cond_item);
                     size += 1;
                     bool_var_items
                 }),*
@@ -123,18 +123,18 @@ macro_rules! __gene__all{
 // EX: sm, cm, gm, (eq, 1, 1)
 #[macro_export]
 macro_rules! __gene_bool_var {
-    ($sm:expr, $cm:expr, $gm:expr, ($op_key:expr)) => ({
-        __gene_bool_var($sm, $cm, $gm, ($op_key, ParsedGenomeParam::Constant(200), ParsedGenomeParam::Constant(200), ParsedGenomeParam::Constant(200)))
+    ($gm:expr, ($op_key:expr)) => ({
+        __gene_bool_var($gm, ($op_key, ParsedGenomeParam::Constant(200), ParsedGenomeParam::Constant(200), ParsedGenomeParam::Constant(200)))
     });
 
-    ($sm:expr, $cm:expr, $gm:expr, ($op_key:expr, $param1:expr)) => ({
-        __gene_bool_var($sm, $cm, $gm, ($op_key, $param1, ParsedGenomeParam::Constant(200), ParsedGenomeParam::Constant(200)))
+    ($gm:expr, ($op_key:expr, $param1:expr)) => ({
+        __gene_bool_var($gm, ($op_key, $param1, ParsedGenomeParam::Constant(200), ParsedGenomeParam::Constant(200)))
     });
-    ($sm:expr, $cm:expr, $gm:expr, ($op_key:expr, $param1:expr, $param2:expr)) => ({
-        __gene_bool_var($sm, $cm, $gm, ($op_key, $param1, $param2, ParsedGenomeParam::Constant(200)))
+    ($gm:expr, ($op_key:expr, $param1:expr, $param2:expr)) => ({
+        __gene_bool_var($gm, ($op_key, $param1, $param2, ParsedGenomeParam::Constant(200)))
     });
 
-    ($sm:expr, $cm:expr, $gm:expr, ($op_key:expr, $param1:expr, $param2:expr, $param3:expr)) => ({
+    ($gm:expr, ($op_key:expr, $param1:expr, $param2:expr, $param3:expr)) => ({
         {
             use crate::biology::genome::framed::types::{BooleanVariable, FramedGenomeValue};
             use crate::biology::unit_behavior::framed::{ParsedGenomeParam};
@@ -154,19 +154,19 @@ macro_rules! __gene_bool_var {
             let mut params: [OperatorParam;3] = [0; 3];
 
 
-            let parsed_operator_param = util::identify_raw_param_string(&stringify!($param1).to_string(), $sm, $gm);
+            let parsed_operator_param = util::identify_raw_param_string(&stringify!($param1).to_string(), $gm);
             println!("param: {:?}", &parsed_operator_param);
             let p = parsed_operator_param.as_values();
             params_meta[0] = p.0;
             params[0] = p.1.try_into().unwrap();
             
-            let parsed_operator_param = util::identify_raw_param_string(&stringify!($param2).to_string(), $sm, $gm);
+            let parsed_operator_param = util::identify_raw_param_string(&stringify!($param2).to_string(), $gm);
             println!("param: {:?}", &parsed_operator_param);
             let p = parsed_operator_param.as_values();
             params_meta[1] = p.0;
             params[1] = p.1.try_into().unwrap();
             
-            let parsed_operator_param = util::identify_raw_param_string(&stringify!($param3).to_string(), $sm, $gm);
+            let parsed_operator_param = util::identify_raw_param_string(&stringify!($param3).to_string(), $gm);
             println!("param: {:?}", &parsed_operator_param);
             let p = parsed_operator_param.as_values();
             params_meta[2] = p.0;
@@ -190,7 +190,7 @@ macro_rules! __gene_bool_var {
 }
 
 macro_rules! __then_do {
-    ($sm:expr, $cm:expr, $gm:expr, ($reaction_name:ident(  $($param:expr),*))) => ({
+    ($gm:expr, ($reaction_name:ident(  $($param:expr),*))) => ({
         {
             use crate::biology::genome::framed::convert::operation;
             use crate::biology::genome::framed::types::{BooleanVariable, FramedGenomeValue, FIXED_NUM_OPERATION_PARAMS};
@@ -211,7 +211,7 @@ macro_rules! __then_do {
                 operation_id = Some(meta_reaction.unwrap().to_val());
             }
             
-            let reaction = $cm.identify_reaction(&reaction_key);
+            let reaction = $gm.chemistry_manifest.identify_reaction(&reaction_key);
             if reaction.is_some() {
                 let _reaction = reaction.unwrap();
                 operation_type = Some(operation::val_for_reaction_operation_type());
@@ -240,7 +240,7 @@ macro_rules! __then_do {
             ];
 
             let mut params = raw_params.iter().map(|x| {
-                util::identify_raw_param_string(x, $sm, $gm)
+                util::identify_raw_param_string(x, $gm)
             }).collect::<Vec<ParsedGenomeParam>>();
 
             while params.len() < FIXED_NUM_OPERATION_PARAMS {
@@ -277,11 +277,9 @@ pub mod tests {
 
     #[test]
     fn test_macro__gene_bool_var() {
-        let gm = GeneticManifest::new();
-        let cm  = CheeseChemistry::default_manifest();
-        let sm = SensorManifest::with_default_sensors(&cm);
+        let gm = GeneticManifest::defaults(&CheeseChemistry::default_manifest());
 
-        let result = __gene_bool_var!(&sm, &cm, &gm, (is_truthy,1,2,3));
+        let result = __gene_bool_var!(&gm, (is_truthy,1,2,3));
 
         let op_id = gm.operator_set.by_key("is_truthy").index as FramedGenomeValue;
         assert_eq!(result, vec![op_id, 0, 0, 1, 0, 2, 0, 3]);
@@ -290,13 +288,11 @@ pub mod tests {
 
     #[test]
     fn test_macro__then_do__multiple_params() {
-        let gm = GeneticManifest::new();
-        let cm  = CheeseChemistry::default_manifest();
-        let sm = SensorManifest::with_default_sensors(&cm);
+        let gm = GeneticManifest::defaults(&CheeseChemistry::default_manifest());
 
-        let result1 = __then_do!(&sm, &cm, &gm, (new_unit(0)));
-        let result2 = __then_do!(&sm, &cm, &gm, (new_unit(0,0)));
-        let result3 = __then_do!(&sm, &cm, &gm, (new_unit(0,0,0)));
+        let result1 = __then_do!(&gm, (new_unit(0)));
+        let result2 = __then_do!(&gm, (new_unit(0,0)));
+        let result3 = __then_do!(&gm, (new_unit(0,0,0)));
 
         assert_eq!(&result1, &result2);
         assert_eq!(&result2, &result3);
@@ -305,11 +301,9 @@ pub mod tests {
 
     #[test]
     fn test_macro__gene_conjunctive() {
-        let gm = GeneticManifest::new();
-        let cm  = CheeseChemistry::default_manifest();
-        let sm = SensorManifest::with_default_sensors(&cm);
+        let gm = GeneticManifest::defaults(&CheeseChemistry::default_manifest());
 
-        let result = __gene__all!(&sm, &cm, &gm, (
+        let result = __gene__all!(&gm, (
             (is_truthy,3,4,5),
             (gte,7,8,9)
         ));
@@ -329,11 +323,9 @@ pub mod tests {
 
     #[test]
     fn test_macro__gene_disjunctive__simple() {
-        let gm = GeneticManifest::new();
-        let cm  = CheeseChemistry::default_manifest();
-        let sm = SensorManifest::with_default_sensors(&cm);
+        let gm = GeneticManifest::defaults(&CheeseChemistry::default_manifest());
 
-        let result = __gene_if_any!(&sm, &cm, &gm, (
+        let result = __gene_if_any!(&gm, (
             all(
                 (eq,7,7,7)
             )
@@ -352,11 +344,9 @@ pub mod tests {
     }
     #[test]
     fn test_macro__gene_disjunctive() {
-        let gm = GeneticManifest::new();
-        let cm  = CheeseChemistry::default_manifest();
-        let sm = SensorManifest::with_default_sensors(&cm);
+        let gm = GeneticManifest::defaults(&CheeseChemistry::default_manifest());
 
-        let result = __gene_if_any!(&sm, &cm, &gm, (
+        let result = __gene_if_any!(&gm, (
             all(
                 (is_truthy,7,7,7),
                 (gte,1,2,3),
@@ -367,6 +357,7 @@ pub mod tests {
                 (gte,9,9,9)
             )
         ));
+
 
         //println!("{:?}", &result);
         assert_eq!(result, vec![
@@ -404,11 +395,9 @@ pub mod tests {
     
     #[test]
     fn test_macro__gene_() {
-        let gm = GeneticManifest::new();
-        let cm  = CheeseChemistry::default_manifest();
-        let sm = SensorManifest::with_default_sensors(&cm);
+        let gm = GeneticManifest::defaults(&CheeseChemistry::default_manifest());
 
-        let result = __gene!(&sm, &cm, &gm,
+        let result = __gene!(&gm,
             (
                 all(
                     (is_truthy,7,7,7),
@@ -429,9 +418,7 @@ pub mod tests {
 
     #[test]
     fn test_macro__basic_genome() {
-        let gm = GeneticManifest::new();
-        let cm  = CheeseChemistry::default_manifest();
-        let sm = SensorManifest::with_default_sensors(&cm);
+        let gm = GeneticManifest::defaults(&CheeseChemistry::default_manifest());
 
         let builder = genome!(
                 gene(
@@ -445,9 +432,9 @@ pub mod tests {
                 )
         );
 
-        let raw_genome_vals = builder.build(&sm, &cm, &gm);
+        let raw_genome_vals = builder.build(&gm);
         let framed_vals = simple_convert_into_frames(raw_genome_vals);
-        let frames = FramedGenomeParser::parse(framed_vals, cm.clone(), sm.clone(), gm.clone());
+        let frames = FramedGenomeCompiler::compile(framed_vals, &gm);
 
         let target = "***FRAME 0:***
 Channel #0
@@ -459,7 +446,7 @@ Channel #2
 
 Channel #3\n\n";
         assert_eq!(
-            frames.display(&sm, &cm, &gm),
+            frames.display(&gm),
             target
         )
     }
@@ -502,9 +489,7 @@ Channel #3\n\n";
     
     #[test]
     fn test_macro__compile_then_parse_complex() {
-        let gm = GeneticManifest::new();
-        let cm  = CheeseChemistry::default_manifest();
-        let sm = SensorManifest::with_default_sensors(&cm);
+        let gm = GeneticManifest::defaults(&CheeseChemistry::default_manifest());
 
         let genome_values = genome!(
                 gene(
@@ -526,14 +511,14 @@ Channel #3\n\n";
 
                     then_do(move_unit(0,0,0))
                 )
-        ).build(&sm, &cm, &gm);
+        ).build(&gm);
 
         let framed_vals = simple_convert_into_frames(genome_values);
-        let frames = FramedGenomeParser::parse(framed_vals, cm.clone(), sm.clone(), gm.clone());
+        let frames = FramedGenomeCompiler::compile(framed_vals, &gm);
 
         //println!("frames: {:?}", &frames);
         use crate::biology::genome::framed::common::{render_frames};
-        println!("result: \n{}", render_frames(&frames.frames, &sm, &cm, &gm));
+        println!("result: \n{}", render_frames(&frames.frames, &gm));
 
         let s = "***FRAME 0:***
 Channel #0
@@ -547,7 +532,7 @@ Channel #2
 Channel #3\n\n";
 
         assert_eq!(
-            render_frames(&frames.frames, &sm, &cm, &gm),
+            render_frames(&frames.frames, &gm),
             s
         )
     }

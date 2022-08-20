@@ -1,4 +1,6 @@
 use crate::genome::framed::samples;
+use crate::simulation::common::builder::ChemistryBuilder;
+use crate::simulation::specs::ChemistryOptions;
 use crate::{
     biology::experiments::{
         alterations::{self, AlterationTypeSet},
@@ -34,13 +36,9 @@ pub fn alterations() -> AlterationTypeSet {
     ])
 }
 pub fn simple_experiment(runner_args: ExperimentRunnerArgs) -> SimpleExperiment {
-    let specs = SimulationSpecs {
-        chemistry_key: "cheese".to_string(),
-        place_units_method: PlaceUnitsMethod::SimpleDrop { attributes: None },
-        ..Default::default()
-    };
+    let chemistry = ChemistryBuilder::with_key("cheese").build();
 
-    let (cm, sm, gm) = specs.context();
+    let gm = GeneticManifest::defaults(chemistry.get_manifest());
 
     let settings = SimpleExperimentSettings {
         cull_strategy: CullStrategy::WorstFirst,
@@ -55,7 +53,6 @@ pub fn simple_experiment(runner_args: ExperimentRunnerArgs) -> SimpleExperiment 
         },
 
         iterations: 5000,
-        specs: specs,
         alteration_set: alterations(),
         experiment_key: runner_args.experiment_name_key.to_string(),
         logging_settings: Some(LoggingSettings {
@@ -63,6 +60,8 @@ pub fn simple_experiment(runner_args: ExperimentRunnerArgs) -> SimpleExperiment 
             allow_overwrite: true,
             checkpoint_interval: 1000,
         }),
+
+        chemistry_options: ChemistryOptions::AOEU,
     };
 
     let mut exp = SimpleExperiment::new(settings);

@@ -142,14 +142,11 @@ impl SimpleExperiment {
             panic!("Experiment hasn't been initialized");
         }
 
-        let (cm, sm, gm) = self.settings.specs.context();
         if let Some(logger) = &self._logger  && self.current_tick == 0{
             logger._log_checkpoint(
                 self.current_tick as usize,
                 &self.genome_entries,
-                &sm,
-                &cm,
-                &gm,
+                &self.settings.gm,
             );
         }
 
@@ -231,18 +228,13 @@ impl SimpleExperiment {
         partitions
     }
 
-    pub fn _summarize_genomes(
-        &self,
-        cm: &ChemistryManifest,
-        gm: &GeneticManifest,
-        sm: &SensorManifest,
-    ) -> String {
+    pub fn _summarize_genomes(&self, gm: &GeneticManifest) -> String {
         let mut s = "".to_string();
 
         self.genome_entries.iter().map(|entry| {
             let genome_vals = entry.genome.clone();
-            let genome = FramedGenomeParser::parse(genome_vals, cm.clone(), sm.clone(), gm.clone());
-            s = format!("{}\n{}", s, genome.display(sm, cm, gm));
+            let genome = FramedGenomeCompiler::compile(genome_vals, gm);
+            s = format!("{}\n{}", s, genome.display(&self.settinsg.gm));
         });
         s
     }
@@ -260,27 +252,14 @@ impl SimpleExperiment {
             let maybe_idx = self._find_by_uid(*uid);
             let idx = maybe_idx.unwrap();
             let genome_vals = self.genome_entries[idx].genome.clone();
-            let genome = FramedGenomeParser::parse(
-                genome_vals,
-                cm.clone(),
-                self.settings.specs.sensors(),
-                self.settings.specs.genetic_manifest(),
-            );
+            let genome = FramedGenomeCompiler::compile(genome_vals, &self.settings.gm);
 
             let unit_entry = UnitEntryBuilder::default()
                 .species_name(format!("species: {}", count))
-                .behavior(
-                    FramedGenomeUnitBehavior::new(
-                        genome,
-                        self.settings.specs.genetic_manifest(),
-                        cm.clone(),
-                        self.settings.specs.sensors(),
-                    )
-                    .construct(),
-                )
+                .behavior(FramedGenomeUnitBehavior::new(genome, self.settings.gm).construct())
                 .default_resources(self.settings.sim_settings.default_unit_resources.clone())
                 .default_attributes(self.settings.sim_settings.default_unit_attr.clone())
-                .build(&cm, None);
+                .build(&cm);
             perf_timer_stop!("building_unit_entries");
 
             unit_entries.push(unit_entry);
@@ -293,23 +272,23 @@ impl SimpleExperiment {
     pub fn run_evaluation_for_uids(
         &mut self,
         genome_uids: &Vec<ExperimentGenomeUid>,
-        specs: &SimulationSpecs,
     ) -> Vec<TrialResultItem> {
         perf_timer_start!("get_unit_entries");
         let unit_entries = self._get_unit_entries_for_uids(
             genome_uids.as_slice(),
-            &self.settings.specs.chemistry_manifest(),
+            &self.settings.gm.chemistry_manifest,
         );
         perf_timer_stop!("get_unit_entries");
 
         explog!("EVAL fitness for genomes: {:?}", genome_uids);
 
+        let chemistry = self.settings.chemistry_options.construct();
+
         perf_timer_start!("sim_build");
         let mut sim = SimulationBuilder::default()
-            .headless(self.is_headless)
             .size(self.settings.sim_settings.grid_size.clone())
             .iterations(self.settings.sim_settings.num_simulation_ticks)
-            .specs(specs.clone())
+            .chemistry(chemistry)
             .unit_manifest(UnitManifest {
                 units: unit_entries,
             })
@@ -598,7 +577,7 @@ impl SimpleExperiment {
         max_scores.sort_by_key(|entry| entry.1);
         max_scores.reverse();
 
-        let (cm, sm, gm) = self.settings.specs.context();
+        // let (cm, sm, gm) = self.settings.specs.context();
         if let Some(logger) = &self._logger {
             perf_timer_start!("experiment_logging");
             logger._log_fitness_percentiles(self.current_tick as usize, &self.genome_entries);
@@ -735,7 +714,7 @@ pub mod tests {
         let vals1 = random_genome_of_length(100);
 
         assert_eq!(vals1.len(), 100);
-        let genome1 = FramedGenomeParser::parse(vals1, cm.clone(), sm.clone(), gm.clone());
+        let genome1 = FramedGenomeCompiler::compile(vals1, cm.clone(), sm.clone(), gm.clone());
         print!("random genome: {}\n", genome1.display(&sm, &cm, &gm));
     }
 

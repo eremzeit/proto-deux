@@ -226,9 +226,9 @@ impl Chemistry for FooChemistry {
         self.configuration.clone()
     }
 
-    fn get_unit_placement(&self) -> PlaceUnitsMethod {
-        PlaceUnitsMethod::Default
-    }
+    // fn get_unit_placement(&self) -> PlaceUnitsMethod {
+    //     PlaceUnitsMethod::Default
+    // }
 
     fn get_manifest(&self) -> &ChemistryManifest {
         &self.manifest

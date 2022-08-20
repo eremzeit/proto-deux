@@ -19,7 +19,7 @@ pub mod samples;
 pub mod common {
     pub use crate::biology::genome::framed::builders::*;
     pub use crate::biology::genome::framed::convert::*;
-    pub use crate::biology::genome::framed::parsing::FramedGenomeParser;
+    pub use crate::biology::genome::framed::parsing::FramedGenomeCompiler;
     pub use crate::biology::genome::framed::render::render_frames;
     pub use crate::biology::genome::framed::types::*;
     pub use crate::biology::genome::framed::util::identify_raw_param_string;

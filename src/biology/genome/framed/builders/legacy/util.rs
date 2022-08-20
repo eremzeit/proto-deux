@@ -15,8 +15,7 @@ use crate::util::{grid_direction_from_string, grid_direction_to_num};
 use std::fmt::{Debug, Formatter, Result};
 use std::rc::Rc;
 
-pub type GenomeBuildFunction =
-    Rc<dyn Fn(&SensorManifest, &ChemistryManifest, &GeneticManifest) -> Vec<FramedGenomeValue>>;
+pub type GenomeBuildFunction = Rc<dyn Fn(&GeneticManifest) -> Vec<FramedGenomeValue>>;
 
 pub struct GenomeBuilder {
     pub build_fn: GenomeBuildFunction,
@@ -26,12 +25,7 @@ impl GenomeBuilder {
     pub fn new(build_fn: GenomeBuildFunction) -> Self {
         Self { build_fn }
     }
-    pub fn build(
-        &self,
-        sensor_manifest: &SensorManifest,
-        chemistry_manifest: &ChemistryManifest,
-        genetic_manifest: &GeneticManifest,
-    ) -> Vec<FramedGenomeValue> {
-        (self.build_fn)(sensor_manifest, chemistry_manifest, genetic_manifest)
+    pub fn build(&self, genetic_manifest: &GeneticManifest) -> Vec<FramedGenomeValue> {
+        (self.build_fn)(genetic_manifest)
     }
 }

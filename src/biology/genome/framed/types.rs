@@ -11,6 +11,7 @@ use crate::chemistry::{ChemistryInstance, ReactionId};
 use crate::simulation::common::*;
 use crate::simulation::world::World;
 use std::fmt::{Debug, Formatter, Result};
+use std::rc::Rc;
 
 //use crate::biology::genome::framed::util as util;
 
@@ -38,19 +39,25 @@ pub struct FramedGenome {
     pub phenotype: CompiledFramedGenome,
 }
 
+// impl FramedGenome {
+//     pub fn from_raw(
+//         raw_frames: RawFramedGenome,
+//         genetic_manifest: Rc<GeneticManifest>,
+//         // cm: &ChemistryManifest,
+//         // gm: &GeneticManifest,
+//         // sm: &SensorManifest,
+//     ) -> Self {
+//     }
+// }
+
 #[derive(Clone)]
 pub struct CompiledFramedGenome {
     pub frames: Vec<Frame>,
 }
 
 impl CompiledFramedGenome {
-    pub fn display(
-        &self,
-        sm: &SensorManifest,
-        cm: &ChemistryManifest,
-        gm: &GeneticManifest,
-    ) -> String {
-        render_frames(&self.frames, sm, cm, gm)
+    pub fn display(&self, gm: &GeneticManifest) -> String {
+        render_frames(&self.frames, gm)
     }
 
     pub fn new(frames: Vec<Frame>) -> Self {
@@ -61,7 +68,7 @@ impl CompiledFramedGenome {
 #[derive(Debug, Clone)]
 pub struct Frame {
     pub channels: [Vec<Gene>; NUM_CHANNELS],
-    pub default_channel: u8, // question: is this something given by the raw genome, or is this meant to be a run-time configuration?
+    pub default_channel: u8,
 }
 
 #[derive(Debug, Clone)]
@@ -96,11 +103,7 @@ pub enum BooleanVariable {
 use super::render::render_param;
 
 impl BooleanVariable {
-    pub fn render(
-        &self,
-        genetic_manifest: &GeneticManifest,
-        sensor_manifest: &SensorManifest,
-    ) -> String {
+    pub fn render(&self, genetic_manifest: &GeneticManifest) -> String {
         match self {
             BooleanVariable::Literal(v) => format!("Value({})", v),
             BooleanVariable::Conditional(op_id, is_negated, _param1, _param2, _param3) => {
@@ -108,9 +111,10 @@ impl BooleanVariable {
                 let op_key = op.name.to_string();
                 let param_count = op.num_params;
 
-                let param1 = render_param(_param1, sensor_manifest);
-                let param2 = render_param(_param2, sensor_manifest);
-                let param3 = render_param(_param3, sensor_manifest);
+                let sensor_manifest = genetic_manifest.sensor_manifest;
+                let param1 = render_param(_param1, &sensor_manifest);
+                let param2 = render_param(_param2, &sensor_manifest);
+                let param3 = render_param(_param3, &sensor_manifest);
 
                 let params: [String; 3] = [param1, param2, param3];
                 let negated_str = if *is_negated { "NOT " } else { "" }.to_string();
@@ -124,7 +128,6 @@ impl BooleanVariable {
         p1: &ParsedGenomeParam,
         p2: &ParsedGenomeParam,
         p3: &ParsedGenomeParam,
-        cm: &ChemistryManifest,
         gm: &GeneticManifest,
     ) -> Vec<ParsedGenomeParam> {
         let mut params: Vec<ParsedGenomeParam> = vec![];
@@ -148,11 +151,7 @@ impl BooleanVariable {
         params
     }
 
-    fn are_all_constants(
-        params: Vec<ParsedGenomeParam>,
-        cm: &ChemistryManifest,
-        gm: &GeneticManifest,
-    ) -> bool {
+    fn are_all_constants(params: Vec<ParsedGenomeParam>, gm: &GeneticManifest) -> bool {
         for i in 0..params.len() {
             match &params[i] {
                 ParsedGenomeParam::Constant(val) => {}
@@ -165,11 +164,7 @@ impl BooleanVariable {
         true
     }
 
-    fn extract_constant_params(
-        params: Vec<ParsedGenomeParam>,
-        cm: &ChemistryManifest,
-        gm: &GeneticManifest,
-    ) -> Vec<OperatorParam> {
+    fn extract_constant_params(params: Vec<ParsedGenomeParam>) -> Vec<OperatorParam> {
         return params
             .iter()
             .map(|p: &ParsedGenomeParam| -> OperatorParam {
@@ -181,20 +176,20 @@ impl BooleanVariable {
             .collect::<Vec<_>>();
     }
 
-    fn normalize(&self, cm: &ChemistryManifest, gm: &GeneticManifest) -> BooleanVariable {
+    fn normalize(&self, gm: &GeneticManifest) -> BooleanVariable {
         match self {
             BooleanVariable::Literal(v) => return self.clone(),
             BooleanVariable::Conditional(op_id, is_negated, _param1, _param2, _param3) => {
                 let op = &gm.operator_set.operators[*op_id as usize];
 
                 let mut params =
-                    Self::get_conditional_params(op.index, _param1, _param2, _param3, cm, gm);
+                    Self::get_conditional_params(op.index, _param1, _param2, _param3, gm);
 
                 let mut used_params = params.clone();
                 used_params.truncate(op.num_params);
 
-                if Self::are_all_constants(used_params, cm, gm) {
-                    let constant_params = Self::extract_constant_params(params, cm, gm);
+                if Self::are_all_constants(used_params, gm) {
+                    let constant_params = Self::extract_constant_params(params);
                     let result: bool = (op.evaluate)(constant_params.as_slice());
                     return BooleanVariable::Literal(result ^ *is_negated);
                 }
@@ -234,15 +229,15 @@ pub mod tests {
 
     #[test]
     pub fn boolean_variable_normalize__literal() {
-        let gm = GeneticManifest::new();
+        let gm = GeneticManifest::defaults(&CheeseChemistry::default_manifest());
         let cm = CheeseChemistry::default_manifest();
 
-        let b = BooleanVariable::Literal(true).normalize(&cm, &gm);
+        let b = BooleanVariable::Literal(true).normalize(&gm);
         assert_eq!(b, BooleanVariable::Literal(true));
     }
 
     pub fn boolean_variable_normalize__all_constants() {
-        let gm = GeneticManifest::new();
+        let gm = GeneticManifest::defaults(&CheeseChemistry::default_manifest());
         let cm = CheeseChemistry::default_manifest();
 
         let bool_var = BooleanVariable::Conditional(
@@ -254,14 +249,14 @@ pub mod tests {
             // calculated, leaving only constants in the operator execution
             ParsedGenomeParam::SensorLookup(0),
         )
-        .normalize(&cm, &gm);
+        .normalize(&gm);
 
         assert_eq!(bool_var, BooleanVariable::Literal(true));
     }
 
     #[test]
     pub fn boolean_variable_normalize__all_constants_failure() {
-        let gm = GeneticManifest::new();
+        let gm = GeneticManifest::defaults(&CheeseChemistry::default_manifest());
         let cm = CheeseChemistry::default_manifest();
 
         let bool_var = BooleanVariable::Conditional(
@@ -271,7 +266,7 @@ pub mod tests {
             ParsedGenomeParam::SensorLookup(0),
             ParsedGenomeParam::SensorLookup(0),
         )
-        .normalize(&cm, &gm);
+        .normalize(&gm);
 
         assert_eq!(
             bool_var,
@@ -286,7 +281,7 @@ pub mod tests {
     }
 
     pub fn boolean_variable_normalize__constant_operator() {
-        let gm = GeneticManifest::new();
+        let gm = GeneticManifest::defaults(&CheeseChemistry::default_manifest());
         let cm = CheeseChemistry::default_manifest();
 
         let true_var = BooleanVariable::Conditional(
@@ -297,7 +292,7 @@ pub mod tests {
             ParsedGenomeParam::Constant(0),
             ParsedGenomeParam::SensorLookup(0),
         )
-        .normalize(&cm, &gm);
+        .normalize(&gm);
         assert_eq!(true_var, BooleanVariable::Literal(true));
 
         let false_var = BooleanVariable::Conditional(
@@ -308,7 +303,7 @@ pub mod tests {
             ParsedGenomeParam::Constant(0),
             ParsedGenomeParam::SensorLookup(0),
         )
-        .normalize(&cm, &gm);
+        .normalize(&gm);
 
         assert_eq!(false_var, BooleanVariable::Literal(false));
         let true_negated_var = BooleanVariable::Conditional(
@@ -319,7 +314,7 @@ pub mod tests {
             ParsedGenomeParam::Constant(0),
             ParsedGenomeParam::SensorLookup(0),
         )
-        .normalize(&cm, &gm);
+        .normalize(&gm);
 
         assert_eq!(true_negated_var, BooleanVariable::Literal(false));
         let false_negated_var = BooleanVariable::Conditional(
@@ -330,7 +325,7 @@ pub mod tests {
             ParsedGenomeParam::Constant(0),
             ParsedGenomeParam::SensorLookup(0),
         )
-        .normalize(&cm, &gm);
+        .normalize(&gm);
 
         assert_eq!(false_negated_var, BooleanVariable::Literal(true));
     }

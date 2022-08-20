@@ -28,23 +28,21 @@ impl GridCellRenderer for ResourceGridCellRenderer {
 }
 
 mod tests {
-    use crate::simulation::common::helpers::place_units::PlaceUnitsMethod;
+    use crate::simulation::common::{
+        builder::ChemistryBuilder, helpers::place_units::PlaceUnitsMethod,
+    };
 
     #[allow(unused_imports)]
     use super::*;
 
     #[test]
     fn render_amounts() {
-        let specs = SimulationSpecs {
-            chemistry_key: "cheese".to_string(),
-            place_units_method: PlaceUnitsMethod::LinearBottomMiddle { attributes: None },
-            ..Default::default()
-        };
+        let chemistry = ChemistryBuilder::with_key("cheese").build();
 
         let mut sim = SimulationBuilder::default()
-            .specs(specs)
+            .place_units_method(PlaceUnitsMethod::LinearBottomMiddle { attributes: None })
+            .chemistry(chemistry)
             .size((2, 2))
-            .headless(true)
             .unit_manifest(UnitManifest {
                 units: vec![UnitEntry::new("main", NullBehavior::construct())],
             })

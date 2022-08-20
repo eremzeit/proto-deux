@@ -35,7 +35,6 @@ pub mod constants {}
 
 pub struct LeverChemistry {
     pub manifest: ChemistryManifest,
-    pub place_units_method: PlaceUnitsMethod,
     pub configuration: ChemistryConfiguration,
 }
 
@@ -67,13 +66,9 @@ pub mod defs {
     }
 }
 impl LeverChemistry {
-    pub fn construct(
-        place_units_method: PlaceUnitsMethod,
-        config: ChemistryConfiguration,
-    ) -> ChemistryInstance {
+    pub fn construct(config: ChemistryConfiguration) -> ChemistryInstance {
         let mut chemistry = LeverChemistry {
             manifest: LeverChemistry::default_manifest(),
-            place_units_method: place_units_method,
             configuration: config,
         };
         chemistry.init_manifest();
@@ -127,10 +122,6 @@ impl Chemistry for LeverChemistry {
     }
     fn get_configuration(&self) -> ChemistryConfiguration {
         self.configuration.clone()
-    }
-
-    fn get_unit_placement(&self) -> PlaceUnitsMethod {
-        self.place_units_method.clone()
     }
 
     fn get_next_unit_resources(
@@ -210,18 +201,13 @@ mod tests {
     use crate::biology::unit_behavior::lever::SimpleLever;
     use crate::chemistry::actions::tests::execute_action;
     use crate::chemistry::actions::*;
+    use crate::simulation::common::builder::ChemistryBuilder;
     use crate::tests::fixtures;
 
     #[test]
     fn do_action() {
-        let specs = SimulationSpecs {
-            chemistry_key: "lever".to_string(),
-            place_units_method: PlaceUnitsMethod::SimpleDrop { attributes: None },
-            ..Default::default()
-        };
-
         let mut sim = SimulationBuilder::default()
-            .specs(specs)
+            .chemistry(ChemistryBuilder::with_key("lever").build())
             .unit_entries(vec![UnitEntryBuilder::default()
                 .species_name("main".to_string())
                 .behavior(Rc::new(Box::new(SimpleLever::construct())))])

@@ -1,7 +1,7 @@
 use variants::CheeseChemistry;
 
 use crate::biology::genome::framed::builders::simple_convert_into_frames;
-use crate::biology::genome::framed::builders::FramedGenomeParser;
+use crate::biology::genome::framed::builders::FramedGenomeCompiler;
 use crate::biology::genome::framed::samples::legacy;
 use crate::biology::unit_behavior::framed::FramedGenomeUnitBehavior;
 use crate::biology::unit_behavior::lever::SimpleLever;
@@ -32,12 +32,16 @@ pub fn basic(sim_args: &SimulationRunnerArgs) -> SimulationBuilder {
 }
 
 pub fn with_genome(sim_args: &SimulationRunnerArgs) -> SimulationBuilder {
-    let specs = SimulationSpecs {
-        chemistry_key: "lever".to_string(),
-        place_units_method: PlaceUnitsMethod::SimpleDrop { attributes: None },
-        ..Default::default()
-    };
+    // let specs = SimulationSpecs {
+    //     chemistry_key: "lever".to_string(),
+    //     place_units_method: PlaceUnitsMethod::SimpleDrop { attributes: None },
+    //     ..Default::default()
+    // };
 
+    let chemistry = ChemistryOptions::from_key("lever".to_owned());
+    let gm = GeneticManifest::new(chemistry);
+
+    // TODO: refactor genome macros to use genetic manifest rather than cm, sm, gm
     let (cm, sm, gm) = specs.context();
 
     use crate::biology::genome::framed::samples::lever::genome1;

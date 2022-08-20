@@ -11,7 +11,7 @@ use rand::Rng;
 use std::sync::Arc;
 use typemap::{CloneMap, Key};
 
-#[derive(Clone, Default)]
+#[derive(Clone, Default, Debug)]
 pub enum PlaceUnitsMethod {
     LinearBottomMiddle {
         attributes: Option<UnitAttributes>,
@@ -36,6 +36,12 @@ pub enum PlaceUnitsMethod {
 
     #[default]
     Default,
+}
+
+impl PlaceUnitsMethod {
+    pub fn place_units(sim: &mut SimCell, method: &PlaceUnitsMethod) {
+        place_units(sim, method);
+    }
 }
 
 pub fn place_units(sim: &mut SimCell, method: &PlaceUnitsMethod) {
@@ -197,21 +203,19 @@ pub fn place_manual(
 }
 
 mod tests {
-    use crate::simulation::specs::SimulationSpecs;
+    use crate::simulation::common::builder::ChemistryBuilder;
 
     #[allow(unused_imports)]
     use super::*;
 
     #[test]
     fn test_place_units() {
+        let chemistry = ChemistryBuilder::with_key("cheese").build();
+
         let mut sim = SimulationBuilder::default()
             .size((5, 5))
-            .specs(SimulationSpecs {
-                chemistry_key: "cheese".to_string(),
-                place_units_method: PlaceUnitsMethod::LinearBottomMiddle { attributes: None },
-                ..Default::default()
-            })
-            .headless(true)
+            .chemistry(chemistry)
+            .place_units_method(PlaceUnitsMethod::LinearBottomMiddle { attributes: None })
             .unit_manifest(UnitManifest {
                 units: vec![UnitEntry::new("main", NullBehavior::construct())],
             })
@@ -222,18 +226,16 @@ mod tests {
 
     #[test]
     fn test_random_region_drop() {
+        let chemistry = ChemistryBuilder::with_key("cheese").build();
+
         let mut sim = SimulationBuilder::default()
             .size((100, 100))
-            .specs(SimulationSpecs {
-                chemistry_key: "cheese".to_string(),
-                place_units_method: PlaceUnitsMethod::RandomRegionDrop {
-                    attributes: None,
-                    units_per_entry: 2,
-                    region_pct_rect: (0.25, 0.25, 0.75, 0.75),
-                },
-                ..Default::default()
+            .place_units_method(PlaceUnitsMethod::RandomRegionDrop {
+                attributes: None,
+                units_per_entry: 2,
+                region_pct_rect: (0.25, 0.25, 0.75, 0.75),
             })
-            // .headless(true)
+            .chemistry(chemistry)
             .unit_manifest(UnitManifest {
                 units: vec![
                     UnitEntry::new("main", NullBehavior::construct()),

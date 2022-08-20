@@ -17,6 +17,8 @@ pub type UnitEntryAttributes = Vec<UnitEntryAttributeValue>;
 
 use crate::chemistry::properties::UnitEntryAttributeDefinition;
 
+use super::common::helpers::place_units::PlaceUnitsMethod;
+
 #[derive(Clone)]
 pub struct UnitManifest {
     pub units: Vec<UnitEntry>,
@@ -56,7 +58,7 @@ impl UnitEntry {
         Self {
             info: UnitEntryData {
                 species_name: species_name.to_string(),
-                default_attributes: None,
+                default_unit_attributes: None,
                 default_resources: None,
                 default_entry_attributes: None,
                 id: 0,
@@ -67,7 +69,7 @@ impl UnitEntry {
     }
 
     pub fn with_default_attributes(mut self, default_attr: UnitAttributes) -> Self {
-        self.info.default_attributes = Some(default_attr);
+        self.info.default_unit_attributes = Some(default_attr);
         self
     }
     pub fn with_default_resources(mut self, default_res: UnitResources) -> Self {
@@ -97,7 +99,7 @@ impl UnitEntry {
     //     return self;
     // }
     pub fn set_default_attributes(mut self, attributes: &UnitAttributes) -> Self {
-        self.info.default_attributes = Some(attributes.clone());
+        self.info.default_unit_attributes = Some(attributes.clone());
         return self;
     }
 
@@ -109,19 +111,18 @@ impl UnitEntry {
 
 #[derive(Clone, Debug)]
 pub struct UnitEntryData {
-    // TODO rename this to creature info or unit entry
     pub species_name: String,
     pub default_entry_attributes: Option<UnitEntryAttributes>,
-    pub default_attributes: Option<UnitAttributes>,
+    pub default_unit_attributes: Option<UnitAttributes>,
     pub default_resources: Option<UnitResources>,
     pub id: UnitEntryId,
 }
 
 impl UnitEntryData {
-    pub fn new(species_name: &'static str) -> Self {
+    pub fn new(species_name: &'static str, place_units_method: Option<PlaceUnitsMethod>) -> Self {
         Self {
             species_name: species_name.to_string(),
-            default_attributes: None,
+            default_unit_attributes: None,
             default_resources: None,
             id: 0,
             default_entry_attributes: None,
@@ -140,6 +141,8 @@ pub mod builder {
         pub species_name: String,
         pub default_attributes: Vec<(&'static str, UnitAttributeValue)>,
         pub default_resources: Vec<(&'static str, UnitResourceAmount)>,
+        pub default_entry_attributes: Vec<(&'static str, UnitEntryAttributeValue)>,
+        pub place_units_method: Option<PlaceUnitsMethod>,
         pub id: UnitEntryId,
     }
 
@@ -147,19 +150,22 @@ pub mod builder {
         pub fn with_species_name(name: &'static str) -> Self {
             Self::default().species_name(name.to_string())
         }
-        pub fn build(
-            self,
-            cm: &ChemistryManifest,
-            default_attributes: Option<UnitEntryAttributes>,
-        ) -> unit_entry::UnitEntry {
+
+        pub fn build(self, cm: &ChemistryManifest) -> unit_entry::UnitEntry {
             let compiled_attr = match &self.default_attributes {
                 Some(attr) => Some(cm.unit_attributes_of(attr.clone()).clone()),
                 None => None,
             };
+
             let compiled_res = match &self.default_resources {
                 Some(res) => Some(convert_maybe_resources_to_resources(
                     cm.unit_resources_of(res.clone()),
                 )),
+                None => None,
+            };
+
+            let compiled_entry_attr = match &self.default_entry_attributes {
+                Some(attr) => Some(cm.unit_entry_attributes_of(attr.clone()).clone()),
                 None => None,
             };
             //let compiled_res = convert_maybe_resources_to_resources(maybe_res.clone());
@@ -168,9 +174,9 @@ pub mod builder {
                 info: UnitEntryData {
                     id: 0,
                     species_name: self.species_name.unwrap().clone(),
-                    default_attributes: compiled_attr,
+                    default_unit_attributes: compiled_attr,
                     default_resources: compiled_res,
-                    default_entry_attributes: default_attributes,
+                    default_entry_attributes: compiled_entry_attr,
                 },
 
                 behavior: self.behavior.unwrap(),

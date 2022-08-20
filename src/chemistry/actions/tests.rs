@@ -17,41 +17,37 @@ use crate::util::*;
 use crate::util::{coord_by_direction_offset, Coord};
 
 use crate::chemistry::actions::default_actions;
-use crate::simulation::common::{get_chemistry_by_key, GridDirection, UnitEntry};
+use crate::simulation::common::{GridDirection, UnitEntry};
 
 pub mod set_unit_resource {
-    use crate::simulation::common::helpers::place_units::PlaceUnitsMethod;
+    use crate::simulation::common::{
+        builder::ChemistryBuilder, helpers::place_units::PlaceUnitsMethod,
+    };
 
     use super::*;
 
     #[test]
     fn test__evaluate() {
-        let specs = SimulationSpecs {
-            chemistry_key: "nanobots".to_string(),
-            place_units_method: PlaceUnitsMethod::ManualSingleEntry {
-                attributes: None,
-                coords: vec![(1, 1)],
-            },
-            ..Default::default()
-        };
+        let chemistry = ChemistryBuilder::with_key("nanobots").build();
 
-        let actions = default_actions();
-        let action = actions.by_key("set_unit_resource");
-
-        let unit_manifest = UnitManifest {
-            units: vec![UnitEntry::new("main", NullBehavior::construct())],
-        };
         let mut sim = SimulationBuilder::default()
             .size((5, 5))
-            .headless(true)
-            .specs(specs)
-            .unit_manifest(unit_manifest)
+            .place_units_method(PlaceUnitsMethod::ManualSingleEntry {
+                attributes: None,
+                coords: vec![(1, 1)],
+            })
+            .unit_manifest(UnitManifest {
+                units: vec![UnitEntry::new("main", NullBehavior::construct())],
+            })
             .to_simulation();
 
         let params = vec![
             ActionParam::UnitResourceIndex(0),
             ActionParam::UnitResourceAmount(10),
         ];
+
+        let actions = default_actions();
+        let action = actions.by_key("set_unit_resource");
 
         assert!(execute_action(
             &action,
@@ -65,27 +61,23 @@ pub mod set_unit_resource {
 pub mod offset_unit_resource {
     use super::*;
     use crate::{
-        chemistry::variants::cheese, simulation::common::helpers::place_units::PlaceUnitsMethod,
+        chemistry::variants::cheese,
+        simulation::common::{builder::ChemistryBuilder, helpers::place_units::PlaceUnitsMethod},
     };
 
     #[test]
     fn test_evaluate_strict() {
-        let specs = SimulationSpecs {
-            chemistry_key: "nanobots".to_string(),
-            place_units_method: PlaceUnitsMethod::ManualSingleEntry {
-                attributes: None,
-                coords: vec![(2, 2)],
-            },
-            ..Default::default()
-        };
+        let chemistry = ChemistryBuilder::with_key("nanobots").build();
 
         let actions = default_actions();
         let action = actions.by_key("offset_unit_resource");
 
         let mut sim = SimulationBuilder::default()
             .size((5, 5))
-            .headless(true)
-            .specs(specs)
+            .place_units_method(PlaceUnitsMethod::ManualSingleEntry {
+                attributes: None,
+                coords: vec![(2, 2)],
+            })
             .unit_manifest(UnitManifest {
                 units: vec![UnitEntry::new("main", NullBehavior::construct())],
             })

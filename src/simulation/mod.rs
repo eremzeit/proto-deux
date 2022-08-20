@@ -15,6 +15,7 @@ pub mod world;
 use ndarray::*;
 use ndarray::{Array, Array2, Dim, Ix, Shape};
 
+use self::common::helpers::place_units::{self, PlaceUnitsMethod};
 use self::config::SimulationConfigData;
 use self::config::*;
 use self::iterators::CoordIterator;
@@ -54,6 +55,8 @@ pub struct Simulation {
     pub unit_manifest: UnitManifest,
     pub unit_entry_attributes: Vec<UnitEntryAttributes>,
     pub iterations: u64,
+
+    pub place_units_method: PlaceUnitsMethod,
     // pub control_events: Option<SimulationControlEventReceiver>,
 }
 
@@ -102,6 +105,7 @@ impl Simulation {
         size: GridSize2D,
         iterations: u64,
         mut unit_manifest: UnitManifest,
+        place_units_method: PlaceUnitsMethod,
     ) -> Simulation {
         let world = World::new(size, &chemistry);
         chemistry.init_manifest();
@@ -128,12 +132,14 @@ impl Simulation {
             unit_manifest,
             attributes,
             unit_entry_attributes,
+            place_units_method,
         };
 
         simulation.init();
 
         simulation
     }
+
     pub fn init(&mut self) {
         self.world.tick = 1; // we start at one.  zero means pre-initialized.
         sim_log!("INIT SIMULATION: {}", self.chemistry.get_key());
@@ -153,7 +159,20 @@ impl Simulation {
             unit_manifest: &self.unit_manifest,
             chemistry: &self.chemistry,
         });
+
+        self.place_units();
     }
+
+    pub fn place_units(&mut self) {
+        let method = match self.place_units_method {
+            PlaceUnitsMethod::Default => self.chemistry.get_default_place_units_method(),
+            _ => self.place_units_method,
+        };
+
+        let mut sim = &mut self.editable();
+        PlaceUnitsMethod::place_units(sim, &method);
+    }
+
     pub fn _start(&mut self) {
         while self.world.tick < self.iterations {
             self.tick();
@@ -351,7 +370,9 @@ pub struct SimCell<'a> {
 }
 
 mod tests {
-    use crate::simulation::common::helpers::place_units::PlaceUnitsMethod;
+    use crate::simulation::common::{
+        builder::ChemistryBuilder, helpers::place_units::PlaceUnitsMethod,
+    };
 
     use super::common::*;
     #[allow(unused_imports)]
@@ -359,15 +380,13 @@ mod tests {
 
     #[test]
     fn test_attribute_initialization() {
+        let chemistry = ChemistryBuilder::with_key("cheese").build();
         let mut sim = SimulationBuilder::default()
+            .chemistry(chemistry)
             .size((5, 5))
-            .specs(SimulationSpecs {
-                chemistry_key: "cheese".to_string(),
-                place_units_method: PlaceUnitsMethod::ManualSingleEntry {
-                    attributes: None,
-                    coords: vec![(1, 1)],
-                },
-                ..Default::default()
+            .place_units_method(PlaceUnitsMethod::ManualSingleEntry {
+                attributes: None,
+                coords: vec![(1, 1)],
             })
             .headless(true)
             .unit_manifest(UnitManifest {

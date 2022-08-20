@@ -57,7 +57,6 @@ pub mod constants {
 
 pub struct CheeseChemistry {
     manifest: ChemistryManifest,
-    place_units_method: PlaceUnitsMethod,
     configuration: ChemistryConfiguration,
 }
 
@@ -126,22 +125,14 @@ pub mod defs {
     //trace_macros!(false);
 }
 impl CheeseChemistry {
-    pub fn construct(
-        place_units_method: PlaceUnitsMethod,
-        config: ChemistryConfiguration,
-    ) -> ChemistryInstance {
+    pub fn construct(config: ChemistryConfiguration) -> ChemistryInstance {
         let mut chemistry = CheeseChemistry {
             manifest: CheeseChemistry::default_manifest(),
-            place_units_method: place_units_method,
             configuration: config,
         };
 
         chemistry.init_manifest();
         wrap_chemistry!(chemistry)
-    }
-
-    fn get_unit_placement(&self) -> PlaceUnitsMethod {
-        self.place_units_method.clone()
     }
 
     pub fn default_manifest() -> ChemistryManifest {
@@ -231,9 +222,10 @@ impl Chemistry for CheeseChemistry {
         self.configuration.clone()
     }
 
-    fn get_unit_placement(&self) -> PlaceUnitsMethod {
-        self.place_units_method.clone()
+    fn get_default_place_units_method(&self) -> PlaceUnitsMethod {
+        PlaceUnitsMethod::SimpleDrop { attributes: None }
     }
+
     // fn construct_specs(
     //     &self,
     //     unit_placement: &PlaceUnitsMethod,
@@ -349,9 +341,9 @@ impl Chemistry for CheeseChemistry {
 
     fn on_simulation_finish(&self, sim: &mut SimCell) {}
 
-    fn init_units(&self, sim: &mut SimCell) {
-        place_units(sim, &self.place_units_method);
-    }
+    // fn init_units(&self, sim: &mut SimCell) {
+    //     place_units(sim, &self.place_units_method);
+    // }
 
     fn init_world_custom(&self, world: &mut World) {
         for coord in CoordIterator::new(world.size.clone()) {
@@ -412,8 +404,7 @@ mod tests {
     use crate::chemistry::actions::*;
     #[test]
     fn make_cheese_manifest() {
-        let cheese =
-            CheeseChemistry::construct(PlaceUnitsMethod::Skip, ChemistryConfiguration::new());
+        let cheese = CheeseChemistry::construct(ChemistryConfiguration::new());
     }
     #[test]
     fn macros() {

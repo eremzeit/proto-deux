@@ -37,6 +37,17 @@ impl ChemistryManifest {
             .clone()
     }
 
+    pub fn unit_entry_attribute_by_key(&self, key: &str) -> UnitEntryAttributeDefinition {
+        self.unit_entry_attributes
+            .iter()
+            .find(|&x| -> bool { key == x.key })
+            .expect(&format!(
+                "could not find unit entry attribute with key: {}",
+                key
+            ))
+            .clone()
+    }
+
     pub fn position_attribute_by_key(&self, key: &str) -> PositionAttributeDefinition {
         self.position_attributes
             .iter()
@@ -57,13 +68,6 @@ impl ChemistryManifest {
             .iter()
             .find(|&x| -> bool { key == x.key })
             .unwrap()
-            .clone()
-    }
-    pub fn unit_entry_attribute_by_key(&self, key: &str) -> UnitEntryAttributeDefinition {
-        self.unit_entry_attributes
-            .iter()
-            .find(|&x| -> bool { key == x.key })
-            .expect(key)
             .clone()
     }
     pub fn empty_simulation_attributes(&self) -> SimulationAttributes {
@@ -128,6 +132,22 @@ impl ChemistryManifest {
         let length = self.unit_attributes.len();
         let mut attributes: UnitAttributes = Vec::with_capacity(length);
         attributes.resize(length, UnitAttributeValue::Nil);
+
+        for pair in attribute_list.iter() {
+            let idx = self.unit_attribute_by_key(pair.0).id as UnitAttributeIndex;
+            attributes[idx] = pair.1.clone();
+        }
+
+        attributes
+    }
+    pub fn unit_entry_attributes_of(
+        &self,
+        attribute_list: Vec<(&'static str, UnitEntryAttributeValue)>,
+    ) -> UnitEntryAttributes {
+        let length = self.unit_entry_attributes.len();
+
+        let mut attributes: UnitEntryAttributes = Vec::with_capacity(length);
+        attributes.resize(length, UnitEntryAttributeValue::Nil);
 
         for pair in attribute_list.iter() {
             let idx = self.unit_attribute_by_key(pair.0).id as UnitAttributeIndex;

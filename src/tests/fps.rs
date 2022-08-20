@@ -16,12 +16,8 @@ pub fn test_with_genome() {
     let (cm, sm, gm) = specs.context();
 
     let genome_values1 = get_genome1().build(&sm, &cm, &gm);
-    let frames1 = FramedGenomeParser::parse(
-        simple_convert_into_frames(genome_values1),
-        cm.clone(),
-        sm.clone(),
-        gm.clone(),
-    );
+    let frames1 =
+        FramedGenomeCompiler::compile(simple_convert_into_frames(genome_values1), &cm, &sm, &gm);
 
     let mut sim = SimulationBuilder::default()
         .headless(true)

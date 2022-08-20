@@ -1,7 +1,7 @@
 use variants::CheeseChemistry;
 
 use crate::biology::genome::framed::builders::simple_convert_into_frames;
-use crate::biology::genome::framed::builders::FramedGenomeParser;
+use crate::biology::genome::framed::builders::FramedGenomeCompiler;
 use crate::biology::genome::framed::samples::legacy;
 use crate::biology::unit_behavior::framed::FramedGenomeUnitBehavior;
 use crate::biology::unit_behavior::mouse::simple_mouse::SimpleMouse;
@@ -46,14 +46,14 @@ pub fn with_genome(sim_args: &SimulationRunnerArgs) -> SimulationBuilder {
     let frames1 = get_genome1(&cm, &sm, &gm);
 
     let genome_values2 = legacy::get_genome2().build(&sm, &cm, &gm);
-    let frames2 = FramedGenomeParser::parse(
+    let frames2 = FramedGenomeCompiler::compile(
         simple_convert_into_frames(genome_values2),
         cm.clone(),
         sm.clone(),
         gm.clone(),
     );
     let genome_values3 = legacy::get_genome3().build(&sm, &cm, &gm);
-    let frames3 = FramedGenomeParser::parse(
+    let frames3 = FramedGenomeCompiler::compile(
         simple_convert_into_frames(genome_values3),
         cm.clone(),
         sm.clone(),

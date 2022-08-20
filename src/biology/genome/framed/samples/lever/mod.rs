@@ -18,5 +18,5 @@ pub fn genome1(
     )
     .build(&sm, &cm, &gm);
 
-    FramedGenomeParser::parse(framed_vals, cm.clone(), sm.clone(), gm.clone())
+    FramedGenomeCompiler::compile(framed_vals, cm.clone(), sm.clone(), gm.clone())
 }

@@ -4,11 +4,7 @@ use crate::simulation::common::*;
 
 use crate::biology::genome::framed::builders::*;
 
-pub fn genome1(
-    cm: &ChemistryManifest,
-    sm: &SensorManifest,
-    gm: &GeneticManifest,
-) -> CompiledFramedGenome {
+pub fn genome1(gm: &GeneticManifest) -> CompiledFramedGenome {
     let framed_vals = frame(
         0,
         vec![
@@ -29,9 +25,9 @@ pub fn genome1(
             ),
         ],
     )
-    .build(&sm, &cm, &gm);
+    .build(&gm);
 
-    FramedGenomeParser::parse(framed_vals, cm.clone(), sm.clone(), gm.clone())
+    FramedGenomeCompiler::compile(framed_vals, &gm)
 }
 
 pub fn get_genome1(
@@ -124,7 +120,7 @@ pub fn get_genome1(
     )
     .build(&sm, &cm, &gm);
 
-    FramedGenomeParser::parse(framed_vals, cm.clone(), sm.clone(), gm.clone())
+    FramedGenomeCompiler::compile(framed_vals, gm.clone())
 }
 pub fn get_genome2() -> GenomeBuilder {
     genome!(

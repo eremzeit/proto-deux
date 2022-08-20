@@ -110,8 +110,11 @@ impl World {
         }
 
         let entry = unit_entry.clone();
-        if entry.default_attributes.is_some() {
-            merge_unit_attributes(&mut attributes, entry.default_attributes.as_ref().unwrap());
+        if entry.default_unit_attributes.is_some() {
+            merge_unit_attributes(
+                &mut attributes,
+                entry.default_unit_attributes.as_ref().unwrap(),
+            );
         }
 
         if entry.default_resources.is_some() {

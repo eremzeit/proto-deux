@@ -26,9 +26,7 @@ pub use crate::chemistry::properties::{
 };
 pub use crate::chemistry::reactions::ReagentDefinition;
 pub use crate::chemistry::*;
-pub use crate::chemistry::{
-    get_chemistry_by_key, ChemistryInstance, ChemistryManifest, ReactionId,
-};
+pub use crate::chemistry::{ChemistryInstance, ChemistryManifest, ReactionId};
 pub use crate::simulation::simulation_data::{SimulationData, ThreadedSimulationReference};
 pub use crate::simulation::unit_entry::builder::UnitEntryBuilder;
 pub use crate::simulation::unit_entry::{

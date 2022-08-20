@@ -74,15 +74,13 @@ pub mod defs {
 
 pub struct BaseChemistry {
     pub manifest: ChemistryManifest,
-    pub place_units_method: PlaceUnitsMethod,
     pub configuration: ChemistryConfiguration,
 }
 
 impl BaseChemistry {
-    pub fn construct(place_units_method: PlaceUnitsMethod) -> ChemistryInstance {
+    pub fn construct() -> ChemistryInstance {
         let mut chemistry = BaseChemistry {
             manifest: BaseChemistry::default_manifest(),
-            place_units_method: place_units_method,
             configuration: ChemistryConfiguration::new(),
         };
 
@@ -114,9 +112,9 @@ impl BaseChemistry {
 }
 
 impl Chemistry for BaseChemistry {
-    fn get_unit_placement(&self) -> PlaceUnitsMethod {
-        self.place_units_method.clone()
-    }
+    // fn get_unit_placement(&self) -> PlaceUnitsMethod {
+    //     self.place_units_method.clone()
+    // }
 
     fn get_configuration(&self) -> ChemistryConfiguration {
         self.configuration.clone()

@@ -1,4 +1,5 @@
 pub mod actions;
+pub mod builder;
 
 #[macro_use]
 pub mod config;
@@ -37,16 +38,17 @@ pub type ChemistryConfiguration = HashMap<String, ChemistryConfigValue>;
 /* used to pass values from the unit_behavior to the action execution
  * to replace placeholders */
 pub type ActionArgValue = u32;
-pub fn get_chemistry_by_key(
+// pub fn get_chemistry_by_key(key: &str, config: ChemistryConfiguration) -> Rc<dyn Chemistry> {
+pub fn construct_chemistry(
     key: &str,
-    place_units_method: PlaceUnitsMethod,
-    config: ChemistryConfiguration,
+    config: Option<ChemistryConfiguration>,
 ) -> Box<dyn Chemistry> {
+    let _config = config.unwrap_or_default();
     match key {
-        "cheese" => CheeseChemistry::construct(place_units_method, config),
-        "lever" => LeverChemistry::construct(place_units_method, config),
-        "nanobots" => NanobotsChemistry::construct(place_units_method, config),
-        "base" => BaseChemistry::construct(place_units_method),
+        "cheese" => CheeseChemistry::construct(_config),
+        "lever" => LeverChemistry::construct(_config),
+        "nanobots" => NanobotsChemistry::construct(_config),
+        "base" => BaseChemistry::construct(),
         _ => panic!("chemistry key not found: {}", key),
     }
 }
@@ -90,8 +92,6 @@ pub trait Chemistry {
         reactions
     }
 
-    fn get_unit_placement(&self) -> PlaceUnitsMethod;
-
     fn get_manifest(&self) -> &ChemistryManifest;
     fn get_manifest_mut(&mut self) -> &mut ChemistryManifest;
 
@@ -123,8 +123,8 @@ pub trait Chemistry {
         coord: &Coord,
         entry: &UnitEntryData,
     ) -> UnitAttributes {
-        if entry.default_attributes.is_some() {
-            entry.default_attributes.as_ref().unwrap().clone()
+        if entry.default_unit_attributes.is_some() {
+            entry.default_unit_attributes.as_ref().unwrap().clone()
         } else {
             self.get_default_unit_seed_attributes(world, coord, entry)
         }
@@ -159,17 +159,23 @@ pub trait Chemistry {
         vec![]
     }
 
+    fn get_default_place_units_method(&self) -> PlaceUnitsMethod {
+        PlaceUnitsMethod::SimpleDrop { attributes: None }
+    }
+
     fn on_simulation_init(&self, sim: &mut SimCell) {
         self.init_pos_properties(&mut sim.world);
         self.init_world_custom(&mut sim.world);
         self.init_units(sim);
     }
+
     fn on_simulation_tick(&self, sim: &mut SimCell);
     fn on_simulation_finish(&self, sim: &mut SimCell);
 
     fn init_world_custom(&self, world: &mut World) {}
+
     fn init_units(&self, sim: &mut SimCell) {
-        place_units(sim, &self.get_unit_placement());
+        place_units(sim, &self.get_default_place_units_method());
     }
 
     fn init_pos_properties(&self, world: &mut World) {

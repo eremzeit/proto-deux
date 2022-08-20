@@ -1,5 +1,6 @@
 use crate::biology::experiments::alterations;
 use crate::biology::unit_behavior::framed::common::*;
+use crate::simulation::common::builder::ChemistryBuilder;
 use crate::simulation::common::*;
 use crate::{
     biology::genome::framed::common::*, simulation::common::helpers::place_units::PlaceUnitsMethod,
@@ -47,7 +48,9 @@ pub struct SimpleExperimentSettings {
     pub alteration_set: alterations::AlterationTypeSet,
     pub fitness_calculation_key: String, // needed?  should this be a trait object?  how will fitness calculation change?
     pub cull_strategy: CullStrategy,
-    pub specs: SimulationSpecs,
+    pub chemistry_options: ChemistryBuilder,
+    pub gm: GeneticManifest,
+    // pub specs: SimulationSpecs,
 }
 
 const DATA_DIR_NAME: &str = "data";

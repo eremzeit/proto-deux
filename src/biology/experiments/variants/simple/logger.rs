@@ -86,13 +86,7 @@ impl SimpleExperimentLogger {
         genetic_manifest: &GeneticManifest,
     ) {
         if tick != 0 && tick % self.settings.checkpoint_interval == 0 {
-            self._log_checkpoint(
-                tick,
-                genome_entries,
-                sensor_manifest,
-                chemistry_manifest,
-                genetic_manifest,
-            );
+            self._log_checkpoint(tick, genome_entries, genetic_manifest);
         }
 
         self._log_fitness_percentiles(tick, genome_entries);
@@ -147,8 +141,6 @@ impl SimpleExperimentLogger {
         tick: usize,
         genome_entries: &Vec<GenomeExperimentEntry>,
 
-        sensor_manifest: &SensorManifest,
-        chemistry_manifest: &ChemistryManifest,
         genetic_manifest: &GeneticManifest,
     ) {
         let mut s = String::new();
@@ -163,13 +155,8 @@ impl SimpleExperimentLogger {
         });
 
         for entry in sorted_entries.iter() {
-            let genome_str = FramedGenomeParser::parse(
-                entry.genome.clone(),
-                chemistry_manifest.clone(),
-                sensor_manifest.clone(),
-                genetic_manifest.clone(),
-            )
-            .display(sensor_manifest, chemistry_manifest, genetic_manifest);
+            let genome_str = FramedGenomeCompiler::compile(entry.genome.clone(), genetic_manifest)
+                .display(genetic_manifest);
 
             s.push_str(&format!(
                 "{}------------------",

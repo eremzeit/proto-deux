@@ -74,9 +74,9 @@ impl ParsedGenomeParam {
     pub fn from(
         param_meta: FramedGenomeValue,
         param_val: FramedGenomeValue,
-        sm: &SensorManifest,
         gm: &GeneticManifest,
     ) -> Self {
+        let sm = &gm.sensor_manifest;
         //println!("param_meta: {}, param_val: {}", param_meta, param_val);
         let num_sensors = sm.sensors.len();
         if param_meta::is_constant(param_meta as u16) {

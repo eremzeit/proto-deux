@@ -8,13 +8,13 @@ use crate::util::{grid_direction_from_string, grid_direction_to_num};
 use std::rc::Rc;
 
 pub use crate::biology::genome::framed::convert::*;
-pub use crate::biology::genome::framed::parsing::FramedGenomeParser;
+pub use crate::biology::genome::framed::parsing::FramedGenomeCompiler;
 pub use crate::biology::genome::framed::types::*;
 pub use crate::biology::genome::framed::util::identify_raw_param_string;
 
 use std::convert::TryInto;
 
-type BuildFunction<T> = Rc<dyn Fn(&SensorManifest, &ChemistryManifest, &GeneticManifest) -> Vec<T>>;
+type BuildFunction<T> = Rc<dyn Fn(&GeneticManifest) -> Vec<T>>;
 
 macro_rules! _make_builder_type {
     ($builder_type:ident, $output_type:ident) => {
@@ -27,13 +27,8 @@ macro_rules! _make_builder_type {
                 Self { build_fn }
             }
 
-            pub fn build(
-                &self,
-                sensor_manifest: &SensorManifest,
-                chemistry_manifest: &ChemistryManifest,
-                genetic_manifest: &GeneticManifest,
-            ) -> Vec<$output_type> {
-                (self.build_fn)(sensor_manifest, chemistry_manifest, genetic_manifest)
+            pub fn build(&self, genetic_manifest: &GeneticManifest) -> Vec<$output_type> {
+                (self.build_fn)(genetic_manifest)
             }
         }
     };
@@ -48,13 +43,10 @@ _make_builder_type!(ConditionalBuilder, FramedGenomeValue);
 
 pub fn frame(default_channel: u8, genes: Vec<GeneBuilder>) -> FrameBuilder {
     FrameBuilder::new(Rc::new(
-        move |sm: &SensorManifest,
-              cm: &ChemistryManifest,
-              gm: &GeneticManifest|
-              -> Vec<FramedGenomeWord> {
+        move |gm: &GeneticManifest| -> Vec<FramedGenomeWord> {
             let mut v = genes
                 .iter()
-                .map(|gene| gene.build(sm, cm, gm))
+                .map(|gene| gene.build(gm))
                 .collect::<Vec<Vec<FramedGenomeValue>>>()
                 .concat();
 
@@ -70,14 +62,11 @@ pub fn frame(default_channel: u8, genes: Vec<GeneBuilder>) -> FrameBuilder {
 
 pub fn gene(predicate: PredicateBuilder, operation: OperationBuilder) -> GeneBuilder {
     GeneBuilder::new(Rc::new(
-        move |sm: &SensorManifest,
-              cm: &ChemistryManifest,
-              gm: &GeneticManifest|
-              -> Vec<FramedGenomeValue> {
-            let pred_vals = predicate.build(sm, cm, gm);
+        move |gm: &GeneticManifest| -> Vec<FramedGenomeValue> {
+            let pred_vals = predicate.build(gm);
             flog!("pred_values: {:?}", &pred_vals);
 
-            let op_vals = operation.build(sm, cm, gm);
+            let op_vals = operation.build(gm);
             vec![pred_vals, op_vals].concat()
         },
     ))
@@ -98,13 +87,10 @@ fn _predicate(
     is_negated: FramedGenomeValue,
 ) -> PredicateBuilder {
     PredicateBuilder::new(Rc::new(
-        move |sm: &SensorManifest,
-              cm: &ChemistryManifest,
-              gm: &GeneticManifest|
-              -> Vec<FramedGenomeValue> {
+        move |gm: &GeneticManifest| -> Vec<FramedGenomeValue> {
             let mut values = conjunctive_clauses
                 .iter()
-                .map(|clause| clause.build(sm, cm, gm))
+                .map(|clause| clause.build(gm))
                 .collect::<Vec<_>>()
                 .concat();
 
@@ -130,13 +116,10 @@ fn _if_all(
     is_negated: FramedGenomeValue,
 ) -> ConjunctiveClauseBuilder {
     ConjunctiveClauseBuilder::new(Rc::new(
-        move |sm: &SensorManifest,
-              cm: &ChemistryManifest,
-              gm: &GeneticManifest|
-              -> Vec<FramedGenomeValue> {
+        move |gm: &GeneticManifest| -> Vec<FramedGenomeValue> {
             let mut values = conditionals
                 .iter()
-                .map(|clause| clause.build(sm, cm, gm))
+                .map(|clause| clause.build(gm))
                 .collect::<Vec<_>>()
                 .concat();
             values.insert(0, is_negated); // is_negated
@@ -161,54 +144,49 @@ macro_rules! conditional {
     };
 
     ($op_key:ident, $param1:expr, $param2:expr, $param3:expr) => {{
-        ConditionalBuilder::new(Rc::new(
-            |sm: &SensorManifest,
-             cm: &ChemistryManifest,
-             gm: &GeneticManifest|
-             -> Vec<FramedGenomeValue> {
-                use crate::biology::genetic_manifest::predicates::OperatorParam;
-                use std::convert::TryInto;
-                let v: Vec<BooleanVariable> = vec![];
-                let op_key = stringify!($op_key).to_string();
-                let op = gm.operator_set.by_key(&op_key);
+        ConditionalBuilder::new(Rc::new(|gm: &GeneticManifest| -> Vec<FramedGenomeValue> {
+            use crate::biology::genetic_manifest::predicates::OperatorParam;
+            use std::convert::TryInto;
+            let v: Vec<BooleanVariable> = vec![];
+            let op_key = stringify!($op_key).to_string();
+            let op = gm.operator_set.by_key(&op_key);
 
-                let mut params_meta: [FramedGenomeValue; 3] = [0; 3];
-                let mut params: [OperatorParam; 3] = [0; 3];
+            let mut params_meta: [FramedGenomeValue; 3] = [0; 3];
+            let mut params: [OperatorParam; 3] = [0; 3];
 
-                let parsed_operator_param =
-                    identify_raw_param_string(&stringify!($param1).to_string(), sm, gm);
-                let mut p = parsed_operator_param.as_values();
-                params_meta[0] = p.0;
-                params[0] = p.1.try_into().unwrap();
+            let parsed_operator_param =
+                identify_raw_param_string(&stringify!($param1).to_string(), gm);
+            let mut p = parsed_operator_param.as_values();
+            params_meta[0] = p.0;
+            params[0] = p.1.try_into().unwrap();
 
-                let parsed_operator_param =
-                    identify_raw_param_string(&stringify!($param2).to_string(), sm, gm);
-                let mut p = parsed_operator_param.as_values();
-                params_meta[1] = p.0;
-                params[1] = p.1.try_into().unwrap();
+            let parsed_operator_param =
+                identify_raw_param_string(&stringify!($param2).to_string(), gm);
+            let mut p = parsed_operator_param.as_values();
+            params_meta[1] = p.0;
+            params[1] = p.1.try_into().unwrap();
 
-                let parsed_operator_param =
-                    identify_raw_param_string(&stringify!($param3).to_string(), sm, gm);
-                let mut p = parsed_operator_param.as_values();
-                params_meta[2] = p.0;
-                params[2] = p.1.try_into().unwrap();
+            let parsed_operator_param =
+                identify_raw_param_string(&stringify!($param3).to_string(), gm);
+            let mut p = parsed_operator_param.as_values();
+            params_meta[2] = p.0;
+            params[2] = p.1.try_into().unwrap();
 
-                let is_negated = 0;
+            let is_negated = 0;
 
-                let v: Vec<FramedGenomeValue> = vec![
-                    op.index as FramedGenomeValue,
-                    is_negated as FramedGenomeValue,
-                    params_meta[0] as FramedGenomeValue,
-                    params[0] as FramedGenomeValue,
-                    params_meta[1] as FramedGenomeValue,
-                    params[1] as FramedGenomeValue,
-                    params_meta[2] as FramedGenomeValue,
-                    params[2] as FramedGenomeValue,
-                ];
+            let v: Vec<FramedGenomeValue> = vec![
+                op.index as FramedGenomeValue,
+                is_negated as FramedGenomeValue,
+                params_meta[0] as FramedGenomeValue,
+                params[0] as FramedGenomeValue,
+                params_meta[1] as FramedGenomeValue,
+                params[1] as FramedGenomeValue,
+                params_meta[2] as FramedGenomeValue,
+                params[2] as FramedGenomeValue,
+            ];
 
-                v
-            },
-        ))
+            v
+        }))
     }};
 }
 
@@ -255,9 +233,7 @@ macro_rules! then_do {
             use std::convert::TryInto;
 
             OperationBuilder::new(Rc::new(
-                |sm: &SensorManifest,
-                 cm: &ChemistryManifest,
-                 gm: &GeneticManifest|
+                |gm: &GeneticManifest|
                  -> Vec<FramedGenomeValue> {
                     pub use crate::biology::genetic_manifest::predicates::OperatorParam;
                     use crate::biology::unit_behavior::framed::MetaReaction;
@@ -282,7 +258,7 @@ macro_rules! then_do {
                     }
 
 
-                    let reaction = cm.identify_reaction(&operation_key);
+                    let reaction = gm.chemistry_manifest.identify_reaction(&operation_key);
                     if reaction.is_some() {
                         let _reaction = reaction.unwrap();
                         operation_type = Some(operation::val_for_reaction_operation_type());
@@ -300,19 +276,19 @@ macro_rules! then_do {
                     let mut params: [OperatorParam; 3] = [0; 3];
 
                     let parsed_operator_param =
-                        identify_raw_param_string(&stringify!($param1).to_string(), sm, gm);
+                        identify_raw_param_string(&stringify!($param1).to_string(), gm);
                     let mut p = parsed_operator_param.as_values();
                     params_meta[0] = p.0;
                     params[0] = p.1.try_into().unwrap();
 
                     let parsed_operator_param =
-                        identify_raw_param_string(&stringify!($param2).to_string(), sm, gm);
+                        identify_raw_param_string(&stringify!($param2).to_string(), gm);
                     let mut p = parsed_operator_param.as_values();
                     params_meta[1] = p.0;
                     params[1] = p.1.try_into().unwrap();
 
                     let parsed_operator_param =
-                        identify_raw_param_string(&stringify!($param3).to_string(), sm, gm);
+                        identify_raw_param_string(&stringify!($param3).to_string(), gm);
                     let mut p = parsed_operator_param.as_values();
                     params_meta[2] = p.0;
                     params[2] = p.1.try_into().unwrap();
@@ -369,17 +345,15 @@ pub mod parsing_v2 {
 
     #[test]
     fn conditional() {
-        let gm = GeneticManifest::new();
-        let cm = CheeseChemistry::default_manifest();
-        let sm = SensorManifest::with_default_sensors(&cm);
+        let gm = GeneticManifest::defaults(&CheeseChemistry::default_manifest());
 
-        let raw_conditional =
-            conditional!(is_truthy, pos_attr::is_cheese_source(0, 0)).build(&sm, &cm, &gm);
+        let raw_conditional = conditional!(is_truthy, pos_attr::is_cheese_source(0, 0)).build(&gm);
 
         let operator_id = gm.operator_id_for_key("is_truthy") as FramedGenomeValue;
         let is_negated = 0 as FramedGenomeValue;
         let param1_meta = param_meta::val_for_sensor_lookup() as FramedGenomeValue;
-        let sensor_id = sm
+        let sensor_id = gm
+            .sensor_manifest
             .identify_sensor_from_key(&"pos_attr::is_cheese_source(0, 0)".to_string())
             .unwrap()
             .id as FramedGenomeValue;
@@ -391,14 +365,13 @@ pub mod parsing_v2 {
     }
     #[test]
     fn if_any_test() {
-        let gm = GeneticManifest::new();
-        let cm = CheeseChemistry::default_manifest();
-        let sm = SensorManifest::with_default_sensors(&cm);
+        let gm = GeneticManifest::defaults(&CheeseChemistry::default_manifest());
 
         let op_id = gm.operator_id_for_key("is_truthy") as FramedGenomeValue;
         let is_negated = 0 as FramedGenomeValue;
         let param1_meta = param_meta::val_for_sensor_lookup() as FramedGenomeValue;
-        let sensor_id = sm
+        let sensor_id = gm
+            .sensor_manifest
             .identify_sensor_from_key(&"pos_attr::is_cheese_source(0, 0)")
             .unwrap()
             .id as FramedGenomeValue;
@@ -407,7 +380,7 @@ pub mod parsing_v2 {
             is_truthy,
             pos_attr::is_cheese_source(0, 0)
         )])])
-        .build(&sm, &cm, &gm);
+        .build(&gm);
 
         assert_eq!(
             values,
@@ -459,9 +432,7 @@ pub mod parsing_v2 {
     // }
     #[test]
     fn test_gene() {
-        let gm = GeneticManifest::new();
-        let cm = CheeseChemistry::default_manifest();
-        let sm = SensorManifest::with_default_sensors(&cm);
+        let gm = GeneticManifest::defaults(&CheeseChemistry::default_manifest());
         let gene_values = gene(
             if_any(vec![if_not_all(vec![conditional!(
                 is_truthy,
@@ -533,7 +504,7 @@ pub mod parsing_v2 {
         )
         .build(&sm, &cm, &gm);
 
-        let genome = FramedGenomeParser::parse(framed_vals, cm.clone(), sm.clone(), gm.clone());
+        let genome = FramedGenomeCompiler::compile(framed_vals, &cm, &sm, &gm);
         let s = "***FRAME 0:***
 Channel #0
 CALL move_unit(Constant(75)) IF is_truthy(pos_attr::is_cheese_source(0, 0))
@@ -574,7 +545,7 @@ Channel #3\n\n";
         )
         .build(&sm, &cm, &gm);
 
-        let genome = FramedGenomeParser::parse(framed_vals, cm.clone(), sm.clone(), gm.clone());
+        let genome = FramedGenomeCompiler::compile(framed_vals, cm.clone(), sm.clone(), gm.clone());
         let s = "***FRAME 0:***
 Channel #0
 CALL move_unit(Constant(75)) IF (is_truthy(pos_attr::is_cheese_source(0, 0)) && unit_res::cheese(0, 0) > Constant(100))

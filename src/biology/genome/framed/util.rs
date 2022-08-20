@@ -47,11 +47,7 @@ macro_rules! flog {
  *
  * "pos_attr::is_cheese_source"
  */
-pub fn identify_raw_param_string(
-    str_param: &String,
-    sensor_manifest: &SensorManifest,
-    gm: &GeneticManifest,
-) -> ParsedGenomeParam {
+pub fn identify_raw_param_string(str_param: &String, gm: &GeneticManifest) -> ParsedGenomeParam {
     //println!("identify_raw_param_string() called for {}", &str_param);
     let s = str_param.to_ascii_lowercase().clone();
     if s.starts_with("constant") {
@@ -105,7 +101,7 @@ pub fn identify_raw_param_string(
     }
 
     let key = s.trim_start_matches("(").trim_end_matches(")");
-    let maybe_sensor_id = sensor_manifest.identify_sensor_from_key(str_param);
+    let maybe_sensor_id = gm.sensor_manifest.identify_sensor_from_key(str_param);
     if maybe_sensor_id.is_some() {
         return ParsedGenomeParam::SensorLookup(maybe_sensor_id.unwrap().id);
     }

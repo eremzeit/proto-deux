@@ -26,9 +26,7 @@ pub mod common {
 
 pub struct FramedGenomeUnitBehavior {
     pub genome: CompiledFramedGenome,
-    pub chemistry_manifest: ChemistryManifest,
-    pub sensor_manifest: SensorManifest,
-    pub genetic_manifest: GeneticManifest,
+    pub genetic_manifest: Rc<GeneticManifest>,
 }
 
 impl UnitBehavior for FramedGenomeUnitBehavior {
@@ -49,8 +47,6 @@ impl UnitBehavior for FramedGenomeUnitBehavior {
             &self.genome.frames,
             &sensor_context,
             new_registers,
-            &self.chemistry_manifest,
-            &self.sensor_manifest,
             &self.genetic_manifest,
             computation_points,
         );
@@ -100,17 +96,10 @@ impl UnitBehavior for FramedGenomeUnitBehavior {
 // }
 
 impl FramedGenomeUnitBehavior {
-    pub fn new(
-        genome: CompiledFramedGenome,
-        genetic_manifest: GeneticManifest,
-        chemistry_manifest: ChemistryManifest,
-        sensor_manifest: SensorManifest,
-    ) -> Self {
+    pub fn new(genome: CompiledFramedGenome, genetic_manifest: Rc<GeneticManifest>) -> Self {
         Self {
             genome,
             genetic_manifest,
-            chemistry_manifest,
-            sensor_manifest,
         }
     }
 
@@ -123,7 +112,7 @@ pub mod test {
     use super::{FramedGenomeUnitBehavior, GenomeExecutionContext};
     use crate::biology::genome::framed::common::*;
     use crate::biology::genome::framed::convert::simple_convert_into_frames;
-    use crate::biology::genome::framed::parsing::FramedGenomeParser;
+    use crate::biology::genome::framed::parsing::FramedGenomeCompiler;
     use crate::biology::genome::framed::render::render_frames;
     use crate::biology::genome::framed::*;
     use crate::chemistry::helpers::place_units::PlaceUnitsMethod;
@@ -161,7 +150,7 @@ pub mod test {
         .build(&sm, &cm, &gm);
 
         let framed_vals = simple_convert_into_frames(genome_values);
-        let frames = FramedGenomeParser::parse(
+        let frames = FramedGenomeCompiler::compile(
             framed_vals,
             specs.chemistry_manifest(),
             specs.sensors(),

@@ -41,6 +41,10 @@ pub struct OperatorSet {
 }
 
 impl OperatorSet {
+    pub fn default_operators() -> OperatorSet {
+        default_operators()
+    }
+
     pub fn by_key(&self, key: &str) -> &Operator {
         let i: usize = *self
             .by_string_key

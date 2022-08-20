@@ -31,10 +31,10 @@ use std::fmt::{Debug, Formatter, Result};
 
 pub use crate::biology::sensor_manifest::{SensorContext, SensorManifest, SensorType, SensorValue};
 
-pub struct FramedGenomeParser {
-    genetic_manifest: GeneticManifest,
-    sensor_manifest: SensorManifest,
-    chemistry_manifest: ChemistryManifest,
+pub struct FramedGenomeCompiler<'a> {
+    genetic_manifest: &'a GeneticManifest,
+    // sensor_manifest: &'a SensorManifest,
+    // chemistry_manifest: &'a ChemistryManifest,
     raw_frames: Vec<RawFrame>,
 
     // state variables for parsing
@@ -45,37 +45,27 @@ pub struct FramedGenomeParser {
 
 const NUM_VALS_FOR_OPERATION: usize = 8;
 
-impl FramedGenomeParser {
-    pub fn parse(
-        raw_values: Vec<FramedGenomeWord>,
-        chemistry_manifest: ChemistryManifest,
-        sensor_manifest: SensorManifest,
-        genetic_manifest: GeneticManifest,
+impl<'a> FramedGenomeCompiler<'a> {
+    pub fn compile(
+        raw_genome: Vec<FramedGenomeWord>,
+        genetic_manifest: &'a GeneticManifest,
     ) -> CompiledFramedGenome {
-        flog!("Parsing genome of size {}", raw_values.len());
-        flog!("raw genome values: {:?}", &raw_values);
-        let cm = chemistry_manifest.clone();
+        flog!("Compiling genome of size {}", raw_genome.len());
+        flog!("raw genome values: {:?}", &raw_genome);
 
-        perf_timer_start!("genome_parsing");
-        let mut s = Self::new(raw_values, sensor_manifest, cm, genetic_manifest);
+        perf_timer_start!("genome_compiling");
+        let mut s = Self::new(raw_genome, genetic_manifest);
         let frames = s.compile_frames();
-        perf_timer_stop!("genome_parsing");
+        perf_timer_stop!("genome_compiling");
         flog!("FINISHED COMPILING FRAMES");
         CompiledFramedGenome { frames }
     }
 
-    pub fn new(
-        values: Vec<FramedGenomeWord>,
-        sensor_manifest: SensorManifest,
-        chemistry_manifest: ChemistryManifest,
-        genetic_manifest: GeneticManifest,
-    ) -> Self {
+    pub fn new(values: Vec<FramedGenomeWord>, genetic_manifest: &GeneticManifest) -> Self {
         let raw_frames = RawFrameParser::parse(values);
         flog!("raw frames: {:?}", &raw_frames);
 
         Self {
-            sensor_manifest,
-            chemistry_manifest,
             genetic_manifest,
             current_channel: 0,
             current_frame: 0,
@@ -188,21 +178,11 @@ impl FramedGenomeParser {
 
             flog!(
                 "compiled disjunction: {:?}",
-                &render_disjunction(
-                    &pred,
-                    &self.chemistry_manifest,
-                    &self.genetic_manifest,
-                    &self.sensor_manifest
-                )
+                &render_disjunction(&pred, &self.genetic_manifest,)
             );
             flog!(
                 "compiled operation: {:?}",
-                &render_gene_operation(
-                    &_operation,
-                    &self.chemistry_manifest,
-                    &self.sensor_manifest,
-                    &self.genetic_manifest
-                )
+                &render_gene_operation(&_operation, &self.genetic_manifest)
             );
 
             Some(Gene {
@@ -275,8 +255,9 @@ impl FramedGenomeParser {
     }
 
     pub fn compile_boolean_variable(&mut self) -> Option<BooleanVariable> {
-        let num_sensors = self.sensor_manifest.sensors.len();
-        let manifest = &self.chemistry_manifest;
+        let sm = &self.genetic_manifest.sensor_manifest;
+        let num_sensors = sm.sensors.len();
+        let manifest = &self.genetic_manifest.chemistry_manifest;
         let operator_id = match &self.pop_in_frame() {
             Some(v) => (*v as usize) % self.genetic_manifest.operator_set.operators.len(),
             None => {
@@ -314,12 +295,8 @@ impl FramedGenomeParser {
             let param_meta = popped_params[i * 2];
             let param_val = popped_params[i * 2 + 1];
 
-            processed_params[i] = ParsedGenomeParam::from(
-                *param_meta,
-                *param_val,
-                &self.sensor_manifest,
-                &self.genetic_manifest,
-            );
+            processed_params[i] =
+                ParsedGenomeParam::from(*param_meta, *param_val, &self.genetic_manifest);
             flog!("processed param {}: {:?}", i, &processed_params[i]);
         }
 
@@ -357,33 +334,18 @@ impl FramedGenomeParser {
         let param1_vals = self.pop_n_in_frame(2);
         let mut param1 = ParsedGenomeParam::Constant(10);
         if let Some(vals) = param1_vals {
-            param1 = ParsedGenomeParam::from(
-                vals[0],
-                vals[1],
-                &self.sensor_manifest,
-                &self.genetic_manifest,
-            );
+            param1 = ParsedGenomeParam::from(vals[0], vals[1], &self.genetic_manifest);
             //println!("PARSED PARAM FROM param1: {:?}", &param1);
         }
         let param2_vals = self.pop_n_in_frame(2);
         let mut param2 = ParsedGenomeParam::Constant(10);
         if let Some(vals) = param2_vals {
-            param2 = ParsedGenomeParam::from(
-                vals[0],
-                vals[1],
-                &self.sensor_manifest,
-                &self.genetic_manifest,
-            );
+            param2 = ParsedGenomeParam::from(vals[0], vals[1], &self.genetic_manifest);
         }
         let param3_vals = self.pop_n_in_frame(2);
         let mut param3 = ParsedGenomeParam::Constant(10);
         if let Some(vals) = param3_vals {
-            param3 = ParsedGenomeParam::from(
-                vals[0],
-                vals[1],
-                &self.sensor_manifest,
-                &self.genetic_manifest,
-            );
+            param3 = ParsedGenomeParam::from(vals[0], vals[1], &self.genetic_manifest);
         }
 
         return Some((op_type, raw_operation_id, param1, param2, param3));
@@ -418,7 +380,7 @@ impl FramedGenomeParser {
                 return None;
             }
         } else {
-            let num_reactions = self.chemistry_manifest.reactions.len();
+            let num_reactions = self.genetic_manifest.chemistry_manifest.reactions.len();
             let reaction_id = (op_id as usize % num_reactions) as ReactionId;
             return Some(GeneOperationCall::Reaction((
                 reaction_id,

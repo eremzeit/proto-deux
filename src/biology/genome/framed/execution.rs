@@ -21,8 +21,6 @@ use crate::chemistry::reactions::ReactionCall;
 use std::convert::TryInto;
 
 pub struct GenomeExecutionContext<'a> {
-    pub chemistry_manifest: &'a ChemistryManifest,
-    pub sensor_manifest: &'a SensorManifest,
     pub genetic_manifest: &'a GeneticManifest,
     frames: &'a Vec<Frame>,
     current_frame: usize,
@@ -42,14 +40,10 @@ impl<'a> GenomeExecutionContext<'a> {
         frames: &'a Vec<Frame>,
         sensor_context: &'a SensorContext,
         registers: PhenotypeRegisters,
-        cm: &'a ChemistryManifest,
-        sm: &'a SensorManifest,
         gm: &'a GeneticManifest,
         compute_points: i32,
     ) -> Self {
         Self {
-            chemistry_manifest: cm,
-            sensor_manifest: sm,
             genetic_manifest: gm,
             frames,
             sensor_context,

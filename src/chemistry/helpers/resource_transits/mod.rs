@@ -86,26 +86,22 @@ pub fn calculate_linear_diff_transits(
 pub fn linear_diff_for_pos(coord: Coord, world: &World, chemistry: &Arc<Box<dyn Chemistry>>) {}
 
 mod tests {
-    use crate::simulation::common::helpers::place_units::PlaceUnitsMethod;
+    use crate::simulation::common::{
+        builder::ChemistryBuilder, helpers::place_units::PlaceUnitsMethod,
+    };
 
     #[allow(unused_imports)]
     use super::*;
 
     #[test]
     fn test() {
-        let specs = SimulationSpecs {
-            chemistry_key: "cheese".to_string(),
-            // can we leave this commented ?
-            // place_units_method: PlaceUnitsMethod::LinearBottomMiddle { attributes: None },
-            ..Default::default()
-        };
+        let chemistry = ChemistryBuilder::with_key("cheese").build();
 
         let mut sim = SimulationBuilder::default()
             .size((5, 5))
-            .specs(specs)
-            .headless(true)
+            .chemistry(chemistry)
             .unit_manifest(UnitManifest {
-                units: vec![UnitEntry::new("main", NullBehavior::construct())],
+                units: vec![UnitEntry::new("main", NullBehavior::construct())], // TODO: use UnitEntryBuilder
             })
             .to_simulation();
 

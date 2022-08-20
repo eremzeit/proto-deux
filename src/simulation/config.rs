@@ -1,9 +1,8 @@
 use crate::chemistry::*;
 use crate::simulation;
 use crate::simulation::common::{
-    get_chemistry_by_key, NullBehavior, SimulationControlEvent, SimulationControlEventReceiver,
-    UnitAttributeValue, UnitBehavior, UnitEntry, UnitEntryBuilder, UnitEntryData, UnitManifest,
-    UnitResourceAmount,
+    NullBehavior, SimulationControlEvent, SimulationControlEventReceiver, UnitAttributeValue,
+    UnitBehavior, UnitEntry, UnitEntryBuilder, UnitEntryData, UnitManifest, UnitResourceAmount,
 };
 use crate::simulation::fitness::*;
 use crate::simulation::unit::util::convert_maybe_resources_to_resources;
@@ -14,9 +13,7 @@ use std::rc::Rc;
 use std::sync::Arc;
 
 pub mod builder {
-    use crate::simulation::{
-        common::helpers::place_units::PlaceUnitsMethod, specs::SimulationSpecs,
-    };
+    use crate::simulation::common::helpers::place_units::PlaceUnitsMethod;
 
     use super::*;
     #[derive(Builder)]
@@ -26,12 +23,10 @@ pub mod builder {
         pub unit_entries: Vec<UnitEntryBuilder>,
         pub unit_manifest: UnitManifest,
         pub iterations: u64,
-        pub specs: SimulationSpecs,
         pub chemistry_key: String,
         // pub chemistry_configuration: ChemistryConfiguration,
-        // pub place_units_method: PlaceUnitsMethod,
-        // pub chemistry: ChemistryInstance,
-        pub headless: bool,
+        pub place_units_method: PlaceUnitsMethod,
+        pub chemistry: ChemistryInstance,
     }
 
     impl SimulationBuilder {
@@ -50,18 +45,12 @@ pub mod builder {
         // }
 
         pub fn to_simulation(mut self) -> simulation::Simulation {
-            let specs = self.specs.unwrap_or_else(|| SimulationSpecs {
-                chemistry_key: self
-                    .chemistry_key
-                    .expect("Must either give specs object or chemistry key"),
-                ..Default::default()
-            });
-
-            let chemistry = specs.construct_chemistry();
+            let chemistry = self.chemistry.unwrap();
 
             let size = self.size.unwrap();
 
-            let chemistry_manifest = specs.chemistry_manifest();
+            // let chemist
+            let chemistry_manifest = chemistry.get_manifest();
 
             /*
              * INIT UNIT MANIFEST
@@ -97,8 +86,13 @@ pub mod builder {
             let mut unit_manifest = std::mem::replace(&mut self.unit_manifest, None);
             // let mut chemistry = std::mem::replace(&mut self.chemistry, None);
 
-            let mut sim =
-                simulation::Simulation::new(chemistry, size, iterations, unit_manifest.unwrap());
+            let mut sim = simulation::Simulation::new(
+                chemistry,
+                size,
+                iterations,
+                unit_manifest.unwrap(),
+                self.place_units_method.unwrap_or_default(),
+            );
 
             sim
         }

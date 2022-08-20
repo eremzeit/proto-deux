@@ -68,24 +68,25 @@ pub fn allocation_method_every<'a>(sim: &'a mut SimCell, unit_manifest: &UnitMan
 }
 
 mod tests {
+    use crate::simulation::common::builder::ChemistryBuilder;
+
     #[allow(unused_imports)]
     use super::*;
 
     #[test]
     fn test_stored_resource_allocation() {
+        let chemistry = ChemistryBuilder::with_key("base").build();
+
         let mut sim = SimulationBuilder::default()
             .size((5, 5))
-            .specs(SimulationSpecs {
-                chemistry_key: "base".to_string(),
-                place_units_method: PlaceUnitsMethod::ManualSingleEntry {
-                    attributes: None,
-                    coords: vec![(2, 0)],
-                },
-                ..Default::default()
+            .place_units_method(PlaceUnitsMethod::ManualSingleEntry {
+                attributes: None,
+                coords: vec![(2, 0)],
             })
-            .headless(true)
             .unit_manifest(UnitManifest {
-                units: vec![UnitEntry::new("main", NullBehavior::construct())],
+                units: vec![UnitEntryBuilder::with_species_name("main")
+                    .behavior(NullBehavior::construct())
+                    .build(chemistry.get_manifest())],
             })
             .to_simulation();
 
