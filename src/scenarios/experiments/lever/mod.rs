@@ -8,12 +8,9 @@ use crate::{
         },
     },
     runners::ExperimentRunnerArgs,
-    simulation::{
-        common::{
-            get_chemistry_by_key, helpers::place_units::PlaceUnitsMethod, ChemistryConfiguration,
-            SensorManifest,
-        },
-        specs::SimulationSpecs,
+    simulation::common::{
+        builder::ChemistryBuilder, helpers::place_units::PlaceUnitsMethod, ChemistryConfiguration,
+        SensorManifest,
     },
     tests::GeneticManifest,
 };
@@ -27,13 +24,9 @@ pub fn alterations() -> AlterationTypeSet {
 }
 
 pub fn simple_experiment(runner_args: ExperimentRunnerArgs) -> SimpleExperiment {
-    let specs = SimulationSpecs {
-        chemistry_key: "lever".to_string(),
-        place_units_method: PlaceUnitsMethod::SimpleDrop { attributes: None },
-        ..Default::default()
-    };
-
-    let (cm, sm, gm) = specs.context();
+    let chemistry_builder = ChemistryBuilder::with_key("lever");
+    let chemistry = chemistry_builder.build();
+    let gm = GeneticManifest::defaults(chemistry.get_manifest()).wrap_rc();
 
     let settings = SimpleExperimentSettings {
         cull_strategy: CullStrategy::WorstFirst,
@@ -45,10 +38,10 @@ pub fn simple_experiment(runner_args: ExperimentRunnerArgs) -> SimpleExperiment 
             num_genomes_per_sim: 10,
             default_unit_resources: vec![],
             default_unit_attr: vec![],
+            place_units_method: PlaceUnitsMethod::SimpleDrop { attributes: None },
         },
 
         iterations: 5000,
-        specs: specs,
         alteration_set: alterations(),
         experiment_key: runner_args.experiment_name_key.to_string(),
         logging_settings: Some(LoggingSettings {
@@ -56,6 +49,8 @@ pub fn simple_experiment(runner_args: ExperimentRunnerArgs) -> SimpleExperiment 
             allow_overwrite: true,
             checkpoint_interval: 1000,
         }),
+        chemistry_options: chemistry_builder,
+        gm: gm,
     };
 
     let mut exp = SimpleExperiment::new(settings);

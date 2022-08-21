@@ -3,8 +3,8 @@ use std::rc::Rc;
 use crate::{biology::genetic_manifest::predicates::OperatorSet, tests::GeneticManifest};
 
 use super::common::{
-    get_chemistry_by_key, helpers::place_units::PlaceUnitsMethod, Chemistry,
-    ChemistryConfiguration, ChemistryInstance, ChemistryManifest, SensorManifest,
+    helpers::place_units::PlaceUnitsMethod, Chemistry, ChemistryConfiguration, ChemistryInstance,
+    ChemistryManifest, SensorManifest,
 };
 
 // /**
@@ -102,12 +102,12 @@ use super::common::{
 // //     }
 // // }
 
-pub struct GeneticManifest {
-    chemistry_manifest: Rc<ChemistryManifest>,
-    sensor_manifest: Rc<SensorManifest>,
-    operator_set: Rc<OperatorSet>,
-    number_of_registers: usize,
-}
+// pub struct GeneticManifest {
+//     chemistry_manifest: Rc<ChemistryManifest>,
+//     sensor_manifest: Rc<SensorManifest>,
+//     operator_set: Rc<OperatorSet>,
+//     number_of_registers: usize,
+// }
 
 // BehaviorManifest {
 //     chemistry_manifest: Rc::new(chemistry.get_manifest().clone()),

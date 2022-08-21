@@ -408,20 +408,16 @@ impl World {
 
 pub mod tests {
     use crate::simulation::common::{
-        helpers::place_units::PlaceUnitsMethod, variants::CheeseChemistry,
+        builder::ChemistryBuilder, helpers::place_units::PlaceUnitsMethod,
+        variants::CheeseChemistry,
     };
 
     use super::*;
 
     #[test]
     pub fn set_some_resources() {
-        let specs = SimulationSpecs {
-            chemistry_key: "cheese".to_string(),
-            place_units_method: PlaceUnitsMethod::Skip,
-            ..Default::default()
-        };
+        let chemistry = ChemistryBuilder::with_key("cheese").build();
 
-        let chemistry: ChemistryInstance = specs.construct_chemistry();
         let mut world = World::new((5, 5), &chemistry);
         let unit_entry = UnitEntry::new("foo_unit", NullBehavior::construct());
         let coord = (2, 2);

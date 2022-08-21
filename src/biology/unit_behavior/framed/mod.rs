@@ -52,7 +52,7 @@ impl UnitBehavior for FramedGenomeUnitBehavior {
         );
 
         let reactions = execution_context.execute();
-        // println!("EXECUTING reactions: {:?}", &reactions);
+        println!("EXECUTING reactions: {:?}", &reactions);
         //println!("consumed_compute_points: {}", execution_context.consumed_compute_points);
 
         UnitBehaviorResult {
@@ -117,6 +117,7 @@ pub mod test {
     use crate::biology::genome::framed::*;
     use crate::chemistry::helpers::place_units::PlaceUnitsMethod;
     use crate::chemistry::variants::CheeseChemistry;
+    use crate::simulation::common::builder::ChemistryBuilder;
     use crate::simulation::common::*;
     use std::rc::Rc;
     pub fn count_units(world: &World) -> u64 {
@@ -132,45 +133,32 @@ pub mod test {
 
     #[test]
     fn genome_execution__execute() {
-        let specs = SimulationSpecs {
-            chemistry_key: "cheese".to_string(),
-            place_units_method: PlaceUnitsMethod::ManualSingleEntry {
-                attributes: None,
-                coords: vec![(1, 1)],
-            },
-            ..Default::default()
-        };
-
-        let (cm, sm, gm) = specs.context();
-
+        let chemistry = ChemistryBuilder::with_key("cheese").build();
+        let gm = Rc::new(GeneticManifest::defaults(chemistry.get_manifest()));
+        let cm = &gm.chemistry_manifest;
         let genome_values = genome!(gene(
             if_any(all((is_truthy, 1, 0, 0))),
             then_do(new_unit(0, 0, 0))
         ))
-        .build(&sm, &cm, &gm);
+        .build(&gm);
 
         let framed_vals = simple_convert_into_frames(genome_values);
-        let frames = FramedGenomeCompiler::compile(
-            framed_vals,
-            specs.chemistry_manifest(),
-            specs.sensors(),
-            specs.genetic_manifest(),
-        );
+        let frames = FramedGenomeCompiler::compile(framed_vals, &gm);
 
         let mut sim = SimulationBuilder::default()
+            .chemistry(chemistry)
             .size((3, 3))
             .iterations(100)
-            .specs(specs)
-            .headless(true)
+            .place_units_method(PlaceUnitsMethod::ManualSingleEntry {
+                attributes: None,
+                coords: vec![(1, 1)],
+            })
             .unit_manifest(UnitManifest {
                 units: vec![UnitEntryBuilder::default()
                     .species_name("main".to_string())
-                    .behavior(
-                        FramedGenomeUnitBehavior::new(frames, gm.clone(), cm.clone(), sm.clone())
-                            .construct(),
-                    )
+                    .behavior(FramedGenomeUnitBehavior::new(frames, gm.clone()).construct())
                     .default_resources(vec![("cheese", 1000)])
-                    .build(&cm, None)],
+                    .build(&cm)],
             })
             .to_simulation();
 

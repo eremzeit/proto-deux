@@ -405,17 +405,16 @@ pub mod parsing_v2 {
 
     #[test]
     fn test_then_do__register_param() {
-        let gm = GeneticManifest::new();
-        let cm = CheeseChemistry::default_manifest();
-        let sm = SensorManifest::with_default_sensors(&cm);
+        let gm = GeneticManifest::defaults(&CheeseChemistry::default_manifest());
 
         let operation_type = 0;
-        let reaction_id = cm
+        let reaction_id = gm
+            .chemistry_manifest
             .identify_reaction(&"gobble_cheese".to_string())
             .unwrap()
             .id as FramedGenomeValue;
         let param1_meta = param_meta::val_for_register_lookup() as FramedGenomeValue;
-        let result__register = then_do!(gobble_cheese, register(1)).build(&sm, &cm, &gm);
+        let result__register = then_do!(gobble_cheese, register(1)).build(&gm);
 
         assert_eq!(
             result__register,
@@ -440,13 +439,16 @@ pub mod parsing_v2 {
             )])]),
             then_do!(move_unit, register(3), 69, 70),
         )
-        .build(&sm, &cm, &gm);
+        .build(&gm);
 
         let n_conjuctions = 1;
         let disjunction1_is_negated = 0;
         let operation_type = 0;
-        let reaction_id =
-            cm.identify_reaction(&"move_unit".to_string()).unwrap().id as FramedGenomeValue;
+        let reaction_id = gm
+            .chemistry_manifest
+            .identify_reaction(&"move_unit".to_string())
+            .unwrap()
+            .id as FramedGenomeValue;
 
         let n_conditionals = 1;
         let conjunction1_is_negated = 1;
@@ -463,7 +465,8 @@ pub mod parsing_v2 {
                         gm.operator_id_for_key(&"is_truthy") as FramedGenomeValue,
                         conditional1_is_negated,
                         param_meta::val_for_sensor_lookup() as FramedGenomeValue,
-                        sm.sensor_id_from_key(&"pos_attr::is_cheese_source(0, 0)")
+                        gm.sensor_manifest
+                            .sensor_id_from_key(&"pos_attr::is_cheese_source(0, 0)")
                             as FramedGenomeValue,
                         0,
                         0,
@@ -488,9 +491,7 @@ pub mod parsing_v2 {
 
     #[test]
     fn full_parsing__basic_genome() {
-        let gm = GeneticManifest::new();
-        let cm = CheeseChemistry::default_manifest();
-        let sm = SensorManifest::with_default_sensors(&cm);
+        let gm = GeneticManifest::defaults(&CheeseChemistry::default_manifest());
 
         let framed_vals = frame(
             0,
@@ -502,9 +503,9 @@ pub mod parsing_v2 {
                 then_do!(move_unit, 75),
             )],
         )
-        .build(&sm, &cm, &gm);
+        .build(&gm);
 
-        let genome = FramedGenomeCompiler::compile(framed_vals, &cm, &sm, &gm);
+        let genome = FramedGenomeCompiler::compile(framed_vals, &gm);
         let s = "***FRAME 0:***
 Channel #0
 CALL move_unit(Constant(75)) IF is_truthy(pos_attr::is_cheese_source(0, 0))
@@ -514,13 +515,11 @@ Channel #1
 Channel #2
 
 Channel #3\n\n";
-        assert_eq!(s, render_frames(&genome.frames, &sm, &cm, &gm))
+        assert_eq!(s, render_frames(&genome.frames, &gm))
     }
     #[test]
     fn full_parsing__complex_genome() {
-        let gm = GeneticManifest::new();
-        let cm = CheeseChemistry::default_manifest();
-        let sm = SensorManifest::with_default_sensors(&cm);
+        let gm = GeneticManifest::defaults(&CheeseChemistry::default_manifest());
 
         println!("BEFORE COMPILING");
         let framed_vals = frame(
@@ -539,17 +538,17 @@ Channel #3\n\n";
                         sim_attr::total_cheese_consumed,
                         100
                     )])]),
-                    then_do!(new_unit, register(3), 69, 69),
+                    then_do!(new_unit, register(1), 69, 69),
                 ),
             ],
         )
-        .build(&sm, &cm, &gm);
+        .build(&gm);
 
-        let genome = FramedGenomeCompiler::compile(framed_vals, cm.clone(), sm.clone(), gm.clone());
+        let genome = FramedGenomeCompiler::compile(framed_vals, &gm);
         let s = "***FRAME 0:***
 Channel #0
 CALL move_unit(Constant(75)) IF (is_truthy(pos_attr::is_cheese_source(0, 0)) && unit_res::cheese(0, 0) > Constant(100))
-CALL new_unit(Register(3)) IF NOT NOT sim_attr::total_cheese_consumed(0, 0) < Constant(100)
+CALL new_unit(Register(1)) IF NOT NOT sim_attr::total_cheese_consumed(0, 0) < Constant(100)
 
 Channel #1
 
@@ -558,8 +557,8 @@ Channel #2
 Channel #3\n\n";
 
         println!("{}", &s);
-        println!("{}", &render_frames(&genome.frames, &sm, &cm, &gm));
+        println!("{}", &render_frames(&genome.frames, &gm));
 
-        assert_eq!(s, render_frames(&genome.frames, &sm, &cm, &gm));
+        assert_eq!(s, render_frames(&genome.frames, &gm));
     }
 }

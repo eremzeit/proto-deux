@@ -158,7 +158,7 @@ impl<'a> GenomeExecutionContext<'a> {
         match parsed_param {
             ParsedGenomeParam::Constant(c) => *c as i32,
             ParsedGenomeParam::SensorLookup(sensor_id) => {
-                let sensor = &self.sensor_manifest.sensors[*sensor_id as usize];
+                let sensor = &self.genetic_manifest.sensor_manifest.sensors[*sensor_id as usize];
                 let val = sensor.calculate(self.sensor_context);
                 val
             }

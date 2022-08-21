@@ -28,9 +28,10 @@ pub mod set_unit_resource {
 
     #[test]
     fn test__evaluate() {
-        let chemistry = ChemistryBuilder::with_key("nanobots").build();
+        let chemistry_builder = ChemistryBuilder::with_key("nanobots");
 
         let mut sim = SimulationBuilder::default()
+            .chemistry(chemistry_builder.build())
             .size((5, 5))
             .place_units_method(PlaceUnitsMethod::ManualSingleEntry {
                 attributes: None,
@@ -67,12 +68,13 @@ pub mod offset_unit_resource {
 
     #[test]
     fn test_evaluate_strict() {
-        let chemistry = ChemistryBuilder::with_key("nanobots").build();
+        let chemistry_builder = ChemistryBuilder::with_key("nanobots");
 
         let actions = default_actions();
         let action = actions.by_key("offset_unit_resource");
 
         let mut sim = SimulationBuilder::default()
+            .chemistry(chemistry_builder.build())
             .size((5, 5))
             .place_units_method(PlaceUnitsMethod::ManualSingleEntry {
                 attributes: None,

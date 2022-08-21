@@ -166,7 +166,7 @@ pub trait Chemistry {
     fn on_simulation_init(&self, sim: &mut SimCell) {
         self.init_pos_properties(&mut sim.world);
         self.init_world_custom(&mut sim.world);
-        self.init_units(sim);
+        // self.init_units(sim);
     }
 
     fn on_simulation_tick(&self, sim: &mut SimCell);
@@ -174,9 +174,7 @@ pub trait Chemistry {
 
     fn init_world_custom(&self, world: &mut World) {}
 
-    fn init_units(&self, sim: &mut SimCell) {
-        place_units(sim, &self.get_default_place_units_method());
-    }
+    // fn init_units(&self, sim: &mut SimCell) {}
 
     fn init_pos_properties(&self, world: &mut World) {
         for coord in CoordIterator::new(world.size.clone()) {

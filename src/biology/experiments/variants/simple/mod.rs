@@ -234,7 +234,7 @@ impl SimpleExperiment {
         self.genome_entries.iter().map(|entry| {
             let genome_vals = entry.genome.clone();
             let genome = FramedGenomeCompiler::compile(genome_vals, gm);
-            s = format!("{}\n{}", s, genome.display(&self.settinsg.gm));
+            s = format!("{}\n{}", s, genome.display(&self.settings.gm));
         });
         s
     }
@@ -256,7 +256,9 @@ impl SimpleExperiment {
 
             let unit_entry = UnitEntryBuilder::default()
                 .species_name(format!("species: {}", count))
-                .behavior(FramedGenomeUnitBehavior::new(genome, self.settings.gm).construct())
+                .behavior(
+                    FramedGenomeUnitBehavior::new(genome, self.settings.gm.clone()).construct(),
+                )
                 .default_resources(self.settings.sim_settings.default_unit_resources.clone())
                 .default_attributes(self.settings.sim_settings.default_unit_attr.clone())
                 .build(&cm);
@@ -282,7 +284,7 @@ impl SimpleExperiment {
 
         explog!("EVAL fitness for genomes: {:?}", genome_uids);
 
-        let chemistry = self.settings.chemistry_options.construct();
+        let chemistry = self.settings.chemistry_options.build();
 
         perf_timer_start!("sim_build");
         let mut sim = SimulationBuilder::default()
@@ -551,11 +553,9 @@ impl SimpleExperiment {
         explog!("groups: {:?}", &groups);
         perf_timer_stop!("experiment_partition");
 
-        let specs = self.settings.specs.clone();
-
         perf_timer_start!("experiment_sim_eval");
         for group in groups {
-            let fitness_result = self.run_evaluation_for_uids(&group, &specs);
+            let fitness_result = self.run_evaluation_for_uids(&group);
             // println!("fitness_scores: {:?}", fitness_result);
             perf_timer_start!("adjust_ranks");
             self.adjust_ranks_based_on_result(&fitness_result);
@@ -586,7 +586,7 @@ impl SimpleExperiment {
             let should_log_checkpoint = _tick % logger.settings.checkpoint_interval as u64 == 0
                 || _tick >= self.settings.iterations as u64;
             if should_log_checkpoint {
-                logger._log_checkpoint(_tick as usize, &self.genome_entries, &sm, &cm, &gm)
+                logger._log_checkpoint(_tick as usize, &self.genome_entries, &self.settings.gm)
             }
             perf_timer_stop!("experiment_logging");
         }
@@ -606,6 +606,7 @@ pub fn random_genome_of_length(length: usize) -> Vec<FramedGenomeWord> {
 }
 
 pub mod tests {
+    use self::utils::SimpleExperimentSettingsBuilder;
     use super::*;
     use crate::biology::experiments::variants::simple::logger::LoggingSettings;
     use crate::biology::experiments::variants::simple::utils::{
@@ -613,38 +614,38 @@ pub mod tests {
     };
     use crate::biology::genome::framed::common::*;
     use crate::biology::unit_behavior::framed::common::*;
+    use crate::simulation::common::builder::ChemistryBuilder;
     use crate::simulation::common::helpers::place_units::PlaceUnitsMethod;
     use crate::simulation::common::*;
 
-    #[test]
-    fn experiment_initialization() {
-        let specs = SimulationSpecs {
-            chemistry_key: "cheese".to_string(),
-            place_units_method: PlaceUnitsMethod::SimpleDrop { attributes: None },
-            ..Default::default()
-        };
-        let gm = GeneticManifest::new();
+    pub fn experiment_settings() -> SimpleExperimentSettingsBuilder {
+        let chemistry_builder = ChemistryBuilder::with_key("cheese");
+        let chemistry = chemistry_builder.build();
+        let gm = GeneticManifest::defaults(chemistry.get_manifest()).wrap_rc();
 
-        let settings = SimpleExperimentSettings {
-            experiment_key: "my_experiment".to_string(),
-            cull_strategy: CullStrategy::WorstFirst,
-            fitness_calculation_key: "total_cheese_consumed".to_string(),
-            num_genomes: 11,
-            sim_settings: ExperimentSimSettings {
+        SimpleExperimentSettingsBuilder::default()
+            .alteration_set(alterations::default_alteration_set())
+            .experiment_key("my_experiment".to_string())
+            .cull_strategy(CullStrategy::WorstFirst)
+            .fitness_calculation_key("total_cheese_consumed".to_string())
+            .num_genomes(11)
+            .sim_settings(ExperimentSimSettings {
                 num_simulation_ticks: 10,
                 grid_size: (10, 10),
                 num_genomes_per_sim: 2,
-                // iterations: 20,
                 default_unit_resources: vec![("cheese", 200)],
                 default_unit_attr: vec![],
-            },
+                place_units_method: PlaceUnitsMethod::Default,
+            })
+            .iterations(1)
+            .logging_settings(None)
+            .chemistry_options(chemistry_builder)
+            .gm(gm)
+    }
 
-            iterations: 1,
-            alteration_set: alterations::default_alteration_set(),
-            specs: specs,
-            logging_settings: Some(LoggingSettings::default()),
-        };
-
+    #[test]
+    fn experiment_initialization() {
+        let settings = experiment_settings().build().unwrap();
         let mut exp = SimpleExperiment::new(settings);
         exp.initialize();
 
@@ -653,35 +654,11 @@ pub mod tests {
 
     #[test]
     fn test_partition_into_groups() {
-        let specs = SimulationSpecs {
-            chemistry_key: "cheese".to_string(),
-            place_units_method: PlaceUnitsMethod::SimpleDrop { attributes: None },
-            ..Default::default()
-        };
-        let gm = GeneticManifest::new();
-
         let num_genomes = 5;
-
-        let settings = SimpleExperimentSettings {
-            experiment_key: "my_experiment".to_string(),
-            cull_strategy: CullStrategy::WorstFirst,
-            fitness_calculation_key: "total_cheese_consumed".to_string(),
-            num_genomes: num_genomes,
-            sim_settings: ExperimentSimSettings {
-                num_simulation_ticks: 10,
-                grid_size: (10, 10),
-                num_genomes_per_sim: 2,
-                // iterations: 20,
-                default_unit_resources: vec![("cheese", 200)],
-                default_unit_attr: vec![],
-            },
-
-            iterations: 10,
-            specs: specs,
-            alteration_set: alterations::default_alteration_set(),
-            logging_settings: None,
-        };
-
+        let mut settings = experiment_settings()
+            .num_genomes(num_genomes)
+            .build()
+            .unwrap();
         let mut exp = SimpleExperiment::new(settings);
         exp.initialize();
 
@@ -702,49 +679,23 @@ pub mod tests {
 
     #[test]
     fn test_random_genome_generation() {
-        let chemistry_key = "cheese".to_string();
-        let chemistry = get_chemistry_by_key(
-            &chemistry_key,
-            PlaceUnitsMethod::Skip,
-            ChemistryConfiguration::new(),
-        );
-        let gm = GeneticManifest::new();
-        let cm = chemistry.get_manifest();
-        let sm = SensorManifest::with_default_sensors(&cm);
+        let chemistry = ChemistryBuilder::with_key("cheese").build();
+        let gm = GeneticManifest::defaults(chemistry.get_manifest());
+
         let vals1 = random_genome_of_length(100);
 
         assert_eq!(vals1.len(), 100);
-        let genome1 = FramedGenomeCompiler::compile(vals1, cm.clone(), sm.clone(), gm.clone());
-        print!("random genome: {}\n", genome1.display(&sm, &cm, &gm));
+        let genome1 = FramedGenomeCompiler::compile(vals1, &gm);
+        print!("random genome: {}\n", genome1.display(&gm));
     }
 
     #[test]
     fn test_adjust_rank() {
-        let specs = SimulationSpecs {
-            chemistry_key: "cheese".to_string(),
-            place_units_method: PlaceUnitsMethod::SimpleDrop { attributes: None },
-            ..Default::default()
-        };
-
-        let settings = SimpleExperimentSettings {
-            experiment_key: "my_experiment".to_string(),
-            logging_settings: None,
-            num_genomes: 4,
-            iterations: 10,
-            specs: specs,
-            sim_settings: ExperimentSimSettings {
-                num_simulation_ticks: 10,
-                grid_size: (10, 10),
-                num_genomes_per_sim: 2,
-                // iterations: 20,
-                default_unit_resources: vec![("cheese", 200)],
-                default_unit_attr: vec![],
-            },
-
-            alteration_set: alterations::default_alteration_set(),
-            fitness_calculation_key: "total_cheese_consumed".to_string(),
-            cull_strategy: CullStrategy::WorstFirst,
-        };
+        let num_genomes = 4;
+        let mut settings = experiment_settings()
+            .num_genomes(num_genomes)
+            .build()
+            .unwrap();
 
         let mut exp = SimpleExperiment::new(settings);
         exp.populate_initial_genomes();
@@ -788,30 +739,11 @@ pub mod tests {
     }
     #[test]
     fn test_genome_initialization() {
-        let specs = SimulationSpecs {
-            chemistry_key: "lever".to_string(),
-            ..Default::default()
-        };
-
-        let settings = SimpleExperimentSettings {
-            num_genomes: 10,
-            logging_settings: None,
-            cull_strategy: CullStrategy::WorstFirst,
-            fitness_calculation_key: "total_cheese_consumed".to_string(),
-            sim_settings: ExperimentSimSettings {
-                num_simulation_ticks: 10,
-                grid_size: (10, 10),
-                num_genomes_per_sim: 2,
-                default_unit_resources: vec![("cheese", 200)],
-                default_unit_attr: vec![],
-            },
-            specs: specs,
-
-            iterations: 10,
-            alteration_set: alterations::default_alteration_set(),
-            experiment_key: "my_experiment".to_string(),
-        };
-
+        let num_genomes = 5;
+        let mut settings = experiment_settings()
+            .num_genomes(num_genomes)
+            .build()
+            .unwrap();
         let mut exp = SimpleExperiment::new(settings);
 
         let sample_genome = vec![0, 0, 0, 0, 0];
@@ -819,7 +751,7 @@ pub mod tests {
         exp.with_seed_genomes(vec![sample_genome.clone()]);
         exp.initialize();
 
-        assert_eq!(exp.genome_entries.len(), 10);
+        assert_eq!(exp.genome_entries.len(), num_genomes);
         assert_eq!(exp.genome_entries[0].genome, sample_genome.clone());
     }
 

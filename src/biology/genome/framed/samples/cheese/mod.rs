@@ -30,11 +30,7 @@ pub fn genome1(gm: &GeneticManifest) -> CompiledFramedGenome {
     FramedGenomeCompiler::compile(framed_vals, &gm)
 }
 
-pub fn get_genome1(
-    cm: &ChemistryManifest,
-    sm: &SensorManifest,
-    gm: &GeneticManifest,
-) -> CompiledFramedGenome {
+pub fn get_genome1(gm: &GeneticManifest) -> CompiledFramedGenome {
     let framed_vals = frame(
         0,
         vec![
@@ -118,7 +114,7 @@ pub fn get_genome1(
             ),
         ],
     )
-    .build(&sm, &cm, &gm);
+    .build(&gm);
 
     FramedGenomeCompiler::compile(framed_vals, gm.clone())
 }

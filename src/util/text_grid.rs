@@ -125,7 +125,8 @@ mod tests {
     #[allow(unused_imports)]
     use super::*;
     use crate::{
-        chemistry::variants::cheese::*, simulation::common::helpers::place_units::PlaceUnitsMethod,
+        chemistry::variants::cheese::*,
+        simulation::common::{builder::ChemistryBuilder, helpers::place_units::PlaceUnitsMethod},
     };
 
     #[test]
@@ -138,16 +139,13 @@ mod tests {
             alignment: CellTextAlignment::Center,
         };
 
-        let specs = SimulationSpecs {
-            chemistry_key: "cheese".to_string(),
-            place_units_method: PlaceUnitsMethod::LinearBottomMiddle { attributes: None },
-            ..Default::default()
-        };
+        let chemistry_builder = ChemistryBuilder::with_key("cheese");
+        let gm = GeneticManifest::defaults(&chemistry_builder.manifest()).wrap_rc();
 
         let mut sim = SimulationBuilder::default()
+            .chemistry(chemistry_builder.build())
             .size((2, 2))
-            .specs(specs)
-            .headless(true)
+            .place_units_method(PlaceUnitsMethod::LinearBottomMiddle { attributes: None })
             .unit_manifest(UnitManifest {
                 units: vec![UnitEntry::new("main", NullBehavior::construct())],
             })

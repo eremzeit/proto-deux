@@ -164,13 +164,12 @@ impl Simulation {
     }
 
     pub fn place_units(&mut self) {
-        let method = match self.place_units_method {
+        let method = match &self.place_units_method {
             PlaceUnitsMethod::Default => self.chemistry.get_default_place_units_method(),
-            _ => self.place_units_method,
+            _ => self.place_units_method.clone(),
         };
 
-        let mut sim = &mut self.editable();
-        PlaceUnitsMethod::place_units(sim, &method);
+        PlaceUnitsMethod::place_units(&mut self.editable(), &method);
     }
 
     pub fn _start(&mut self) {
@@ -388,7 +387,6 @@ mod tests {
                 attributes: None,
                 coords: vec![(1, 1)],
             })
-            .headless(true)
             .unit_manifest(UnitManifest {
                 units: vec![UnitEntry::new("main", NullBehavior::construct())],
             })

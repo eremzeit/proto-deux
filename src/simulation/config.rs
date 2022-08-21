@@ -30,20 +30,6 @@ pub mod builder {
     }
 
     impl SimulationBuilder {
-        // fn _init_chemistry(&mut self) -> ChemistryInstance {
-        //     match &self.chemistry {
-        //         None => {
-        //             let specs = self.specs.unwrap_or(SimulationSpecs {
-        //                 chemistry_key: self
-        //                     .chemistry_key
-        //                     .expect("Must either give specs object or chemistry key"),
-        //                 ..Default::default()
-        //             });
-        //             self.chemistry = Some(specs.construct_chemistry());
-        //         }
-        //     }
-        // }
-
         pub fn to_simulation(mut self) -> simulation::Simulation {
             let chemistry = self.chemistry.unwrap();
 
@@ -63,7 +49,7 @@ pub mod builder {
 
                 while builders.len() > 0 {
                     let builder = builders.remove(0);
-                    unit_entries.push(builder.build(&chemistry_manifest, None));
+                    unit_entries.push(builder.build(&chemistry_manifest));
                 }
                 self.unit_manifest = Some(UnitManifest {
                     units: unit_entries,

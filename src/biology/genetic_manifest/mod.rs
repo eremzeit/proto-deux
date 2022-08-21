@@ -27,12 +27,16 @@ impl GeneticManifest {
             chemistry_manifest: Rc::new(chemistry_manifest.clone()),
             sensor_manifest: Rc::new(SensorManifest::with_default_sensors(&chemistry_manifest)),
             operator_set: Rc::new(OperatorSet::default_operators()),
-            number_of_registers: 3,
+            number_of_registers: 5,
         }
     }
 
     pub fn operator_id_for_key(&self, s: &str) -> OperatorId {
         self.operator_set.by_key(s).index
+    }
+
+    pub fn wrap_rc(self) -> Rc<Self> {
+        Rc::new(self)
     }
 }
 

@@ -87,23 +87,22 @@ pub mod tests {
     use super::*;
     use crate::{
         chemistry::actions::*,
-        simulation::common::{helpers::place_units::PlaceUnitsMethod, variants::CheeseChemistry},
+        simulation::common::{
+            builder::ChemistryBuilder, helpers::place_units::PlaceUnitsMethod,
+            variants::CheeseChemistry,
+        },
     };
 
     #[test]
     pub fn basic() {
-        let specs = SimulationSpecs {
-            chemistry_key: "cheese".to_string(),
-            place_units_method: PlaceUnitsMethod::ManualSingleEntry {
+        let chemistry = ChemistryBuilder::with_key("cheese").build();
+        let mut sim = SimulationBuilder::default()
+            .chemistry(chemistry)
+            .size((5, 5))
+            .place_units_method(PlaceUnitsMethod::ManualSingleEntry {
                 attributes: None,
                 coords: vec![(2, 0)],
-            },
-            ..Default::default()
-        };
-        let mut sim = SimulationBuilder::default()
-            .size((5, 5))
-            .specs(specs)
-            .headless(true)
+            })
             .unit_manifest(UnitManifest {
                 units: vec![UnitEntry::new("main", NullBehavior::construct())],
             })

@@ -61,7 +61,7 @@ impl<'a> FramedGenomeCompiler<'a> {
         CompiledFramedGenome { frames }
     }
 
-    pub fn new(values: Vec<FramedGenomeWord>, genetic_manifest: &GeneticManifest) -> Self {
+    pub fn new(values: Vec<FramedGenomeWord>, genetic_manifest: &'a GeneticManifest) -> Self {
         let raw_frames = RawFrameParser::parse(values);
         flog!("raw frames: {:?}", &raw_frames);
 

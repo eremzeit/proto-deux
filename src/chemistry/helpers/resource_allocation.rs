@@ -76,8 +76,10 @@ mod tests {
     #[test]
     fn test_stored_resource_allocation() {
         let chemistry = ChemistryBuilder::with_key("base").build();
+        let manifest = chemistry.get_manifest().clone();
 
         let mut sim = SimulationBuilder::default()
+            .chemistry(chemistry)
             .size((5, 5))
             .place_units_method(PlaceUnitsMethod::ManualSingleEntry {
                 attributes: None,
@@ -86,7 +88,7 @@ mod tests {
             .unit_manifest(UnitManifest {
                 units: vec![UnitEntryBuilder::with_species_name("main")
                     .behavior(NullBehavior::construct())
-                    .build(chemistry.get_manifest())],
+                    .build(&manifest)],
             })
             .to_simulation();
 

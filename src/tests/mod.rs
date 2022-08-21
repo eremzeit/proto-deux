@@ -28,31 +28,23 @@ use std::time::Duration;
 pub use crate::biology::genetic_manifest::predicates::default_operators;
 pub use crate::biology::genetic_manifest::GeneticManifest;
 
-pub fn test_framed_genome() {
-    let gm = GeneticManifest::new();
-}
-
-pub fn test_framed_genome2() {}
-
 pub mod fixtures {
-    use crate::simulation::common::helpers::place_units::PlaceUnitsMethod;
+    use crate::simulation::common::{
+        builder::ChemistryBuilder, helpers::place_units::PlaceUnitsMethod,
+    };
 
     use super::*;
 
     pub fn default_base_with_unit_placement(place_units_method: PlaceUnitsMethod) -> Simulation {
-        let specs = SimulationSpecs {
-            chemistry_key: "cheese".to_string(),
-            place_units_method: place_units_method,
-            ..Default::default()
-        };
+        let chemistry = ChemistryBuilder::with_key("cheese").build();
 
         let mut sim = SimulationBuilder::default()
-            .specs(specs)
+            .chemistry(chemistry)
+            .place_units_method(place_units_method)
             .unit_manifest(UnitManifest::from(&vec![UnitEntry::new(
                 "main",
                 NullBehavior::construct(),
             )]))
-            .headless(true)
             .size((5, 5))
             .to_simulation();
 

@@ -243,8 +243,6 @@ impl Chemistry for FooChemistry {
 
     fn on_simulation_finish(&self, sim: &mut SimCell) {}
 
-    fn init_units(&self, sim: &mut SimCell) {}
-
     fn init_world_custom(&self, world: &mut World) {}
 
     fn get_default_simulation_attributes(&self) -> Vec<SimulationAttributeValue> {

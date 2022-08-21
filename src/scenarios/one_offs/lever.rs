@@ -7,7 +7,7 @@ use crate::{
             SimpleExperiment,
         },
     },
-    simulation::{common::helpers::place_units::PlaceUnitsMethod, specs::SimulationSpecs},
+    simulation::common::{builder::ChemistryBuilder, helpers::place_units::PlaceUnitsMethod},
 };
 
 use crate::biology::genome::framed::builders::*;
@@ -17,13 +17,8 @@ use std::rc::Rc;
 
 pub fn test_fitness(key: &str) {
     let exp_key = key.to_string();
-    let specs = SimulationSpecs {
-        chemistry_key: "lever".to_string(),
-        place_units_method: PlaceUnitsMethod::SimpleDrop { attributes: None },
-        ..Default::default()
-    };
-
-    let (cm, sm, gm) = specs.context();
+    let chemistry_builder = ChemistryBuilder::with_key("cheese");
+    let gm = GeneticManifest::defaults(&chemistry_builder.manifest()).wrap_rc();
 
     let genome_vals1 = frame(
         0,
@@ -32,7 +27,7 @@ pub fn test_fitness(key: &str) {
             then_do!(pull_lever, 1),
         )],
     )
-    .build(&sm, &cm, &gm);
+    .build(&gm);
 
     let genome_vals2 = frame(
         0,
@@ -41,7 +36,7 @@ pub fn test_fitness(key: &str) {
             then_do!(pull_lever, 5),
         )],
     )
-    .build(&sm, &cm, &gm);
+    .build(&gm);
 
     let genome_vals3 = frame(
         0,
@@ -50,7 +45,7 @@ pub fn test_fitness(key: &str) {
             then_do!(pull_lever, 10),
         )],
     )
-    .build(&sm, &cm, &gm);
+    .build(&gm);
 
     let genome_vals4 = frame(
         0,
@@ -59,7 +54,7 @@ pub fn test_fitness(key: &str) {
             then_do!(pull_lever, 20),
         )],
     )
-    .build(&sm, &cm, &gm);
+    .build(&gm);
 
     let settings = SimpleExperimentSettings {
         cull_strategy: CullStrategy::WorstFirst,
@@ -72,10 +67,10 @@ pub fn test_fitness(key: &str) {
             // iterations: 5,
             default_unit_resources: vec![],
             default_unit_attr: vec![],
+            place_units_method: PlaceUnitsMethod::SimpleDrop { attributes: None },
         },
 
         iterations: 1,
-        specs: specs,
         alteration_set: alterations::default_alteration_set(),
         experiment_key: exp_key.clone(),
         logging_settings: Some(LoggingSettings {
@@ -83,6 +78,8 @@ pub fn test_fitness(key: &str) {
             allow_overwrite: true,
             checkpoint_interval: 1,
         }),
+        gm,
+        chemistry_options: chemistry_builder,
     };
 
     let mut exp = SimpleExperiment::new(settings);

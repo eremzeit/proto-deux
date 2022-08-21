@@ -227,9 +227,7 @@ pub mod tests {
     pub fn disjunctive_to_str__simple() {
         let clause = (false, vec![(false, vec![BooleanVariable::Literal(true)])]);
 
-        let gm = GeneticManifest::new();
-        let cm = CheeseChemistry::default_manifest();
-        let sm = SensorManifest::with_default_sensors(&cm);
+        let gm = GeneticManifest::defaults(&CheeseChemistry::default_manifest());
 
         let result = render_disjunction(&clause, &gm);
 

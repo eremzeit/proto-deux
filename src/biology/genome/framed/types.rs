@@ -111,10 +111,10 @@ impl BooleanVariable {
                 let op_key = op.name.to_string();
                 let param_count = op.num_params;
 
-                let sensor_manifest = genetic_manifest.sensor_manifest;
-                let param1 = render_param(_param1, &sensor_manifest);
-                let param2 = render_param(_param2, &sensor_manifest);
-                let param3 = render_param(_param3, &sensor_manifest);
+                let sensor_manifest = &genetic_manifest.sensor_manifest;
+                let param1 = render_param(_param1, sensor_manifest);
+                let param2 = render_param(_param2, sensor_manifest);
+                let param3 = render_param(_param3, sensor_manifest);
 
                 let params: [String; 3] = [param1, param2, param3];
                 let negated_str = if *is_negated { "NOT " } else { "" }.to_string();

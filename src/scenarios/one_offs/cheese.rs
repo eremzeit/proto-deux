@@ -7,7 +7,7 @@ use crate::{
             SimpleExperiment,
         },
     },
-    simulation::{common::helpers::place_units::PlaceUnitsMethod, specs::SimulationSpecs},
+    simulation::common::{builder::ChemistryBuilder, helpers::place_units::PlaceUnitsMethod},
 };
 
 use crate::biology::genome::framed::builders::*;
@@ -17,15 +17,8 @@ use std::rc::Rc;
 
 pub fn test_fitness(key: &str) {
     let exp_key = key.to_string();
-    let specs = SimulationSpecs {
-        chemistry_key: "cheese".to_string(),
-        place_units_method: PlaceUnitsMethod::SimpleDrop { attributes: None },
-        ..Default::default()
-    };
-
-    let (cm, sm, gm) = specs.context();
-
-    // let genome_vals1 = ;
+    let chemistry_builder = ChemistryBuilder::with_key("cheese");
+    let gm = GeneticManifest::defaults(&chemistry_builder.manifest()).wrap_rc();
 
     let settings = SimpleExperimentSettings {
         cull_strategy: CullStrategy::WorstFirst,
@@ -35,20 +28,17 @@ pub fn test_fitness(key: &str) {
             num_simulation_ticks: 10,
             grid_size: (10, 1),
             num_genomes_per_sim: 4,
-            // iterations: 5,
             default_unit_resources: vec![],
             default_unit_attr: vec![],
+            place_units_method: PlaceUnitsMethod::SimpleDrop { attributes: None },
         },
 
         iterations: 1,
-        specs: specs,
         alteration_set: alterations::default_alteration_set(),
         experiment_key: exp_key.clone(),
-        logging_settings: Some(LoggingSettings {
-            experiment_key: exp_key.clone(),
-            allow_overwrite: true,
-            checkpoint_interval: 1,
-        }),
+        logging_settings: None,
+        chemistry_options: chemistry_builder,
+        gm,
     };
 
     let mut exp = SimpleExperiment::new(settings);

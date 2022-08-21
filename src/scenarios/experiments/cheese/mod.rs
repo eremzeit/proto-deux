@@ -1,22 +1,20 @@
 use crate::genome::framed::samples;
 use crate::simulation::common::builder::ChemistryBuilder;
-use crate::simulation::specs::ChemistryOptions;
 use crate::{
     biology::experiments::{
         alterations::{self, AlterationTypeSet},
         variants::simple::{
             logger::LoggingSettings,
-            utils::{CullStrategy, ExperimentSimSettings, SimpleExperimentSettings},
+            utils::{
+                CullStrategy, ExperimentSimSettings, SimpleExperimentSettings,
+                SimpleExperimentSettingsBuilder,
+            },
             SimpleExperiment,
         },
     },
     runners::ExperimentRunnerArgs,
-    simulation::{
-        common::{
-            get_chemistry_by_key, helpers::place_units::PlaceUnitsMethod, ChemistryConfiguration,
-            SensorManifest,
-        },
-        specs::SimulationSpecs,
+    simulation::common::{
+        helpers::place_units::PlaceUnitsMethod, ChemistryConfiguration, SensorManifest,
     },
     tests::GeneticManifest,
 };
@@ -36,9 +34,9 @@ pub fn alterations() -> AlterationTypeSet {
     ])
 }
 pub fn simple_experiment(runner_args: ExperimentRunnerArgs) -> SimpleExperiment {
-    let chemistry = ChemistryBuilder::with_key("cheese").build();
-
-    let gm = GeneticManifest::defaults(chemistry.get_manifest());
+    let chemistry_builder = ChemistryBuilder::with_key("cheese");
+    let chemistry = chemistry_builder.build();
+    let gm = GeneticManifest::defaults(chemistry.get_manifest()).wrap_rc();
 
     let settings = SimpleExperimentSettings {
         cull_strategy: CullStrategy::WorstFirst,
@@ -50,6 +48,7 @@ pub fn simple_experiment(runner_args: ExperimentRunnerArgs) -> SimpleExperiment 
             num_genomes_per_sim: 10,
             default_unit_resources: vec![],
             default_unit_attr: vec![],
+            place_units_method: PlaceUnitsMethod::Default,
         },
 
         iterations: 5000,
@@ -61,7 +60,8 @@ pub fn simple_experiment(runner_args: ExperimentRunnerArgs) -> SimpleExperiment 
             checkpoint_interval: 1000,
         }),
 
-        chemistry_options: ChemistryOptions::AOEU,
+        chemistry_options: chemistry_builder,
+        gm,
     };
 
     let mut exp = SimpleExperiment::new(settings);

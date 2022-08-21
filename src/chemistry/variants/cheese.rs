@@ -135,6 +135,7 @@ impl CheeseChemistry {
         wrap_chemistry!(chemistry)
     }
 
+    // TODO: modify this to require a ChemistryConfig
     pub fn default_manifest() -> ChemistryManifest {
         let mut manifest = ChemistryManifest {
             all_properties: vec![],
@@ -312,7 +313,6 @@ impl Chemistry for CheeseChemistry {
     fn on_simulation_init(&self, sim: &mut SimCell) {
         self.init_pos_properties(&mut sim.world);
         self.init_world_custom(&mut sim.world);
-        self.init_units(sim);
     }
 
     fn on_simulation_tick(&self, sim: &mut SimCell) {
