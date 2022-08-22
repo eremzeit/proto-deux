@@ -116,13 +116,14 @@ impl Position {
     }
 
     pub fn set_unit_resources(&mut self, resources: UnitResources) {
-        let mut unit = self.unit.as_mut();
+        let mut unit = self.unit.as_mut().unwrap();
+        unit.set_resources(resources);
 
-        if let Some(u) = unit {
-            u.set_resources(resources);
-        } else {
-            panic!("Unit doesnt exist: {:?}", self.coord);
-        }
+        // if let Some(u) = unit {
+        //     u.set_resources(resources);
+        // } else {
+        //     panic!("Unit doesnt exist: {:?}", self.coord);
+        // }
     }
 
     pub fn add_unit_resources(&mut self, resources: &SomeUnitResources) {

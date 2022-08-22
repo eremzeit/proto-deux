@@ -23,6 +23,10 @@ pub enum PlaceUnitsMethod {
     SimpleDrop {
         attributes: Option<UnitAttributes>,
     },
+    SimpleDropMultiple {
+        attributes: Option<UnitAttributes>,
+        units_per_entry: u32,
+    },
 
     RandomRegionDrop {
         attributes: Option<UnitAttributes>,
@@ -83,6 +87,28 @@ pub fn place_units(sim: &mut SimCell, method: &PlaceUnitsMethod) {
                 *units_per_entry,
                 &region_pct_rect,
             );
+        }
+        PlaceUnitsMethod::SimpleDropMultiple {
+            attributes,
+            units_per_entry,
+        } => {
+            let manifest = sim.unit_manifest.clone();
+            for (i, unit) in manifest.units.iter().enumerate() {
+                for j in 0..*units_per_entry {
+                    let idx = i * *units_per_entry as usize + j as usize;
+                    // fill from the left to right, bottom to top
+                    let x = idx % sim.world.size.0;
+                    let y = idx / sim.world.size.0;
+
+                    place_manual(
+                        &unit.info,
+                        &vec![(x, y)],
+                        &mut sim.world,
+                        attributes,
+                        sim.chemistry,
+                    );
+                }
+            }
         }
 
         PlaceUnitsMethod::SimpleDrop { attributes } => {
@@ -165,12 +191,11 @@ pub fn place_pct_region(
 
     for (i, unit_entry) in manifest.units.iter().enumerate() {
         for i in 0..units_per_entry {
-            let coord = (
-                rng.gen_range(rect[0]..rect[2]),
-                rng.gen_range(rect[1]..rect[3]),
-            );
-
             loop {
+                let coord = (
+                    rng.gen_range(rect[0]..rect[2]),
+                    rng.gen_range(rect[1]..rect[3]),
+                );
                 let can_place = !world.has_unit_at(&coord);
                 if can_place {
                     world.seed_unit_at(&coord, &unit_entry.info, attributes.clone(), chemistry);

@@ -27,7 +27,7 @@ pub fn get_cheese_pct(pos: &Position, current_tick: u64) -> f64 {
 pub fn get_unit_cheese_size_ratio(pos: &Position) -> f64 {
     let res_defs = cheese::defs::UnitResourcesLookup::new();
     let cheese = pos.get_unit_resource(res_defs.cheese);
-    println!("unit cheese: {}", cheese);
+    // println!("unit cheese: {}", cheese);
     (cheese as f64 / 100.0).min(1.0).max(0.2)
 }
 

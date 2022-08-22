@@ -1,6 +1,6 @@
 use std::rc::Rc;
 
-use crate::{biology::genetic_manifest::predicates::OperatorSet, tests::GeneticManifest};
+use crate::biology::genetic_manifest::predicates::OperatorSet;
 
 use super::common::{
     helpers::place_units::PlaceUnitsMethod, Chemistry, ChemistryConfiguration, ChemistryInstance,

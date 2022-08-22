@@ -1,5 +1,6 @@
 use crate::genome::framed::samples;
 use crate::simulation::common::builder::ChemistryBuilder;
+use crate::simulation::common::GeneticManifest;
 use crate::{
     biology::experiments::{
         alterations::{self, AlterationTypeSet},
@@ -16,7 +17,6 @@ use crate::{
     simulation::common::{
         helpers::place_units::PlaceUnitsMethod, ChemistryConfiguration, SensorManifest,
     },
-    tests::GeneticManifest,
 };
 
 // pub fn get_experiment_scenario(runner_args: ExperimentRunnerArgs) -> SimpleExperiment {
@@ -41,34 +41,33 @@ pub fn simple_experiment(runner_args: ExperimentRunnerArgs) -> SimpleExperiment 
     let settings = SimpleExperimentSettings {
         cull_strategy: CullStrategy::WorstFirst,
         fitness_calculation_key: "total_cheese_consumed".to_string(),
-        num_genomes: 10,
+        num_genomes: 20,
         sim_settings: ExperimentSimSettings {
-            num_simulation_ticks: 10,
-            grid_size: (100, 100),
+            num_simulation_ticks: 100,
+            grid_size: (20, 20),
             num_genomes_per_sim: 10,
-            default_unit_resources: vec![],
+            default_unit_resources: vec![("cheese", 200)],
             default_unit_attr: vec![],
             place_units_method: PlaceUnitsMethod::Default,
         },
 
-        iterations: 5000,
+        iterations: 100000,
         alteration_set: alterations(),
         experiment_key: runner_args.experiment_name_key.to_string(),
         logging_settings: Some(LoggingSettings {
             experiment_key: runner_args.experiment_name_key.to_string(),
             allow_overwrite: true,
-            checkpoint_interval: 1000,
+            checkpoint_interval: 2000,
         }),
 
         chemistry_options: chemistry_builder,
-        gm,
+        gm: gm.clone(),
     };
 
     let mut exp = SimpleExperiment::new(settings);
 
-    // let genome1 = samples::cheese::get_genome1();
-
-    // exp.with_seed_genomes(vec![genome1]);
+    // use crate::biology::genome::framed::samples::cheese::get_genome1_raw;
+    // exp.with_seed_genomes(vec![get_genome1_raw(&gm)]);
 
     // exp.initialize();
     // exp.resume();

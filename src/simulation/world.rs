@@ -6,6 +6,7 @@ use crate::util::{coord_by_coord_offset, coord_by_direction_offset, Coord, GridD
 use ndarray::*;
 use ndarray::{Array, Array2, Dim, Ix, Shape};
 
+// TODO: do we need an option here?  Array2 by default returns an option.
 pub type Grid = Array2<Option<Position>>;
 
 #[derive(Clone)]
@@ -65,7 +66,7 @@ impl World {
         chemistry: &ChemistryInstance,
     ) {
         let src_unit = self.get_unit_at(src_coord).unwrap().clone(); // TODO PERF
-        println!("moving unit {:?}, {:?}", dest_coord, src_coord);
+                                                                     // println!("moving unit {:?}, {:?}", dest_coord, src_coord);
         self.set_unit_at(dest_coord, Some(src_unit));
         self.set_unit_at(src_coord, None);
     }

@@ -584,7 +584,8 @@ impl SimpleExperiment {
 
             let _tick = self.current_tick + 1;
             let should_log_checkpoint = _tick % logger.settings.checkpoint_interval as u64 == 0
-                || _tick >= self.settings.iterations as u64;
+                || _tick >= self.settings.iterations as u64
+                || self.current_tick == 1;
             if should_log_checkpoint {
                 logger._log_checkpoint(_tick as usize, &self.genome_entries, &self.settings.gm)
             }

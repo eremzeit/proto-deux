@@ -25,8 +25,8 @@ use crate::simulation::simulation_data::{
 use std::time::Duration;
 
 //pub use crate::biology::genome::framed::{FramedGenome};
-pub use crate::biology::genetic_manifest::predicates::default_operators;
-pub use crate::biology::genetic_manifest::GeneticManifest;
+use crate::biology::genetic_manifest::predicates::default_operators;
+use crate::biology::genetic_manifest::GeneticManifest;
 
 pub mod fixtures {
     use crate::simulation::common::{

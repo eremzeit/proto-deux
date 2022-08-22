@@ -192,11 +192,11 @@ impl CheeseChemistry {
                         amount,
                     );
 
-                    //println!("before: {:?}", sim_attr[sim_attributes.total_cheese_consumed]);
                     let next_val = sim_cell.unit_entry_attributes[*entry_id]
                         [unit_entry_attributes.total_cheese_consumed]
                         .unwrap_integer()
                         + amount;
+
                     sim_cell.unit_entry_attributes[*entry_id]
                         [unit_entry_attributes.total_cheese_consumed] =
                         UnitEntryAttributeValue::Integer(next_val);
@@ -224,7 +224,11 @@ impl Chemistry for CheeseChemistry {
     }
 
     fn get_default_place_units_method(&self) -> PlaceUnitsMethod {
-        PlaceUnitsMethod::SimpleDrop { attributes: None }
+        PlaceUnitsMethod::RandomRegionDrop {
+            attributes: None,
+            units_per_entry: 1,
+            region_pct_rect: (0.25, 0.25, 0.75, 0.75),
+        }
     }
 
     // fn construct_specs(
@@ -329,7 +333,7 @@ impl Chemistry for CheeseChemistry {
             if let Some(unit) = sim.world.get_unit_at(&coord) {
                 let val = unit.get_resource(unit_resources.cheese);
                 if val <= 50 {
-                    //println!("destroying unit");
+                    // println!("destroying unit");
                     sim.world.destroy_unit(&coord);
                 }
             }

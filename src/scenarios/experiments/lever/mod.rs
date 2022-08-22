@@ -10,9 +10,8 @@ use crate::{
     runners::ExperimentRunnerArgs,
     simulation::common::{
         builder::ChemistryBuilder, helpers::place_units::PlaceUnitsMethod, ChemistryConfiguration,
-        SensorManifest,
+        GeneticManifest, SensorManifest,
     },
-    tests::GeneticManifest,
 };
 
 pub fn alterations() -> AlterationTypeSet {

@@ -52,7 +52,7 @@ impl UnitBehavior for FramedGenomeUnitBehavior {
         );
 
         let reactions = execution_context.execute();
-        println!("EXECUTING reactions: {:?}", &reactions);
+        // println!("EXECUTING reactions: {:?}", &reactions);
         //println!("consumed_compute_points: {}", execution_context.consumed_compute_points);
 
         UnitBehaviorResult {

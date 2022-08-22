@@ -26,6 +26,10 @@ pub fn basic(sim_args: &SimulationRunnerArgs) -> SimulationBuilder {
     SimulationBuilder::default()
         .chemistry(chemistry_builder.build())
         .unit_entries(get_unit_entries_for_cheese())
+        .place_units_method(PlaceUnitsMethod::SimpleDropMultiple {
+            attributes: None,
+            units_per_entry: 2,
+        })
         .size((50, 50))
         .iterations(1000)
 }
@@ -65,6 +69,7 @@ pub fn with_genome(sim_args: &SimulationRunnerArgs) -> SimulationBuilder {
         .build(&chemistry_builder.manifest());
 
     SimulationBuilder::default()
+        .chemistry(chemistry_builder.build())
         .size((50, 30))
         .iterations(1000)
         .unit_manifest(UnitManifest {

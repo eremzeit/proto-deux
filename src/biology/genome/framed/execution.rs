@@ -164,7 +164,7 @@ impl<'a> GenomeExecutionContext<'a> {
             }
 
             ParsedGenomeParam::Register(register_id) => {
-                panic!("registers not supported yet");
+                // panic!("registers not supported yet");
                 // TODO!
                 //self.registers[*register_id as usize] as i32
                 0
