@@ -129,17 +129,55 @@ pub fn default_alterations() -> Vec<GenomeAlterationDefinition> {
                 },
             ),
         },
-        // GenomeAlterationDefinition {
-        // 	key: "crossover".to_string(),
-        // 	index: 0,
-        // 	genomes_required: 1,
-        // 	execute: Rc::new(
-        // 		|genomes: &[Vec<FramedGenomeWord>], params: &[usize]| -> Vec<FramedGenomeWord> {
-        // 			genomes[0].iter().map(|x| *x).collect()
-        // 		},
-        // 	),
-        // 	prepare: Rc::new(|genomes: &[&Vec<usize>]| -> Vec<usize> { vec![] }),
-        // },
+        GenomeAlterationDefinition {
+            key: "crossover".to_string(),
+            index: 0,
+            genomes_required: 2,
+            execute: Rc::new(
+                |genomes: &[Vec<FramedGenomeWord>],
+                 params: &[FramedGenomeWord]|
+                 -> Vec<FramedGenomeWord> {
+                    let src_start = params[0];
+                    let src_end = params[1]; // exclusive
+                    let dest_start = params[2];
+                    let dest_end = params[3]; // exclusive
+
+                    let mut section: Vec<FramedGenomeWord> = vec![];
+
+                    for i in src_start..src_end {
+                        section.push(genomes[0][i as usize]);
+                    }
+
+                    // // println!("sectionto splice in {:?}", section);
+                    // println!("{}, {}", dest_start, dest_end);
+
+                    let mut new = genomes[1].clone();
+                    new.splice(
+                        dest_start as usize..dest_end as usize,
+                        section.clone().into_iter(),
+                    );
+                    new
+                },
+            ),
+            prepare: Rc::new(
+                |genomes: &[Vec<FramedGenomeWord>]| -> Vec<FramedGenomeWord> {
+                    let mut rng = rand::thread_rng();
+
+                    let src_start = rng.gen_range(0..genomes[0].len());
+                    let mut src_end = rng.gen_range(src_start..genomes[0].len());
+                    src_end = src_end.min(src_start + 10); // TEMP: limit the size of cutout regions as a hack to contain genome sizes
+
+                    let dest_start = rng.gen_range(0..genomes[1].len());
+                    let dest_end = rng.gen_range(dest_start..genomes[1].len());
+                    vec![
+                        src_start as FramedGenomeWord,
+                        src_end as FramedGenomeWord,
+                        dest_start as FramedGenomeWord,
+                        dest_end as FramedGenomeWord,
+                    ]
+                },
+            ),
+        },
         GenomeAlterationDefinition {
             key: "point_mutation".to_string(),
             index: 0,
@@ -163,16 +201,37 @@ pub fn default_alterations() -> Vec<GenomeAlterationDefinition> {
                 },
             ),
         },
-        // GenomeAlterationDefinition {
-        // 	key: "point_mutation_in_channel".to_string(),
-        // 	index: 0,
-        // 	genomes_required: 1,
-        // 	execute: Rc::new(
-        // 		|genomes: &[&[FramedGenomeWord]]| -> Vec<FramedGenomeWord> {
-        // 			genomes[0].iter().map(|x| *x).collect()
-        // 		},
-        // 	),
-        // },
+        GenomeAlterationDefinition {
+            key: "point_mutation_in_channel".to_string(),
+            index: 0,
+            genomes_required: 1,
+            execute: Rc::new(
+                |genomes: &[Vec<FramedGenomeWord>],
+                 params: &[FramedGenomeWord]|
+                 -> Vec<FramedGenomeWord> {
+                    let idx = params[0] as usize;
+                    let channel = params[1];
+                    let val = params[2];
+
+                    let mut _new = genomes[0].clone();
+
+                    _new[idx] =
+                        merge_value_into_word(_new[idx], val as FramedGenomeValue, channel as u8);
+
+                    _new
+                },
+            ),
+            prepare: Rc::new(
+                |genomes: &[Vec<FramedGenomeWord>]| -> Vec<FramedGenomeWord> {
+                    let mut rng = rand::thread_rng();
+                    vec![
+                        rng.gen_range(0..genomes[0].len()).try_into().unwrap(),
+                        rng.gen_range(0..NUM_CHANNELS).try_into().unwrap(),
+                        get_random_genome_value() as FramedGenomeWord,
+                    ]
+                },
+            ),
+        },
         // GenomeAlterationDefinition {
         // 	key: "swap_frames".to_string(),
         // 	index: 0,
@@ -216,3 +275,43 @@ pub fn default_alterations() -> Vec<GenomeAlterationDefinition> {
 // 	SwapFrames(usize, usize),              //
 // 	FramesCrossover(usize, usize, usize, usize),
 // }
+pub mod tests {
+    use super::{default_alterations, AlterationTypeSet};
+
+    pub fn get_alterations() -> AlterationTypeSet {
+        AlterationTypeSet::new(default_alterations())
+    }
+    #[test]
+    pub fn test_crossover() {
+        let alteration = get_alterations().alteration_for_key("crossover");
+        let genome1 = vec![1, 2, 3, 4, 5];
+        let genome2 = vec![9, 8, 7];
+
+        let genomes = vec![genome1, genome2];
+        let params = vec![1, 3, 1, 2];
+        let result = (alteration.execute)(&genomes, &params);
+
+        assert_eq!(result.to_vec(), vec![9, 2, 3, 7]);
+
+        let params = vec![0, 5, 1, 1];
+        let result = (alteration.execute)(&genomes, &params);
+
+        println!("result: {:?}", result);
+        assert_eq!(result.to_vec(), vec![9, 1, 2, 3, 4, 5, 8, 7]);
+    }
+    pub fn test_point_mutation_in_channel() {
+        let alteration = get_alterations().alteration_for_key("point_mutation_in_channel");
+        let genome1 = vec![1, 2, 0x123, 4, 5];
+        let genomes = vec![genome1];
+        let params = vec![3, 0, 100];
+        let result = (alteration.execute)(&genomes, &params);
+        assert_eq!(result.to_vec(), vec![1, 2, 3, 0x123, 5]);
+
+        //
+
+        let params = vec![3, 1, 0xaaa];
+
+        let result = (alteration.execute)(&genomes, &params);
+        assert_eq!(result.to_vec(), vec![1, 2, 3, 0x0aaa0123, 5]);
+    }
+}

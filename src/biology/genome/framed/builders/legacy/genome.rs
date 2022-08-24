@@ -437,7 +437,7 @@ pub mod tests {
         let frames = FramedGenomeCompiler::compile(framed_vals, &gm);
 
         let target = "***FRAME 0:***
-Channel #0
+Channel #0 (DEFAULT)
 CALL new_unit(Constant(0)) IF unit_res::cheese(0, 0) == Constant(1)
 
 Channel #1
@@ -521,7 +521,7 @@ Channel #3\n\n";
         println!("result: \n{}", render_frames(&frames.frames, &gm));
 
         let s = "***FRAME 0:***
-Channel #0
+Channel #0 (DEFAULT)
 CALL new_unit(Constant(0)) IF (unit_res::cheese(0, 0) == Constant(5) && pos_res::cheese(0, 0) > Constant(2))
 CALL move_unit(Constant(0)) IF is_truthy(pos_attr::is_cheese_source(0, 0))
 

@@ -41,16 +41,19 @@ _make_builder_type!(OperationBuilder, FramedGenomeValue);
 _make_builder_type!(ConjunctiveClauseBuilder, FramedGenomeValue);
 _make_builder_type!(ConditionalBuilder, FramedGenomeValue);
 
-pub fn frame(default_channel: u8, genes: Vec<GeneBuilder>) -> FrameBuilder {
+/**
+ * Given a single list of genes, create a frame with the given genes in the first channel
+ */
+pub fn frame_from_single_channel(first_channel_genes: Vec<GeneBuilder>) -> FrameBuilder {
     FrameBuilder::new(Rc::new(
         move |gm: &GeneticManifest| -> Vec<FramedGenomeWord> {
-            let mut v = genes
+            let mut v = first_channel_genes
                 .iter()
                 .map(|gene| gene.build(gm))
                 .collect::<Vec<Vec<FramedGenomeValue>>>()
                 .concat();
 
-            v.insert(0, default_channel as FramedGenomeValue);
+            v.insert(0, 0 as FramedGenomeValue);
 
             let mut frame_vals = v.iter().map(|x| *x as FramedGenomeWord).collect::<Vec<_>>();
             // insert frame size
@@ -493,21 +496,18 @@ pub mod parsing_v2 {
     fn full_parsing__basic_genome() {
         let gm = GeneticManifest::defaults(&CheeseChemistry::default_manifest());
 
-        let framed_vals = frame(
-            0,
-            vec![gene(
-                if_any(vec![if_all(vec![conditional!(
-                    is_truthy,
-                    pos_attr::is_cheese_source(0, 0)
-                )])]),
-                then_do!(move_unit, 75),
-            )],
-        )
+        let framed_vals = frame_from_single_channel(vec![gene(
+            if_any(vec![if_all(vec![conditional!(
+                is_truthy,
+                pos_attr::is_cheese_source(0, 0)
+            )])]),
+            then_do!(move_unit, 75),
+        )])
         .build(&gm);
 
         let genome = FramedGenomeCompiler::compile(framed_vals, &gm);
         let s = "***FRAME 0:***
-Channel #0
+Channel #0 (DEFAULT)
 CALL move_unit(Constant(75)) IF is_truthy(pos_attr::is_cheese_source(0, 0))
 
 Channel #1
@@ -522,31 +522,28 @@ Channel #3\n\n";
         let gm = GeneticManifest::defaults(&CheeseChemistry::default_manifest());
 
         println!("BEFORE COMPILING");
-        let framed_vals = frame(
-            0,
-            vec![
-                gene(
-                    if_any(vec![if_all(vec![
-                        conditional!(is_truthy, pos_attr::is_cheese_source(0, 0)),
-                        conditional!(gt, unit_res::cheese, 100),
-                    ])]),
-                    then_do!(move_unit, 75),
-                ),
-                gene(
-                    if_none(vec![if_not_all(vec![conditional!(
-                        lt,
-                        sim_attr::total_cheese_consumed,
-                        100
-                    )])]),
-                    then_do!(new_unit, register(1), 69, 69),
-                ),
-            ],
-        )
+        let framed_vals = frame_from_single_channel(vec![
+            gene(
+                if_any(vec![if_all(vec![
+                    conditional!(is_truthy, pos_attr::is_cheese_source(0, 0)),
+                    conditional!(gt, unit_res::cheese, 100),
+                ])]),
+                then_do!(move_unit, 75),
+            ),
+            gene(
+                if_none(vec![if_not_all(vec![conditional!(
+                    lt,
+                    sim_attr::total_cheese_consumed,
+                    100
+                )])]),
+                then_do!(new_unit, register(1), 69, 69),
+            ),
+        ])
         .build(&gm);
 
         let genome = FramedGenomeCompiler::compile(framed_vals, &gm);
         let s = "***FRAME 0:***
-Channel #0
+Channel #0 (DEFAULT)
 CALL move_unit(Constant(75)) IF (is_truthy(pos_attr::is_cheese_source(0, 0)) && unit_res::cheese(0, 0) > Constant(100))
 CALL new_unit(Register(1)) IF NOT NOT sim_attr::total_cheese_consumed(0, 0) < Constant(100)
 

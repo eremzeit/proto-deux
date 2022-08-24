@@ -17,7 +17,7 @@ pub trait UnitBehavior {
         world: &World,
         chemistry: &ChemistryInstance,
     ) -> UnitBehaviorResult {
-        UnitBehaviorResult { reactions: vec![] }
+        UnitBehaviorResult::with_reactions(vec![])
     }
 }
 
@@ -29,9 +29,17 @@ pub const NUM_REACTION_PARAMS: u32 = 3;
 pub struct UnitBehaviorResult {
     pub reactions: Vec<ReactionCall>,
     //pub register_changes: PhenotypeRegisterChanges,
+    pub consumed_execution_points: u64,
 }
 
 impl UnitBehaviorResult {
+    pub fn with_reactions(reactions: Vec<ReactionCall>) -> Self {
+        UnitBehaviorResult {
+            reactions,
+            consumed_execution_points: 0,
+        }
+    }
+
     pub fn display(&self, chemistry_manifest: &ChemistryManifest) -> String {
         let mut s = "".to_string();
         for reaction_call in &self.reactions {

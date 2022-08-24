@@ -163,9 +163,9 @@ impl SimpleExperimentLogger {
                 entry.max_fitness_metric.unwrap()
             ));
             s.push_str(&genome_str);
-            s.push_str(&format!("raw_genome: {:?}/n", entry.genome.clone()));
+            s.push_str(&format!("raw_genome: {:?}\n\n", entry.genome.clone()));
             s.push_str(&format!(
-                "raw_genome_length: {}/n",
+                "raw_genome_length: {}\n",
                 entry.genome.clone().len()
             ));
             s.push_str(&format!("\n\n\n\n"));

@@ -24,9 +24,9 @@ pub struct GenomeExecutionContext<'a> {
     pub genetic_manifest: &'a GeneticManifest,
     frames: &'a Vec<Frame>,
     current_frame: usize,
-    override_channel: Option<u8>,
-    consumed_compute_points: i32,
-    allotted_compute_points: i32,
+    pub override_channel: Option<u8>,
+    pub consumed_compute_points: u64,
+    pub allotted_compute_points: u64,
 
     pub sensor_context: &'a SensorContext<'a>,
     registers: PhenotypeRegisters,
@@ -41,7 +41,7 @@ impl<'a> GenomeExecutionContext<'a> {
         sensor_context: &'a SensorContext,
         registers: PhenotypeRegisters,
         gm: &'a GeneticManifest,
-        compute_points: i32,
+        compute_points: u64,
     ) -> Self {
         Self {
             genetic_manifest: gm,
@@ -182,6 +182,7 @@ impl<'a> GenomeExecutionContext<'a> {
     }
 
     pub fn execute_boolean(&mut self, boolean_clause: &BooleanVariable) -> bool {
+        self.consumed_compute_points += 1;
         match boolean_clause {
             BooleanVariable::Literal(v) => {
                 //self.consumed_compute_points += 1;

@@ -4,6 +4,10 @@ use crate::biology::unit_behavior::framed::common::*;
 use crate::simulation::common::*;
 use crate::util::{grid_direction_from_string, grid_direction_to_num};
 
+/**
+ *  Given a value, and a channel number, create a Word that has that value in that channel
+ * but all other channels zeroed out.
+ */
 #[macro_export]
 macro_rules! convert_val_to_channel {
     ($channel:expr, $val:expr) => {{
@@ -17,6 +21,10 @@ macro_rules! convert_val_to_channel {
     }};
 }
 
+/**
+ * Given a word value and channel, extract the value from that word
+ * from the given channel.
+ */
 #[macro_export]
 macro_rules! get_val_from_channel {
     ($channel:expr, $val:expr) => {{

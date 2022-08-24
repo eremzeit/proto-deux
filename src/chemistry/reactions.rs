@@ -77,11 +77,6 @@ pub fn execute_reaction(
             &action_params[i],
             unit_manifest,
         );
-
-        let mus = Instant::now().duration_since(then).as_micros();
-        if mus > 10 {
-            //println!("Reaction time for {} {}mus", action_def.key, mus);
-        }
     }
 }
 

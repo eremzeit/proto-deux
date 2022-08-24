@@ -20,6 +20,8 @@ use std::rc::Rc;
 
 use crate::chemistry;
 
+pub const BITS_PER_CHANNEL: usize = 16;
+
 pub mod param_meta {
     use super::*;
     const MAX_PARAM_META_VAL: u16 = 4;
@@ -116,7 +118,9 @@ pub fn val_for_frame_size(val: usize) -> FramedGenomeWord {
     (val) as FramedGenomeWord
 }
 
-// get the raw val that would represent that channel
+/**
+ * get the raw val that would represent that channel
+ */
 pub fn val_for_channel(channel: u8) -> FramedGenomeValue {
     // TODO: ANDing it here as a sanity check, but should it be an error?
     (channel & 0b011) as FramedGenomeValue
@@ -130,23 +134,36 @@ pub fn val_to_channel(val: FramedGenomeValue) -> u8 {
     (val & 0b11) as u8
 }
 
+/**
+ * Given a genomic program expressed in FramedGenomeValues (ie. u16), convert this
+ * into a full FramedGenome, with the destination being the zeroeth channel and the
+ * default channel being the zeroeth channel.
+ */
 pub fn simple_convert_into_frames(values: Vec<FramedGenomeValue>) -> Vec<FramedGenomeWord> {
-    convert_into_framed_channels(values, None, 0, 0, None)
+    convert_into_framed_channels(values, None, 0, 0)
 }
 
+/**
+ * Given a list of genome values, creates a list of genome words that expresses those values
+ * as framed genome.
+ */
 pub fn convert_into_framed_channels(
     values: Vec<FramedGenomeValue>,
+
+    /*
+     * frame size is optional.  if it's given but is smaller than the actual size of the list of values,
+     * then undefined behavior could occur when executing the genome.
+     */
     frame_size: Option<usize>,
     default_channel: u8,
     dest_channel: u8,
-    padding: Option<usize>,
 ) -> Vec<FramedGenomeWord> {
     let mut result = values
         .iter()
         .map(|v| -> u64 { convert_val_to_channel!(dest_channel, *v) as u64 })
         .collect::<Vec<u64>>();
-    let frame_padding = padding.unwrap_or(5);
-    let frame_size = frame_size.unwrap_or(FRAME_META_DATA_SIZE + values.len() + frame_padding);
+
+    let frame_size = frame_size.unwrap_or(values.len());
 
     // encode frame size (ie. first value in frame)
     result.insert(
@@ -159,20 +176,38 @@ pub fn convert_into_framed_channels(
         convert_val_to_channel!(CHANNEL_ZERO, val_for_channel(default_channel)),
     );
 
-    // the padding is in its own frame
-    result.push(convert_val_to_channel!(CHANNEL_ZERO, frame_padding));
-    for i in 0..frame_padding {
-        result.push(convert_val_to_channel!(CHANNEL_ZERO, 123));
-    }
-
     result
 }
 
+pub fn mask_for_channel(channel: u8) -> FramedGenomeWord {
+    let bits = (channel % 4) * 16;
+    0xffff << bits as FramedGenomeWord
+}
+
+pub fn merge_value_into_word(
+    word: FramedGenomeWord,
+    value: FramedGenomeValue,
+    into_channel: u8,
+) -> FramedGenomeWord {
+    let mask = 0;
+
+    let word1 = word & !mask_for_channel(into_channel);
+    let word2 = (value as FramedGenomeWord) << into_channel * 16;
+
+    word1 | word2
+}
+
+/**
+ * Maybe this could be renamed to compile_channels_into_frame, because
+ * it's also handling the compilation of metadata in a way that's specific to the Framed genome design
+ * */
 pub fn merge_channels_into_frame(
     channel_values: Vec<Vec<FramedGenomeValue>>,
     default_channel: u8,
 ) -> Vec<FramedGenomeWord> {
     let mut max_length = 0;
+
+    // find length of the longest channel
     for values in channel_values.iter() {
         if max_length < values.len() {
             max_length = values.len()
@@ -181,6 +216,13 @@ pub fn merge_channels_into_frame(
 
     let mut result: Vec<FramedGenomeWord> = vec![];
     let frame_size = max_length;
+
+    // let meta_data = vec![
+    //     // encode the henceforth active channel on the zeroeth channel (ie. second value in frame)
+    //     convert_val_to_channel!(CHANNEL_ZERO, val_for_frame_size(frame_size)),
+    //     // encode frame size (ie. first value in frame)
+    //     convert_val_to_channel!(CHANNEL_ZERO, val_for_channel(default_channel)),
+    // ];
 
     // encode the henceforth active channel on the zeroeth channel (ie. second value in frame)
     result.insert(
@@ -217,6 +259,9 @@ pub struct RawFrame {
     pub channel_values: [Vec<FramedGenomeValue>; NUM_CHANNELS],
 }
 
+/**
+ * Receives a raw genome and outputs a list of raw frames.
+ */
 pub struct RawFrameParser {
     idx: usize,
     current_frame: (usize, usize),
@@ -234,12 +279,23 @@ impl RawFrameParser {
         parser.unroll_channels_from_from_frames()
     }
 
+    /**
+     *
+     */
     pub fn unroll_channels_from_from_frames(&mut self) -> Vec<RawFrame> {
         let mut result = vec![];
 
         while (self.idx as i64) < (self.values.len() as i64 - FRAME_META_DATA_SIZE as i64) {
+            // let idx_frame_start = self.idx;
+
             let frame_size = self.values[self.idx] as usize;
             let mut default_channel = self.values[self.idx + 1] as u8;
+
+            /*
+              current_frame specifies the address that starts the metadata and the end address (which I think is non-inclusive)
+              the frame_size does NOT include the meta_data because the meta_data always needs to exist,
+              even if the encoded frame_size is zero
+            */
 
             self.current_frame = (self.idx, self.idx + FRAME_META_DATA_SIZE + frame_size);
 
@@ -253,6 +309,10 @@ impl RawFrameParser {
         result
     }
 
+    /**
+     *
+     *
+     * */
     pub fn unroll_inner_frame(&mut self, size: usize) -> [Vec<FramedGenomeValue>; 4] {
         let mut channels = vec![];
 
@@ -326,8 +386,8 @@ pub mod tests {
     #[test]
     pub fn convert_into_framed_channels() {
         assert_eq!(
-            super::convert_into_framed_channels(vec![1, 2, 3, 4, 5], None, 0, 0, Some(2)),
-            vec![9, 0, 1, 2, 3, 4, 5, 2, 123, 123]
+            super::convert_into_framed_channels(vec![1, 2, 3, 4, 5], None, 0, 0),
+            vec![5, 0, 1, 2, 3, 4, 5]
         );
     }
     #[test]
@@ -384,5 +444,29 @@ pub mod tests {
         assert_eq!(result[1].channel_values[1][3], 4);
         assert_eq!(result[1].channel_values[2][3], 18);
         assert_eq!(result[1].channel_values[3][3], 2);
+    }
+
+    #[test]
+    pub fn test_mask_for_channel() {
+        let test = 0x1234567887654321;
+
+        assert_eq!(mask_for_channel(0), 0xffff);
+        assert_eq!(mask_for_channel(1), 0xffff0000);
+        assert_eq!(mask_for_channel(2), 0xffff00000000);
+        assert_eq!(mask_for_channel(0) & test, 0x4321);
+        assert_eq!(mask_for_channel(1) & test, 0x87650000);
+
+        assert_eq!(mask_for_channel(2) & test, 0x567800000000);
+        assert_eq!(mask_for_channel(3) & test, 0x1234000000000000);
+    }
+
+    #[test]
+    pub fn test_merge_value_into_word() {
+        let test = 0x1234567887654321;
+
+        assert_eq!(merge_value_into_word(test, 0x1111, 0), 0x1234567887651111);
+        assert_eq!(merge_value_into_word(test, 0x1111, 1), 0x1234567811114321);
+        assert_eq!(merge_value_into_word(test, 0x1111, 2), 0x1234111187654321);
+        assert_eq!(merge_value_into_word(test, 0x1111, 3), 0x1111567887654321);
     }
 }

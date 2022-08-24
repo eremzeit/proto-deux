@@ -183,6 +183,34 @@ pub trait Chemistry {
         }
     }
 
+    fn deduct_unit_execution_points(&self, sim: &mut SimCell, unit_entry_id: usize, points: u64) {}
+
+    fn execute_unit_reaction(
+        &self,
+        sim: &mut SimCell,
+        coord: &Coord,
+        result: &UnitBehaviorResult,
+        // reaction_def: &ReactionDefinition,
+        // reaction_call: ReactionCall,
+    ) {
+        self.deduct_unit_execution_points(sim, 0, result.consumed_execution_points);
+
+        println!("behavior result: {:?}", result);
+        for i in 0..result.reactions.len().min(1) {
+            let reaction_call = result.reactions[i];
+            let reaction_def = &sim.chemistry.get_manifest().reactions[reaction_call.0 as usize];
+
+            execute_reaction(
+                sim,
+                &coord,
+                &reaction_def,
+                sim.chemistry,
+                sim.unit_manifest,
+                reaction_call,
+            );
+        }
+    }
+
     // fn init_unit_properties(&self, world: &mut World) {
     //     for coord in CoordIterator::new(world.size.clone()) {
     //         if world.has_unit_at(&coord) {

@@ -1,5 +1,7 @@
 pub mod types;
 
+use rand::Rng;
+
 use crate::biology::genetic_manifest::predicates::{
     Operator, OperatorParam, OperatorParamDefinition, OperatorParamType, OperatorSet,
 };
@@ -51,12 +53,16 @@ impl UnitBehavior for FramedGenomeUnitBehavior {
             computation_points,
         );
 
+        // let mut rng = rand::thread_rng();
+        // execution_context.override_channel = Some(rng.gen_range(0..4));
+
         let reactions = execution_context.execute();
         // println!("EXECUTING reactions: {:?}", &reactions);
         //println!("consumed_compute_points: {}", execution_context.consumed_compute_points);
 
         UnitBehaviorResult {
             reactions: reactions.clone(),
+            consumed_execution_points: execution_context.consumed_compute_points,
         }
     }
 }
@@ -144,6 +150,8 @@ pub mod test {
 
         let framed_vals = simple_convert_into_frames(genome_values);
         let frames = FramedGenomeCompiler::compile(framed_vals, &gm);
+
+        println!("genome: \n{}", frames.display(&gm));
 
         let mut sim = SimulationBuilder::default()
             .chemistry(chemistry)

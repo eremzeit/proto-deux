@@ -325,6 +325,7 @@ impl Chemistry for CheeseChemistry {
             sim.unit_manifest,
             &StoredResourceAllocationMethod::Every,
         );
+
         behavior_execution(sim);
 
         let unit_resources = defs::UnitResourcesLookup::new();

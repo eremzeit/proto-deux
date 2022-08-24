@@ -30,7 +30,8 @@ pub fn alterations() -> AlterationTypeSet {
     AlterationTypeSet::from_keys(&vec![
         "insertion".to_string(),
         "point_mutation".to_string(),
-        // "deletion".to_string(),
+        "deletion".to_string(),
+        "crossover".to_string(),
     ])
 }
 pub fn simple_experiment(runner_args: ExperimentRunnerArgs) -> SimpleExperiment {
@@ -43,7 +44,7 @@ pub fn simple_experiment(runner_args: ExperimentRunnerArgs) -> SimpleExperiment 
         fitness_calculation_key: "total_cheese_consumed".to_string(),
         num_genomes: 20,
         sim_settings: ExperimentSimSettings {
-            num_simulation_ticks: 100,
+            num_simulation_ticks: 50,
             grid_size: (20, 20),
             num_genomes_per_sim: 10,
             default_unit_resources: vec![("cheese", 200)],
@@ -51,7 +52,7 @@ pub fn simple_experiment(runner_args: ExperimentRunnerArgs) -> SimpleExperiment 
             place_units_method: PlaceUnitsMethod::Default,
         },
 
-        iterations: 100000,
+        iterations: 1000000,
         alteration_set: alterations(),
         experiment_key: runner_args.experiment_name_key.to_string(),
         logging_settings: Some(LoggingSettings {

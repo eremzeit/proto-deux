@@ -20,40 +20,28 @@ pub fn test_fitness(key: &str) {
     let chemistry_builder = ChemistryBuilder::with_key("cheese");
     let gm = GeneticManifest::defaults(&chemistry_builder.manifest()).wrap_rc();
 
-    let genome_vals1 = frame(
-        0,
-        vec![gene(
-            if_any!(if_all!(conditional!(is_truthy, 1))),
-            then_do!(pull_lever, 1),
-        )],
-    )
+    let genome_vals1 = frame_from_single_channel(vec![gene(
+        if_any!(if_all!(conditional!(is_truthy, 1))),
+        then_do!(pull_lever, 1),
+    )])
     .build(&gm);
 
-    let genome_vals2 = frame(
-        0,
-        vec![gene(
-            if_any!(if_all!(conditional!(is_truthy, 1))),
-            then_do!(pull_lever, 5),
-        )],
-    )
+    let genome_vals2 = frame_from_single_channel(vec![gene(
+        if_any!(if_all!(conditional!(is_truthy, 1))),
+        then_do!(pull_lever, 5),
+    )])
     .build(&gm);
 
-    let genome_vals3 = frame(
-        0,
-        vec![gene(
-            if_any!(if_all!(conditional!(is_truthy, 1))),
-            then_do!(pull_lever, 10),
-        )],
-    )
+    let genome_vals3 = frame_from_single_channel(vec![gene(
+        if_any!(if_all!(conditional!(is_truthy, 1))),
+        then_do!(pull_lever, 10),
+    )])
     .build(&gm);
 
-    let genome_vals4 = frame(
-        0,
-        vec![gene(
-            if_any!(if_all!(conditional!(is_truthy, 1))),
-            then_do!(pull_lever, 20),
-        )],
-    )
+    let genome_vals4 = frame_from_single_channel(vec![gene(
+        if_any!(if_all!(conditional!(is_truthy, 1))),
+        then_do!(pull_lever, 20),
+    )])
     .build(&gm);
 
     let settings = SimpleExperimentSettings {

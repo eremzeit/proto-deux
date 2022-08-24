@@ -37,21 +37,22 @@ impl UnitBehavior for SmartMouse {
         let pos_attributes = defs::PositionAttributesLookup::new();
 
         if world.get_pos_resource_at(coord, pos_resources.cheese) > MAX_GOBBLE_AMOUNT / 2 {
-            return UnitBehaviorResult {
-                reactions: vec![(defs::REACTION_ID_GOBBLE_CHEESE, 0, 0, 0)],
-            };
+            return UnitBehaviorResult::with_reactions(vec![(
+                defs::REACTION_ID_GOBBLE_CHEESE,
+                0,
+                0,
+                0,
+            )]);
         }
 
         for (_coord, _dir) in CoordOffsetIterator::new(coord, &world.size) {
             if world.get_pos_resource_at(&_coord, pos_resources.cheese) > 10 {
-                return UnitBehaviorResult {
-                    reactions: vec![(
-                        defs::REACTION_ID_MOVE_UNIT,
-                        grid_direction_to_num(_dir) as u16,
-                        0,
-                        0,
-                    )],
-                };
+                return UnitBehaviorResult::with_reactions(vec![(
+                    defs::REACTION_ID_MOVE_UNIT,
+                    grid_direction_to_num(_dir) as u16,
+                    0,
+                    0,
+                )]);
             }
         }
 
@@ -61,21 +62,23 @@ impl UnitBehavior for SmartMouse {
         });
 
         if let Some(dir) = dir_of_cheese_source {
-            return UnitBehaviorResult {
-                reactions: vec![(
-                    defs::REACTION_ID_MOVE_UNIT,
-                    grid_direction_to_num(dir) as u16,
-                    0,
-                    0,
-                )],
-            };
+            return UnitBehaviorResult::with_reactions(vec![(
+                defs::REACTION_ID_MOVE_UNIT,
+                grid_direction_to_num(dir) as u16,
+                0,
+                0,
+            )]);
         }
 
         let mut rnd = rand::thread_rng();
         let direction = rnd.gen_range(0..4);
-        UnitBehaviorResult {
-            reactions: vec![(defs::REACTION_ID_MOVE_UNIT, direction as u16, 0, 0)],
-        }
+
+        UnitBehaviorResult::with_reactions(vec![(
+            defs::REACTION_ID_MOVE_UNIT,
+            direction as u16,
+            0,
+            0,
+        )])
     }
 }
 

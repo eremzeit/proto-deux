@@ -52,20 +52,24 @@ pub fn behavior_execution(sim: &mut SimCell) {
                 .behavior
                 .get_behavior(&coord, &sim.attributes, &sim.world, sim.chemistry);
 
-        for i in 0..result.reactions.len().min(1) {
-            let reaction_call = result.reactions[i];
-            let reaction_def = &sim.chemistry.get_manifest().reactions[reaction_call.0 as usize];
+        // chemistry.consume_execution_points(result.consumed_execution_points);
 
-            // println!("EXECUTING REACTION: {}", reaction_def.key);
-            execute_reaction(
-                sim,
-                &coord,
-                &reaction_def,
-                sim.chemistry,
-                sim.unit_manifest,
-                reaction_call,
-            );
-        }
+        sim.chemistry.execute_unit_reaction(sim, &coord, &result);
+
+        // for i in 0..result.reactions.len().min(1) {
+        //     let reaction_call = result.reactions[i];
+        //     let reaction_def = &sim.chemistry.get_manifest().reactions[reaction_call.0 as usize];
+
+        //     // println!("EXECUTING REACTION: {}", reaction_def.key);
+        //     execute_reaction(
+        //         sim,
+        //         &coord,
+        //         &reaction_def,
+        //         sim.chemistry,
+        //         sim.unit_manifest,
+        //         reaction_call,
+        //     );
+        // }
     }
 }
 

@@ -39,7 +39,13 @@ pub fn render_frames(frames: &Vec<Frame>, genetic_manifest: &GeneticManifest) ->
         s.push_str(&format!("***FRAME {}:***\n", frame_i));
         for channel in (0..4) {
             let gene_str = render_genes(&frame.channels[channel], genetic_manifest);
-            s.push_str(&format!("Channel #{}\n", channel));
+            let is_default = frame.default_channel as usize == channel;
+            let default_str = if is_default {
+                " (DEFAULT)".to_owned()
+            } else {
+                "".to_owned()
+            };
+            s.push_str(&format!("Channel #{}{}\n", channel, &default_str));
             s.push_str(&format!("{}\n", &gene_str));
         }
     }

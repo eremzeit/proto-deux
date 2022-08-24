@@ -5,115 +5,109 @@ use crate::simulation::common::*;
 use crate::biology::genome::framed::builders::*;
 
 pub fn genome1(gm: &GeneticManifest) -> CompiledFramedGenome {
-    let framed_vals = frame(
-        0,
-        vec![
-            gene(
-                if_any(vec![if_all(vec![
-                    conditional!(is_truthy, pos_attr::is_cheese_source(0, 0)),
-                    conditional!(gt, unit_res::cheese, 100),
-                ])]),
-                then_do!(move_unit, up),
-            ),
-            gene(
-                if_none(vec![if_not_all(vec![conditional!(
-                    lt,
-                    sim_attr::total_cheese_consumed,
-                    100
-                )])]),
-                then_do!(new_unit, register(3), 69, 69),
-            ),
-        ],
-    )
+    let framed_vals = frame_from_single_channel(vec![
+        gene(
+            if_any(vec![if_all(vec![
+                conditional!(is_truthy, pos_attr::is_cheese_source(0, 0)),
+                conditional!(gt, unit_res::cheese, 100),
+            ])]),
+            then_do!(move_unit, up),
+        ),
+        gene(
+            if_none(vec![if_not_all(vec![conditional!(
+                lt,
+                sim_attr::total_cheese_consumed,
+                100
+            )])]),
+            then_do!(new_unit, register(3), 69, 69),
+        ),
+    ])
     .build(&gm);
 
     FramedGenomeCompiler::compile(framed_vals, &gm)
 }
 
 pub fn get_genome1_raw(gm: &GeneticManifest) -> Vec<u64> {
-    frame(
-        0,
-        vec![
-            gene(
-                if_any!(if_all!(
-                    conditional!(is_truthy, pos_attr::is_cheese_source(0, 0)),
-                    conditional!(gt, unit_res::cheese, 1000)
-                )),
-                then_do!(move_unit, right),
-            ),
-            gene(
-                if_any!(if_all!(
-                    conditional!(is_truthy, pos_attr::is_cheese_source(0, 0)),
-                    conditional!(gt, unit_res::cheese, 300)
-                )),
-                then_do!(gobble_cheese),
-            ),
-            gene(
-                if_any!(if_all!(
-                    conditional!(lt, unit_res::cheese, 60),
-                    conditional!(gt, pos_res::cheese, 20)
-                )),
-                then_do!(gobble_cheese),
-            ),
-            gene(
-                if_any!(if_all!(conditional!(lt, random_hundred, 20))),
-                then_do!(move_unit, random(4)),
-            ),
-            gene(
-                if_any!(if_all!(conditional!(gt, unit_res::cheese, 600))),
-                then_do!(new_unit, up),
-            ),
-            gene(
-                if_any!(if_all!(
-                    conditional!(is_truthy, pos_attr::is_cheese_source),
-                    conditional!(lt, unit_res::cheese, 1000)
-                )),
-                then_do!(gobble_cheese),
-            ),
-            gene(
-                if_any!(if_all!(
-                    conditional!(is_falsy, pos_attr::is_cheese_source),
-                    conditional!(is_truthy, pos_attr::is_cheese_source(0, 1))
-                )),
-                then_do!(move_unit, up),
-            ),
-            gene(
-                if_any!(if_all!(
-                    conditional!(is_falsy, pos_attr::is_cheese_source),
-                    conditional!(is_truthy, pos_attr::is_cheese_source(0, 1))
-                )),
-                then_do!(move_unit, up),
-            ),
-            gene(
-                if_any!(if_all!(
-                    conditional!(is_falsy, pos_attr::is_cheese_source),
-                    conditional!(is_truthy, pos_attr::is_cheese_source(0, 1))
-                )),
-                then_do!(move_unit, up),
-            ),
-            gene(
-                if_any!(if_all!(
-                    conditional!(is_falsy, pos_attr::is_cheese_source),
-                    conditional!(is_truthy, pos_attr::is_cheese_source(1, 0))
-                )),
-                then_do!(move_unit, right),
-            ),
-            gene(
-                if_any!(if_all!(
-                    conditional!(is_falsy, pos_attr::is_cheese_source),
-                    conditional!(is_truthy, pos_attr::is_cheese_source(-1, 0))
-                )),
-                then_do!(move_unit, left),
-            ),
-            gene(
-                if_any!(if_all!(
-                    conditional!(is_falsy, pos_attr::is_cheese_source),
-                    conditional!(is_truthy, pos_attr::is_cheese_source(0, -1))
-                )),
-                then_do!(move_unit, down),
-            ),
-        ],
-    )
+    frame_from_single_channel(vec![
+        gene(
+            if_any!(if_all!(
+                conditional!(is_truthy, pos_attr::is_cheese_source(0, 0)),
+                conditional!(gt, unit_res::cheese, 1000)
+            )),
+            then_do!(move_unit, right),
+        ),
+        gene(
+            if_any!(if_all!(
+                conditional!(is_truthy, pos_attr::is_cheese_source(0, 0)),
+                conditional!(gt, unit_res::cheese, 300)
+            )),
+            then_do!(gobble_cheese),
+        ),
+        gene(
+            if_any!(if_all!(
+                conditional!(lt, unit_res::cheese, 60),
+                conditional!(gt, pos_res::cheese, 20)
+            )),
+            then_do!(gobble_cheese),
+        ),
+        gene(
+            if_any!(if_all!(conditional!(lt, random_hundred, 20))),
+            then_do!(move_unit, random(4)),
+        ),
+        gene(
+            if_any!(if_all!(conditional!(gt, unit_res::cheese, 600))),
+            then_do!(new_unit, up),
+        ),
+        gene(
+            if_any!(if_all!(
+                conditional!(is_truthy, pos_attr::is_cheese_source),
+                conditional!(lt, unit_res::cheese, 1000)
+            )),
+            then_do!(gobble_cheese),
+        ),
+        gene(
+            if_any!(if_all!(
+                conditional!(is_falsy, pos_attr::is_cheese_source),
+                conditional!(is_truthy, pos_attr::is_cheese_source(0, 1))
+            )),
+            then_do!(move_unit, up),
+        ),
+        gene(
+            if_any!(if_all!(
+                conditional!(is_falsy, pos_attr::is_cheese_source),
+                conditional!(is_truthy, pos_attr::is_cheese_source(0, 1))
+            )),
+            then_do!(move_unit, up),
+        ),
+        gene(
+            if_any!(if_all!(
+                conditional!(is_falsy, pos_attr::is_cheese_source),
+                conditional!(is_truthy, pos_attr::is_cheese_source(0, 1))
+            )),
+            then_do!(move_unit, up),
+        ),
+        gene(
+            if_any!(if_all!(
+                conditional!(is_falsy, pos_attr::is_cheese_source),
+                conditional!(is_truthy, pos_attr::is_cheese_source(1, 0))
+            )),
+            then_do!(move_unit, right),
+        ),
+        gene(
+            if_any!(if_all!(
+                conditional!(is_falsy, pos_attr::is_cheese_source),
+                conditional!(is_truthy, pos_attr::is_cheese_source(-1, 0))
+            )),
+            then_do!(move_unit, left),
+        ),
+        gene(
+            if_any!(if_all!(
+                conditional!(is_falsy, pos_attr::is_cheese_source),
+                conditional!(is_truthy, pos_attr::is_cheese_source(0, -1))
+            )),
+            then_do!(move_unit, down),
+        ),
+    ])
     .build(&gm)
 }
 
