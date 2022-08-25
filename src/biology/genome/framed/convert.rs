@@ -279,6 +279,10 @@ impl RawFrameParser {
         parser.unroll_channels_from_from_frames()
     }
 
+    fn frame_val_to_frame_size(val: FramedGenomeWord) -> u16 {
+        (val % 1000) as u16
+    }
+
     /**
      *
      */
@@ -288,7 +292,10 @@ impl RawFrameParser {
         while (self.idx as i64) < (self.values.len() as i64 - FRAME_META_DATA_SIZE as i64) {
             // let idx_frame_start = self.idx;
 
+            // AOEUAOEU
             let frame_size = self.values[self.idx] as usize;
+            // let frame_size = Self::frame_val_to_frame_size(self.values[self.idx]) as usize;
+
             let mut default_channel = self.values[self.idx + 1] as u8;
 
             /*
@@ -339,6 +346,8 @@ impl RawFrameParser {
 }
 
 pub mod tests {
+    use variants::CheeseChemistry;
+
     use super::param_meta;
     use super::*;
     use crate::biology::genetic_manifest::predicates::default_operators;
@@ -468,5 +477,56 @@ pub mod tests {
         assert_eq!(merge_value_into_word(test, 0x1111, 1), 0x1234567811114321);
         assert_eq!(merge_value_into_word(test, 0x1111, 2), 0x1234111187654321);
         assert_eq!(merge_value_into_word(test, 0x1111, 3), 0x1111567887654321);
+    }
+
+    #[test]
+    pub fn test_compile_multiple_frames() {
+        use super::super::common::*;
+
+        let gm = GeneticManifest::defaults(&CheeseChemistry::default_manifest());
+
+        let mut frame1 = frame_from_single_channel(vec![gene(
+            if_any(vec![if_all(vec![
+                conditional!(is_truthy, pos_attr::is_cheese_source(0, 0)),
+                conditional!(gt, unit_res::cheese, 100),
+            ])]),
+            then_do!(move_unit, 75),
+        )])
+        .build(&gm);
+
+        let mut frame2 = frame_from_single_channel(vec![gene(
+            if_none(vec![if_not_all(vec![conditional!(
+                lt,
+                sim_attr::total_cheese_consumed,
+                100
+            )])]),
+            then_do!(new_unit, register(1), 69, 69),
+        )])
+        .build(&gm);
+
+        let mut genome_words = vec![];
+        genome_words.append(&mut frame1.clone());
+        genome_words.append(&mut frame2.clone());
+
+        let frames = RawFrameParser::parse(genome_words);
+        assert_eq!(frames.len(), 2);
+
+        assert_eq!(
+            frames[0].channel_values[0].len() + FRAME_META_DATA_SIZE,
+            frame1.len()
+        );
+        assert_eq!(
+            frames[0].channel_values[1].len() + FRAME_META_DATA_SIZE,
+            frame1.len()
+        );
+
+        for i in 0..frames.len() {
+            assert_eq!(frames[i].default_channel, 0);
+        }
+
+        // let compiled = FramedGenomeCompiler::compile(genome_words, &gm);
+
+        // println!("genome:\n{}", frames.display(&gm));
+        assert_eq!(frames.len(), 2);
     }
 }

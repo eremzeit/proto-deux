@@ -47,7 +47,7 @@ pub fn simple_experiment(runner_args: ExperimentRunnerArgs) -> SimpleExperiment 
             num_simulation_ticks: 50,
             grid_size: (20, 20),
             num_genomes_per_sim: 10,
-            default_unit_resources: vec![("cheese", 200)],
+            default_unit_resources: vec![("cheese", 2000)],
             default_unit_attr: vec![],
             place_units_method: PlaceUnitsMethod::Default,
         },

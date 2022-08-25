@@ -117,8 +117,8 @@ impl FramedGenomeUnitBehavior {
 pub mod test {
     use super::{FramedGenomeUnitBehavior, GenomeExecutionContext};
     use crate::biology::genome::framed::common::*;
+    use crate::biology::genome::framed::compile::FramedGenomeCompiler;
     use crate::biology::genome::framed::convert::simple_convert_into_frames;
-    use crate::biology::genome::framed::parsing::FramedGenomeCompiler;
     use crate::biology::genome::framed::render::render_frames;
     use crate::biology::genome::framed::*;
     use crate::chemistry::helpers::place_units::PlaceUnitsMethod;

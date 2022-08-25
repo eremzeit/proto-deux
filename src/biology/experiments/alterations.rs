@@ -165,7 +165,7 @@ pub fn default_alterations() -> Vec<GenomeAlterationDefinition> {
 
                     let src_start = rng.gen_range(0..genomes[0].len());
                     let mut src_end = rng.gen_range(src_start..genomes[0].len());
-                    src_end = src_end.min(src_start + 10); // TEMP: limit the size of cutout regions as a hack to contain genome sizes
+                    // src_end = src_end.min(src_start + 10); // TEMP: limit the size of cutout regions as a hack to contain genome sizes
 
                     let dest_start = rng.gen_range(0..genomes[1].len());
                     let dest_end = rng.gen_range(dest_start..genomes[1].len());

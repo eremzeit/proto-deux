@@ -98,17 +98,22 @@ pub trait Chemistry {
     fn get_key(&self) -> String;
     fn get_default_simulation_attributes(&self) -> Vec<SimulationAttributeValue>;
     fn get_default_unit_entry_attributes(&self) -> Vec<UnitEntryAttributeValue>;
-    fn get_next_unit_resources(
-        &self,
-        entry: &UnitEntryData,
-        pos: &Position,
-        unit: &Unit,
-        world: &World,
-        tick_multiplier: u32,
-    ) -> UnitResources {
-        self.get_manifest().empty_unit_resources()
-    }
+    // fn get_next_unit_resources(
+    //     &self,
+    //     entry: &UnitEntryData,
+    //     pos: &Position,
+    //     unit: &Unit,
+    //     world: &World,
+    //     tick_multiplier: u32,
+    // ) -> UnitResources {
+    //     self.get_manifest().empty_unit_resources()
+    // }
 
+    fn allocate_unit_resources(&self, coord: &Coord, sim: &mut SimCell) {}
+
+    /**
+     * Get the seed attributes used when a unit entry doesn't have seed attributes specified
+     */
     fn get_default_unit_seed_attributes(
         &self,
         world: &mut World,
@@ -117,6 +122,10 @@ pub trait Chemistry {
     ) -> UnitAttributes {
         self.get_manifest().empty_unit_attributes()
     }
+
+    /**
+     * Get the seed attributes used for a specifc unit entry
+     */
     fn get_unit_seed_attributes(
         &self,
         world: &mut World,
@@ -143,21 +152,21 @@ pub trait Chemistry {
         }
     }
 
-    fn get_base_stored_resource_allocation(
-        &self,
-        world: &mut World,
-        coord: &Coord,
-    ) -> SomeUnitResources {
-        vec![]
-    }
+    // fn get_base_stored_resource_allocation(
+    //     &self,
+    //     world: &mut World,
+    //     coord: &Coord,
+    // ) -> SomeUnitResources {
+    //     vec![]
+    // }
 
-    fn get_base_streamed_resource_allocation(
-        &self,
-        world: &mut World,
-        coord: &Coord,
-    ) -> SomeUnitResources {
-        vec![]
-    }
+    // fn get_base_streamed_resource_allocation(
+    //     &self,
+    //     world: &mut World,
+    //     coord: &Coord,
+    // ) -> SomeUnitResources {
+    //     vec![]
+    // }
 
     fn get_default_place_units_method(&self) -> PlaceUnitsMethod {
         PlaceUnitsMethod::SimpleDrop { attributes: None }
@@ -185,17 +194,10 @@ pub trait Chemistry {
 
     fn deduct_unit_execution_points(&self, sim: &mut SimCell, unit_entry_id: usize, points: u64) {}
 
-    fn execute_unit_reaction(
-        &self,
-        sim: &mut SimCell,
-        coord: &Coord,
-        result: &UnitBehaviorResult,
-        // reaction_def: &ReactionDefinition,
-        // reaction_call: ReactionCall,
-    ) {
+    fn execute_unit_reaction(&self, sim: &mut SimCell, coord: &Coord, result: &UnitBehaviorResult) {
         self.deduct_unit_execution_points(sim, 0, result.consumed_execution_points);
 
-        println!("behavior result: {:?}", result);
+        // println!("behavior result: {:?}", result);
         for i in 0..result.reactions.len().min(1) {
             let reaction_call = result.reactions[i];
             let reaction_def = &sim.chemistry.get_manifest().reactions[reaction_call.0 as usize];
@@ -210,31 +212,4 @@ pub trait Chemistry {
             );
         }
     }
-
-    // fn init_unit_properties(&self, world: &mut World) {
-    //     for coord in CoordIterator::new(world.size.clone()) {
-    //         if world.has_unit_at(&coord) {
-    //             println!("updating properties at: {:?}", coord);
-    //             let unit_resources = self.get_manifest().empty_unit_resources();
-    //             world.set_unit_resources_at(&coord, unit_resources);
-    //             //println!("resources: {:?}, {:?}", coord, unit_resources);
-    //             world.set_unit_attributes_at(&coord, self.get_manifest().empty_unit_attributes());
-    //         }
-    //     }
-    // }
-
-    /* TODO: remove the concept of specs, which were meant to be a dynamic list of behaviors that could
-    be configured on the fly independent of the chemistry.
-        We already have the concept of chemistry.on_init().  Lets just add the concept of chemistry.on_tick().
-
-        We can still have behaviors called specs defined outside a chemistry that can be shared across chemistries.
-        The order of specs will be hard-coded on a per-chemistry basis.
-        If we want to configure the behavior of those behaviors on a per-chemistry basis we can pass
-        in a configuration object into the chemistry itself.  The configuration object itself can be clonable.
-        The chemistry won't be cloneable because it is used as a trait object by the simulation struct.
-    */
-    // fn construct_specs(
-    //     &self,
-    //     unit_placement: &PlaceUnitsMethod,
-    // ) -> Vec<std::boxed::Box<dyn SimulationSpec>>;
 }

@@ -86,17 +86,6 @@ impl Chemistry for NanobotsChemistry {
         self.get_manifest().empty_unit_entry_attributes()
     }
 
-    fn get_next_unit_resources(
-        &self,
-        entry: &UnitEntryData,
-        pos: &Position,
-        unit: &Unit,
-        world: &World,
-        tick_multiplier: u32,
-    ) -> UnitResources {
-        self.get_manifest().empty_unit_resources()
-    }
-
     fn on_simulation_tick(&self, sim: &mut SimCell) {
         allocate_stored_resources(
             sim,

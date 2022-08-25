@@ -118,6 +118,7 @@ pub enum AttributeValue {
 }
 
 use std::fmt::{Debug, Formatter, Result};
+use std::ops::AddAssign;
 
 impl AttributeValue {
     pub fn unwrap_bool(&self) -> bool {
@@ -153,6 +154,12 @@ impl AttributeValue {
             Self::Nil => 0,
             _ => 0,
         }
+    }
+}
+
+impl AddAssign for AttributeValue {
+    fn add_assign(&mut self, other: Self) {
+        AttributeValue::Integer(self.coerce_unwrap_to_integer() + other.coerce_unwrap_to_integer());
     }
 }
 

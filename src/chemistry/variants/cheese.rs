@@ -40,7 +40,7 @@ pub mod constants {
     #[macro_export]
     macro_rules! MOVE_COST_ {
         () => {
-            5
+            1
         };
     }
     #[macro_export]
@@ -231,6 +231,57 @@ impl Chemistry for CheeseChemistry {
         }
     }
 
+    fn allocate_unit_resources(&self, coord: &Coord, sim: &mut SimCell) {
+        let position_attributes = defs::PositionAttributesLookup::new();
+        let unit_resources = defs::UnitResourcesLookup::new();
+        let unit_attributes = defs::UnitAttributesLookup::new();
+        let sim_attributes = defs::SimulationAttributesLookup::new();
+        let position_resources = defs::PositionResourcesLookup::new();
+        let unit_entry_attributes = defs::UnitEntryAttributesLookup::new();
+
+        let mut pos = sim
+            .world
+            .grid
+            .get_mut([coord.0, coord.1])
+            .unwrap()
+            .as_mut()
+            .unwrap();
+
+        let is_air_source = pos
+            .get_attribute(position_attributes.is_air_source)
+            .unwrap_bool();
+
+        let is_cheese_source = pos
+            .get_attribute(position_attributes.is_cheese_source)
+            .unwrap_bool();
+
+        let has_unit = pos.has_unit();
+
+        let unit = pos.unit.as_mut().unwrap();
+
+        let resources = &mut unit.resources;
+
+        if is_air_source {
+            resources[unit_resources.air] = 10;
+        } else {
+            resources[unit_resources.air] = std::cmp::max(resources[unit_resources.air] - 1, 0);
+        }
+
+        //println!("is_cheese_source: {}", is_cheese_source);
+        //let id_cheese: PositionAttributeIndex = self.get_manifest().unit_resource_by_key("cheese").id as usize;
+        //println!("id_air: {}", id_air);
+        //println!("id_cheese: {}", id_cheese);
+
+        if is_cheese_source {
+            let amount = 20;
+            resources[unit_resources.cheese] += amount;
+
+            sim.unit_entry_attributes[unit.entry_id]
+                [unit_entry_attributes.total_cheese_consumed] +=
+                UnitAttributeValue::Integer(amount);
+        }
+    }
+
     // fn construct_specs(
     //     &self,
     //     unit_placement: &PlaceUnitsMethod,
@@ -246,50 +297,50 @@ impl Chemistry for CheeseChemistry {
     //         Box::new(specs::PostTick {}),
     //     ]
     // }
-    fn get_next_unit_resources(
-        &self,
-        entry: &UnitEntryData,
-        pos: &Position,
-        unit: &Unit,
-        world: &World,
-        tick_multiplier: u32,
-    ) -> UnitResources {
-        //println!("unit resources before: {:?}", &unit.resources);
+    // fn get_next_unit_resources(
+    //     &self,
+    //     entry: &UnitEntryData,
+    //     pos: &Position,
+    //     unit: &Unit,
+    //     world: &World,
+    //     tick_multiplier: u32,
+    // ) -> UnitResources {
+    //     //println!("unit resources before: {:?}", &unit.resources);
 
-        // is_air_source
-        let mut resources = unit.resources.clone();
+    //     // is_air_source
+    //     let mut resources = unit.resources.clone();
 
-        let position_attributes = defs::PositionAttributesLookup::new();
-        let unit_resources = defs::UnitResourcesLookup::new();
-        let unit_attributes = defs::UnitAttributesLookup::new();
-        let sim_attributes = defs::SimulationAttributesLookup::new();
-        let position_resources = defs::PositionResourcesLookup::new();
+    //     let position_attributes = defs::PositionAttributesLookup::new();
+    //     let unit_resources = defs::UnitResourcesLookup::new();
+    //     let unit_attributes = defs::UnitAttributesLookup::new();
+    //     let sim_attributes = defs::SimulationAttributesLookup::new();
+    //     let position_resources = defs::PositionResourcesLookup::new();
 
-        let is_air_source = pos
-            .get_attribute(position_attributes.is_air_source)
-            .unwrap_bool();
+    //     let is_air_source = pos
+    //         .get_attribute(position_attributes.is_air_source)
+    //         .unwrap_bool();
 
-        if is_air_source {
-            resources[unit_resources.air] = 10;
-        } else {
-            resources[unit_resources.air] = std::cmp::max(resources[unit_resources.air] - 1, 0);
-        }
+    //     if is_air_source {
+    //         resources[unit_resources.air] = 10;
+    //     } else {
+    //         resources[unit_resources.air] = std::cmp::max(resources[unit_resources.air] - 1, 0);
+    //     }
 
-        let is_cheese_source = pos
-            .get_attribute(position_attributes.is_cheese_source)
-            .unwrap_bool();
-        //println!("is_cheese_source: {}", is_cheese_source);
-        //let id_cheese: PositionAttributeIndex = self.get_manifest().unit_resource_by_key("cheese").id as usize;
-        //println!("id_air: {}", id_air);
-        //println!("id_cheese: {}", id_cheese);
+    //     let is_cheese_source = pos
+    //         .get_attribute(position_attributes.is_cheese_source)
+    //         .unwrap_bool();
+    //     //println!("is_cheese_source: {}", is_cheese_source);
+    //     //let id_cheese: PositionAttributeIndex = self.get_manifest().unit_resource_by_key("cheese").id as usize;
+    //     //println!("id_air: {}", id_air);
+    //     //println!("id_cheese: {}", id_cheese);
 
-        if is_cheese_source {
-            resources[unit_resources.cheese] += 20;
-        }
+    //     if is_cheese_source {
+    //         resources[unit_resources.cheese] += 20;
+    //     }
 
-        // println!("resources: {:?}", resources);
-        resources
-    }
+    //     // println!("resources: {:?}", resources);
+    //     resources
+    // }
 
     fn get_manifest(&self) -> &ChemistryManifest {
         &self.manifest

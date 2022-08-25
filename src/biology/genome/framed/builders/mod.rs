@@ -7,12 +7,13 @@ use crate::simulation::common::*;
 use crate::util::{grid_direction_from_string, grid_direction_to_num};
 use std::rc::Rc;
 
+pub use crate::biology::genome::framed::compile::FramedGenomeCompiler;
 pub use crate::biology::genome::framed::convert::*;
-pub use crate::biology::genome::framed::parsing::FramedGenomeCompiler;
-pub use crate::biology::genome::framed::types::*;
 pub use crate::biology::genome::framed::util::identify_raw_param_string;
 
 use std::convert::TryInto;
+
+use super::common::{FramedGenomeValue, FramedGenomeWord};
 
 type BuildFunction<T> = Rc<dyn Fn(&GeneticManifest) -> Vec<T>>;
 
@@ -53,11 +54,18 @@ pub fn frame_from_single_channel(first_channel_genes: Vec<GeneBuilder>) -> Frame
                 .collect::<Vec<Vec<FramedGenomeValue>>>()
                 .concat();
 
-            v.insert(0, 0 as FramedGenomeValue);
+            // v.insert(0, 0 as FramedGenomeValue);
 
-            let mut frame_vals = v.iter().map(|x| *x as FramedGenomeWord).collect::<Vec<_>>();
+            let mut _frame_vals = v.iter().map(|x| *x as FramedGenomeWord).collect::<Vec<_>>();
             // insert frame size
-            frame_vals.insert(0, frame_vals.len() as FramedGenomeWord);
+            // frame_vals.insert(0, frame_vals.len() as FramedGenomeWord);
+            let mut frame_vals = vec![
+                _frame_vals.len() as FramedGenomeWord, // frame size
+                0,                                     // default channel
+            ];
+
+            println!("generating frame with size: {}", &frame_vals[0]);
+            frame_vals.append(&mut _frame_vals);
             frame_vals
         },
     ))
@@ -147,6 +155,8 @@ macro_rules! conditional {
     };
 
     ($op_key:ident, $param1:expr, $param2:expr, $param3:expr) => {{
+        use crate::biology::genome::framed::types::{BooleanVariable, FramedGenomeValue};
+
         ConditionalBuilder::new(Rc::new(|gm: &GeneticManifest| -> Vec<FramedGenomeValue> {
             use crate::biology::genetic_manifest::predicates::OperatorParam;
             use std::convert::TryInto;

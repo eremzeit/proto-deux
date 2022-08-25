@@ -64,7 +64,8 @@ impl<'a> GenomeExecutionContext<'a> {
             // println!("frame {:?}", &self.frames[self.current_frame]);
             let result = self.execute_frame();
             if result.is_some() {
-                reactions.push(result.unwrap())
+                reactions.push(result.unwrap());
+                return reactions; // ie. we can have only one reaction, for right now
             }
             self.current_frame += 1;
         }

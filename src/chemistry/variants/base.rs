@@ -139,47 +139,45 @@ impl Chemistry for BaseChemistry {
         self.get_manifest().empty_unit_entry_attributes()
     }
 
-    fn get_next_unit_resources(
-        &self,
-        entry: &UnitEntryData,
-        pos: &Position,
-        unit: &Unit,
-        world: &World,
-        tick_multiplier: u32,
-    ) -> UnitResources {
-        let mut resources = unit.resources.clone();
-
+    fn allocate_unit_resources(&self, coord: &Coord, sim: &mut SimCell) {
         let position_attributes = defs::PositionAttributesLookup::new();
         let unit_resources = defs::UnitResourcesLookup::new();
         let unit_attributes = defs::UnitAttributesLookup::new();
         let sim_attributes = defs::SimulationAttributesLookup::new();
         let position_resources = defs::PositionResourcesLookup::new();
+        let unit_entry_attributes = defs::UnitEntryAttributesLookup::new();
+
+        let mut pos = sim
+            .world
+            .grid
+            .get_mut([coord.0, coord.1])
+            .unwrap()
+            .as_mut()
+            .unwrap();
+
+        // let is_air_source = pos
+        //     .get_attribute(position_attributes.is_air_source)
+        //     .unwrap_bool();
+
+        // let is_cheese_source = pos
+        //     .get_attribute(position_attributes.is_cheese_source)
+        //     .unwrap_bool();
 
         let is_foo_position_attr = pos
             .get_attribute(position_attributes.is_foo_position)
             .unwrap_bool();
+        let has_unit = pos.has_unit();
+        let unit = pos.unit.as_mut().unwrap();
+
+        let resources = &mut unit.resources;
 
         if is_foo_position_attr {
             resources[unit_resources.foo_streamed_resource] = 10;
+            resources[unit_resources.foo_stored_resource] += 20;
         } else {
             resources[unit_resources.foo_streamed_resource] =
                 std::cmp::max(resources[unit_resources.foo_streamed_resource] - 1, 0);
         }
-
-        let is_foo_position_attribute = pos
-            .get_attribute(position_attributes.is_foo_position)
-            .unwrap_bool();
-        //println!("is_cheese_source: {}", is_cheese_source);
-        //let id_cheese: PositionAttributeIndex = self.get_manifest().unit_resource_by_key("cheese").id as usize;
-        //println!("id_air: {}", id_air);
-        //println!("id_cheese: {}", id_cheese);
-
-        if is_foo_position_attribute {
-            resources[unit_resources.foo_stored_resource] += 20;
-        }
-
-        // println!("resources: {:?}", resources);
-        resources
     }
 
     fn on_simulation_tick(&self, sim: &mut SimCell) {

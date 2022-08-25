@@ -124,16 +124,16 @@ impl Chemistry for LeverChemistry {
         self.configuration.clone()
     }
 
-    fn get_next_unit_resources(
-        &self,
-        entry: &UnitEntryData,
-        pos: &Position,
-        unit: &Unit,
-        world: &World,
-        tick_multiplier: u32,
-    ) -> UnitResources {
-        unit.resources.clone()
-    }
+    // fn get_next_unit_resources(
+    //     &self,
+    //     entry: &UnitEntryData,
+    //     pos: &Position,
+    //     unit: &Unit,
+    //     world: &World,
+    //     tick_multiplier: u32,
+    // ) -> UnitResources {
+    //     unit.resources.clone()
+    // }
 
     fn get_manifest(&self) -> &ChemistryManifest {
         &self.manifest
@@ -141,22 +141,6 @@ impl Chemistry for LeverChemistry {
 
     fn get_manifest_mut(&mut self) -> &mut ChemistryManifest {
         &mut self.manifest
-    }
-
-    fn get_base_streamed_resource_allocation(
-        &self,
-        world: &mut World,
-        coord: &Coord,
-    ) -> SomeUnitResources {
-        return self.manifest.unit_resources_of(vec![]);
-    }
-
-    fn get_base_stored_resource_allocation(
-        &self,
-        world: &mut World,
-        coord: &Coord,
-    ) -> SomeUnitResources {
-        return self.manifest.unit_resources_of(vec![]);
     }
 
     fn init_world_custom(&self, world: &mut World) {}

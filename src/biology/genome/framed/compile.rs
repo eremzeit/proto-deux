@@ -401,8 +401,47 @@ impl<'a> FramedGenomeCompiler<'a> {
 }
 
 pub mod tests {
+    use variants::CheeseChemistry;
+
+    use super::super::common::*;
     use super::super::render::render_genes;
     use super::*;
+
+    #[test]
+    pub fn test_parse_multiple_frames() {
+        use super::super::common::*;
+
+        let gm = GeneticManifest::defaults(&CheeseChemistry::default_manifest());
+
+        let mut frame1 = frame_from_single_channel(vec![gene(
+            if_any(vec![if_all(vec![
+                conditional!(is_truthy, pos_attr::is_cheese_source(0, 0)),
+                conditional!(gt, unit_res::cheese, 100),
+            ])]),
+            then_do!(move_unit, 75),
+        )])
+        .build(&gm);
+
+        let mut frame2 = frame_from_single_channel(vec![gene(
+            if_none(vec![if_not_all(vec![conditional!(
+                lt,
+                sim_attr::total_cheese_consumed,
+                100
+            )])]),
+            then_do!(new_unit, register(1), 69, 69),
+        )])
+        .build(&gm);
+
+        let mut genome_words = vec![];
+        genome_words.append(&mut frame1);
+        genome_words.append(&mut frame2);
+
+        let compiled = FramedGenomeCompiler::compile(genome_words, &gm);
+
+        println!("genome:\n{}", compiled.display(&gm));
+        assert_eq!(compiled.frames.len(), 2);
+    }
+
     //use crate::biology::genome::framed::tests::{full_test_framed_genome_one};
 
     // #[test]

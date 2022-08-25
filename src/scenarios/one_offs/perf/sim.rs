@@ -56,9 +56,9 @@ pub fn resource_allocation1(iterations: usize) {
                     let entry_id = unit.entry_id;
                     let unit_entry = &unit_manifest.units[entry_id].info;
 
-                    let next_resources =
-                        chemistry.get_next_unit_resources(unit_entry, pos, unit, &sim.world, 1);
-                    sim.world.set_unit_resources_at(&coord, next_resources);
+                    // let next_resources =
+                    //     chemistry.get_next_unit_resources(unit_entry, pos, unit, &sim.world, 1);
+                    // sim.world.set_unit_resources_at(&coord, next_resources);
                 }
                 _ => {}
             };
@@ -145,9 +145,9 @@ pub fn resource_allocation3(iterations: usize) {
                         let entry_id = unit.entry_id;
                         let unit_entry = &unit_manifest.units[entry_id].info;
 
-                        let next_resources =
-                            chemistry.get_next_unit_resources(unit_entry, pos, unit, &sim.world, 1);
-                        sim.world.set_unit_resources_at(&coord, next_resources);
+                        // let next_resources =
+                        //     chemistry.get_next_unit_resources(unit_entry, pos, unit, &sim.world, 1);
+                        // sim.world.set_unit_resources_at(&coord, next_resources);
                     }
                     _ => {}
                 };

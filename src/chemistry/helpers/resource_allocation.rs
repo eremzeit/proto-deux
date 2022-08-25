@@ -49,21 +49,25 @@ pub fn allocate_stored_resources<'a>(
 pub fn allocation_method_every<'a>(sim: &'a mut SimCell, unit_manifest: &UnitManifest) {
     let chemistry = sim.chemistry;
     for coord in CoordIterator::new(sim.world.size) {
-        let pos = sim.world.get_position_at(&coord).unwrap();
-        //println!("iterating coord: {:?}", coord);
+        if !sim.world.has_unit_at(&coord) {
+            continue;
+        }
+        chemistry.allocate_unit_resources(&coord, sim);
 
-        match sim.world.get_unit_at(&coord) {
-            Some(unit) => {
-                let entry_id = unit.entry_id;
-                let unit_entry = &unit_manifest.units[entry_id].info;
+        // continue;
+        // match sim.world.get_unit_at(&coord) {
+        //     Some(unit) => {
+        //         let entry_id = unit.entry_id;
+        //         let unit_entry = &unit_manifest.units[entry_id].info;
 
-                let next_resources =
-                    chemistry.get_next_unit_resources(unit_entry, pos, unit, sim.world, 1);
-                sim.world.set_unit_resources_at(&coord, next_resources);
-            }
+        //         //AOEU
+        //         let next_resources =
+        //             chemistry.get_next_unit_resources(unit_entry, pos, unit, sim.world, 1);
+        //         sim.world.set_unit_resources_at(&coord, next_resources);
+        //     }
 
-            _ => {}
-        };
+        //     _ => {}
+        // };
     }
 }
 
