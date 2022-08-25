@@ -10,7 +10,7 @@ use crate::simulation::common::helpers::place_units::PlaceUnitsMethod;
 
 pub fn test_with_genome() {
     let chemistry = ChemistryBuilder::with_key("cheese").build();
-    let gm = GeneticManifest::defaults(&CheeseChemistry::default_manifest()).wrap_rc();
+    let gm = GeneticManifest::defaults(chemistry.get_manifest()).wrap_rc();
 
     let genome_values1 = get_genome1().build(&gm);
     let frames1 = FramedGenomeCompiler::compile(simple_convert_into_frames(genome_values1), &gm);

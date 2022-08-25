@@ -1,13 +1,5 @@
-use std::time::{Duration, Instant};
-// use std::sync::atomic::{*};
-// use std::sync::{Arc, Mutex};
-// use std::cell::RefCell;
-// use std::sync::mpsc::{channel, Receiver};
-//
-// use crate::chemistry::{BaseChemistry, CheeseChemistry};
-// use crate::simulation::{*};
 use crate::simulation::Simulation;
-//use crate::simulation::simulation_data::{SimulationData, ThreadedSimulationReference};
+use std::time::{Duration, Instant};
 
 pub struct SimpleSimulationExecutor {
     pub is_paused: bool,

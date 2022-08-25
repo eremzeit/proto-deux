@@ -1,4 +1,4 @@
-use crate::chemistry::variants::{BaseChemistry, CheeseChemistry};
+use crate::chemistry::variants::CheeseChemistry;
 use crate::simulation::common::*;
 use crate::simulation::config::SimulationConfig;
 use crate::simulation::iterators::*;
@@ -79,7 +79,7 @@ mod tests {
 
     #[test]
     fn test_stored_resource_allocation() {
-        let chemistry = ChemistryBuilder::with_key("base").build();
+        let chemistry = ChemistryBuilder::with_key("foo").build();
         let manifest = chemistry.get_manifest().clone();
 
         let mut sim = SimulationBuilder::default()

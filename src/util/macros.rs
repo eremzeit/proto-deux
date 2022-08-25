@@ -220,7 +220,7 @@ macro_rules! unit_behavior_arg {
 
 #[macro_export]
 macro_rules! chemistry_arg {
-    ($param_key:ident, $type:ident) => {
+    ($type:ident, $param_key:ident) => {
         ActionParam::ChemistryArgument(stringify!($param_key).to_string(), ActionParamType::$type)
     };
 }

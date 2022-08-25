@@ -167,7 +167,9 @@ pub mod tests {
             ],
         );
 
-        let gm = GeneticManifest::defaults(&CheeseChemistry::default_manifest());
+        let gm = GeneticManifest::defaults(&CheeseChemistry::construct_manifest(
+            &ChemistryConfiguration::new(),
+        ));
 
         let result = render_conjunction(&clause, &gm);
         //println!("RESULT: {}", &result);
@@ -193,7 +195,9 @@ pub mod tests {
             ],
         );
 
-        let gm = GeneticManifest::defaults(&CheeseChemistry::default_manifest());
+        let gm = GeneticManifest::defaults(&CheeseChemistry::construct_manifest(
+            &ChemistryConfiguration::new(),
+        ));
 
         let result = render_conjunction(&clause, &gm);
 
@@ -233,7 +237,9 @@ pub mod tests {
     pub fn disjunctive_to_str__simple() {
         let clause = (false, vec![(false, vec![BooleanVariable::Literal(true)])]);
 
-        let gm = GeneticManifest::defaults(&CheeseChemistry::default_manifest());
+        let gm = GeneticManifest::defaults(&CheeseChemistry::construct_manifest(
+            &ChemistryConfiguration::new(),
+        ));
 
         let result = render_disjunction(&clause, &gm);
 
@@ -267,8 +273,8 @@ pub mod tests {
             ],
         );
 
-        let gm = GeneticManifest::defaults(&CheeseChemistry::default_manifest());
-        let cm = CheeseChemistry::default_manifest();
+        let cm = CheeseChemistry::construct_manifest(&ChemistryConfiguration::new());
+        let gm = GeneticManifest::defaults(&cm);
         let result = render_disjunction(&clause, &gm);
 
         assert_eq!(
@@ -297,7 +303,9 @@ pub mod tests {
             operation: GeneOperationCall::Nil,
         };
 
-        let gm = GeneticManifest::defaults(&CheeseChemistry::default_manifest());
+        let gm = GeneticManifest::defaults(&CheeseChemistry::construct_manifest(
+            &ChemistryConfiguration::new(),
+        ));
 
         let result = render_gene(&gene, &gm);
 
@@ -345,7 +353,9 @@ pub mod tests {
             },
         ];
 
-        let gm = GeneticManifest::defaults(&CheeseChemistry::default_manifest());
+        let gm = GeneticManifest::defaults(&CheeseChemistry::construct_manifest(
+            &ChemistryConfiguration::new(),
+        ));
 
         let result = render_genes(&genes, &gm);
         let expected = "CALL gobble_cheese() IF ( Value(false) || Value(true) )
@@ -391,7 +401,9 @@ CALL move_unit(Constant(0)) IF ( Value(true) || Value(false) )\n";
             },
         ];
 
-        let gm = GeneticManifest::defaults(&CheeseChemistry::default_manifest());
+        let gm = GeneticManifest::defaults(&CheeseChemistry::construct_manifest(
+            &ChemistryConfiguration::new(),
+        ));
 
         let result = render_genes(&genes, &gm);
         let expected = "CALL gobble_cheese() IF ( Value(true) || Value(true) )

@@ -358,7 +358,9 @@ pub mod parsing_v2 {
 
     #[test]
     fn conditional() {
-        let gm = GeneticManifest::defaults(&CheeseChemistry::default_manifest());
+        let gm = GeneticManifest::defaults(&CheeseChemistry::construct_manifest(
+            &ChemistryConfiguration::new(),
+        ));
 
         let raw_conditional = conditional!(is_truthy, pos_attr::is_cheese_source(0, 0)).build(&gm);
 
@@ -378,7 +380,9 @@ pub mod parsing_v2 {
     }
     #[test]
     fn if_any_test() {
-        let gm = GeneticManifest::defaults(&CheeseChemistry::default_manifest());
+        let gm = GeneticManifest::defaults(&CheeseChemistry::construct_manifest(
+            &ChemistryConfiguration::new(),
+        ));
 
         let op_id = gm.operator_id_for_key("is_truthy") as FramedGenomeValue;
         let is_negated = 0 as FramedGenomeValue;
@@ -418,7 +422,8 @@ pub mod parsing_v2 {
 
     #[test]
     fn test_then_do__register_param() {
-        let gm = GeneticManifest::defaults(&CheeseChemistry::default_manifest());
+        let cm = CheeseChemistry::construct_manifest(&ChemistryConfiguration::new());
+        let gm = GeneticManifest::defaults(&cm);
 
         let operation_type = 0;
         let reaction_id = gm
@@ -444,7 +449,9 @@ pub mod parsing_v2 {
     // }
     #[test]
     fn test_gene() {
-        let gm = GeneticManifest::defaults(&CheeseChemistry::default_manifest());
+        let gm = GeneticManifest::defaults(&CheeseChemistry::construct_manifest(
+            &ChemistryConfiguration::new(),
+        ));
         let gene_values = gene(
             if_any(vec![if_not_all(vec![conditional!(
                 is_truthy,

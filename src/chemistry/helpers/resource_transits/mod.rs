@@ -1,4 +1,4 @@
-use crate::chemistry::variants::{BaseChemistry, CheeseChemistry};
+use crate::chemistry::variants::CheeseChemistry;
 use crate::simulation::common::CoordIterator;
 use crate::simulation::common::*;
 use crate::simulation::config::SimulationConfig;

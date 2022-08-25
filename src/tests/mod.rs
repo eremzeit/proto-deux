@@ -3,7 +3,7 @@ pub mod fps;
 pub mod perf;
 
 use crate::chemistry::actions::{ActionDefinition, ActionParam};
-use crate::chemistry::variants::{BaseChemistry, CheeseChemistry};
+use crate::chemistry::variants::CheeseChemistry;
 use crate::simulation::common::*;
 use crate::simulation::config::SimulationConfig;
 use crate::simulation::config::*;

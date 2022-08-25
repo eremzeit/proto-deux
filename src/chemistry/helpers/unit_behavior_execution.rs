@@ -1,5 +1,5 @@
 use crate::chemistry::reactions::execute_reaction;
-use crate::chemistry::variants::{BaseChemistry, CheeseChemistry, NanobotsChemistry};
+use crate::chemistry::variants::{CheeseChemistry, NanobotsChemistry};
 use crate::chemistry::Chemistry;
 use crate::simulation::common::CoordIterator;
 use crate::simulation::common::*;

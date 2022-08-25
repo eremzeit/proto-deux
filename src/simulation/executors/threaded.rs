@@ -4,7 +4,7 @@ use std::sync::mpsc::{channel, Receiver};
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 
-use crate::chemistry::variants::{BaseChemistry, CheeseChemistry};
+use crate::chemistry::variants::CheeseChemistry;
 use crate::simulation::common::SimulationControlEventReceiver;
 use crate::simulation::simulation_data::{SimulationData, ThreadedSimulationReference};
 use crate::simulation::Simulation;
@@ -142,29 +142,4 @@ impl ThreadedSimulationExecutor {
             std::thread::sleep(Duration::new(0, 2_000_000));
         }
     }
-}
-
-pub fn test() {
-    use std::thread;
-    // use ui::widgets::simulation::{SimulationUi};
-
-    // let (tx, rx) = channel::<String>();
-    //
-    // let cell = Arc::new(Mutex::new(RefCell::new(None)));
-    // let cell2 = cell.clone();
-    // let mut simulation = SimulationUi::new(cell);
-    //
-    // let handle = std::thread::spawn(move || {
-    //     let _tx = tx; // force a move
-
-    //     let config = SimulationConfig::new((5, 5), None);
-    //     let sim = Simulation::new(config, vec![], BaseChemistry::default());
-    //     let mut executor = ThreadedSimulationExecutor::new(sim, cell2);
-    //     executor.start();
-    // });
-
-    // std::thread::sleep(Duration::new(5, 0));
-    //
-    // simulation.start_ui();
-    //std::process::exit(0);
 }

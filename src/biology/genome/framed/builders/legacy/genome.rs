@@ -277,7 +277,7 @@ pub mod tests {
 
     #[test]
     fn test_macro__gene_bool_var() {
-        let gm = GeneticManifest::defaults(&CheeseChemistry::default_manifest());
+        let gm = GeneticManifest::defaults(&CheeseChemistry::construct_manifest(&ChemistryConfiguration::new()));
 
         let result = __gene_bool_var!(&gm, (is_truthy,1,2,3));
 
@@ -288,7 +288,7 @@ pub mod tests {
 
     #[test]
     fn test_macro__then_do__multiple_params() {
-        let gm = GeneticManifest::defaults(&CheeseChemistry::default_manifest());
+        let gm = GeneticManifest::defaults(&CheeseChemistry::construct_manifest(&ChemistryConfiguration::new()));
 
         let result1 = __then_do!(&gm, (new_unit(0)));
         let result2 = __then_do!(&gm, (new_unit(0,0)));
@@ -301,7 +301,7 @@ pub mod tests {
 
     #[test]
     fn test_macro__gene_conjunctive() {
-        let gm = GeneticManifest::defaults(&CheeseChemistry::default_manifest());
+        let gm = GeneticManifest::defaults(&CheeseChemistry::construct_manifest(&ChemistryConfiguration::new()));
 
         let result = __gene__all!(&gm, (
             (is_truthy,3,4,5),
@@ -323,7 +323,7 @@ pub mod tests {
 
     #[test]
     fn test_macro__gene_disjunctive__simple() {
-        let gm = GeneticManifest::defaults(&CheeseChemistry::default_manifest());
+        let gm = GeneticManifest::defaults(&CheeseChemistry::construct_manifest(&ChemistryConfiguration::new()));
 
         let result = __gene_if_any!(&gm, (
             all(
@@ -344,7 +344,7 @@ pub mod tests {
     }
     #[test]
     fn test_macro__gene_disjunctive() {
-        let gm = GeneticManifest::defaults(&CheeseChemistry::default_manifest());
+        let gm = GeneticManifest::defaults(&CheeseChemistry::construct_manifest(&ChemistryConfiguration::new()));
 
         let result = __gene_if_any!(&gm, (
             all(
@@ -395,7 +395,7 @@ pub mod tests {
     
     #[test]
     fn test_macro__gene_() {
-        let gm = GeneticManifest::defaults(&CheeseChemistry::default_manifest());
+        let gm = GeneticManifest::defaults(&CheeseChemistry::construct_manifest(&ChemistryConfiguration::new()));
 
         let result = __gene!(&gm,
             (
@@ -418,7 +418,7 @@ pub mod tests {
 
     #[test]
     fn test_macro__basic_genome() {
-        let gm = GeneticManifest::defaults(&CheeseChemistry::default_manifest());
+        let gm = GeneticManifest::defaults(&CheeseChemistry::construct_manifest(&ChemistryConfiguration::new()));
 
         let builder = genome!(
                 gene(
@@ -489,7 +489,7 @@ Channel #3\n\n";
     
     #[test]
     fn test_macro__compile_then_parse_complex() {
-        let gm = GeneticManifest::defaults(&CheeseChemistry::default_manifest());
+        let gm = GeneticManifest::defaults(&CheeseChemistry::construct_manifest(&ChemistryConfiguration::new()));
 
         let genome_values = genome!(
                 gene(

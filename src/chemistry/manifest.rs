@@ -3,7 +3,10 @@ use self::reactions::*;
 use crate::biology::genetic_manifest::predicates::OperatorParam;
 use crate::chemistry::actions::{default_actions, ActionDefinition, ActionParam, ActionSet};
 use crate::simulation::common::*;
+use crate::simulation::unit_entry::UnitEntryAttributeIndex;
 use crate::util::Coord;
+
+use super::init_chemistry_action_params;
 
 #[derive(Clone)]
 pub struct ChemistryManifest {
@@ -421,71 +424,53 @@ impl ChemistryManifest {
         return None;
     }
 
-    pub fn normalize_manifest(&mut self) {
+    pub fn normalize_manifest(&mut self, config: &ChemistryConfiguration) {
         self.action_set.normalize();
 
-        let mut unit_resources: Vec<ResourceDefinition> = self.unit_resources.clone();
-        let mut unit_attributes: Vec<UnitAttributeDefinition> = self.unit_attributes.clone();
-        let mut pos_attributes: Vec<PositionAttributeDefinition> = self.position_attributes.clone();
-        let mut pos_resources: Vec<PositionResourceDefinition> = self.position_resources.clone();
-        let mut sim_attributes: Vec<SimulationAttributeDefinition> =
-            self.simulation_attributes.clone();
+        self.normalize_properties(config);
+
+        init_chemistry_action_params(self, config);
+
         let mut reactions: Vec<ReactionDefinition> = self.reactions.clone();
-        // normalize property definitions
-        for (i, def) in self.unit_resources.iter().enumerate() {
-            unit_resources[i].id = i as UnitResourceIndex;
-        }
-        for (i, def) in self.unit_attributes.iter_mut().enumerate() {
-            unit_attributes[i].id = i as UnitAttributeIndex;
-        }
-
-        for (i, def) in self.position_attributes.iter().enumerate() {
-            pos_attributes[i].id = i as PositionAttributeIndex;
-        }
-        for (i, def) in self.position_resources.iter().enumerate() {
-            pos_resources[i].id = i as PositionAttributeIndex;
-        }
-        for (i, def) in self.simulation_attributes.iter().enumerate() {
-            sim_attributes[i].id = i as SimulationAttributeIndex;
-        }
-
         // normalize reaction definitions
         //
         // Lookup string keys and replace them with the numerical id
         for (i, reaction) in self.reactions.iter().enumerate() {
             reactions[i].id = i;
-
+            println!("processing reaction key: {}", &reaction.key);
             for (j, reagent) in reaction.reagents.iter().enumerate() {
                 let action_key = &reaction.reagents[j].action_key;
                 reactions[i].reagents[j].action_index = self.action_set.by_key(action_key).index;
 
-                for param_value in reagent.params.iter() {
+                println!("\tfor reagent: {}", &reagent.action_key);
+                for (param_idx, param_value) in reagent.params.iter().enumerate() {
+                    println!("\t\tinitial param value: {:?}", param_value);
                     match param_value {
                         ActionParam::UnitAttributeKey(key) => {
                             let idx = self.unit_attribute_by_key(key).id as usize;
-                            reactions[i].reagents[j].params[idx] =
+                            reactions[i].reagents[j].params[param_idx] =
                                 ActionParam::UnitAttributeIndex(idx);
                         }
                         ActionParam::UnitResourceKey(key) => {
                             let idx = self.unit_resource_by_key(key).id as usize;
-                            reactions[i].reagents[j].params[idx] =
+                            reactions[i].reagents[j].params[param_idx] =
                                 ActionParam::UnitResourceIndex(idx);
                         }
                         ActionParam::PositionAttributeKey(key) => {
                             let idx = self.position_attribute_by_key(key).id as usize;
-                            reactions[i].reagents[j].params[idx] =
+                            reactions[i].reagents[j].params[param_idx] =
                                 ActionParam::PositionAttributeIndex(idx)
                         }
 
                         ActionParam::PositionResourceKey(key) => {
                             let idx = self.position_resource_by_key(key).id as usize;
-                            reactions[i].reagents[j].params[idx] =
+                            reactions[i].reagents[j].params[param_idx] =
                                 ActionParam::PositionResourceIndex(idx)
                         }
 
                         ActionParam::SimulationAttributeKey(key) => {
                             let idx = self.simulation_attribute_by_key(key).id as usize;
-                            reactions[i].reagents[j].params[idx] =
+                            reactions[i].reagents[j].params[param_idx] =
                                 ActionParam::SimulationAttributeIndex(idx)
                         }
 
@@ -499,14 +484,47 @@ impl ChemistryManifest {
          * Normalize reagent definitions
          */
 
-        self.unit_resources = unit_resources;
-        self.unit_attributes = unit_attributes;
-        self.position_attributes = pos_attributes;
-        self.position_resources = pos_resources;
-
-        self.all_properties = self.gather_properties();
+        println!("NORMALIZING REACTIONS");
+        println!("--- pre: {:?}\n", &self.reactions);
+        println!("--- post: {:?}\n", &reactions);
+        println!("END NORMALIZING REACTIONS\n");
 
         self.reactions = reactions;
+    }
+
+    pub fn normalize_properties(&mut self, config: &ChemistryConfiguration) {
+        // let mut unit_resources: Vec<ResourceDefinition> = self.unit_resources.clone();
+        // let mut unit_attributes: Vec<UnitAttributeDefinition> = self.unit_attributes.clone();
+        // let mut pos_attributes: Vec<PositionAttributeDefinition> = self.position_attributes.clone();
+        // let mut pos_resources: Vec<PositionResourceDefinition> = self.position_resources.clone();
+        // let mut sim_attributes: Vec<SimulationAttributeDefinition> =
+        //     self.simulation_attributes.clone();
+
+        // normalize property definitions
+        for (i, prop_def) in self.unit_resources.iter_mut().enumerate() {
+            prop_def.id = i;
+        }
+        for (i, prop_def) in self.unit_attributes.iter_mut().enumerate() {
+            prop_def.id = i as UnitAttributeIndex;
+        }
+
+        for (i, prop_def) in self.position_attributes.iter_mut().enumerate() {
+            prop_def.id = i as PositionAttributeIndex;
+        }
+
+        for (i, prop_def) in self.position_resources.iter_mut().enumerate() {
+            prop_def.id = i as PositionAttributeIndex;
+        }
+
+        for (i, prop_def) in self.simulation_attributes.iter_mut().enumerate() {
+            prop_def.id = i as SimulationAttributeIndex;
+        }
+
+        for (i, prop_def) in self.unit_entry_attributes.iter_mut().enumerate() {
+            prop_def.id = i as UnitEntryAttributeIndex;
+        }
+
+        self.all_properties = self.gather_properties();
     }
 }
 
@@ -515,8 +533,9 @@ pub mod tests {
 
     #[test]
     pub fn manifest() {
-        let mut manifest = CheeseChemistry::default_manifest();
-        manifest.normalize_manifest();
+        let mut manifest = CheeseChemistry::construct_manifest(&ChemistryConfiguration::new());
+        let gm = GeneticManifest::defaults(&manifest);
+
         assert_eq!(manifest.unit_resources[0].id, 0);
         assert_eq!(manifest.unit_resources[1].id, 1);
     }

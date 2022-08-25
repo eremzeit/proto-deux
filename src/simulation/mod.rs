@@ -108,7 +108,6 @@ impl Simulation {
         place_units_method: PlaceUnitsMethod,
     ) -> Simulation {
         let world = World::new(size, &chemistry);
-        chemistry.init_manifest();
         unit_manifest.init_manifest();
 
         let attributes = chemistry.get_default_simulation_attributes();

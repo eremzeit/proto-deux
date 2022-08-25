@@ -13,7 +13,7 @@ use self::helpers::place_units::place_units;
 use self::helpers::place_units::PlaceUnitsMethod;
 use self::properties::*;
 use self::reactions::*;
-use self::variants::BaseChemistry;
+use self::variants::foo::FooChemistry;
 use self::variants::LeverChemistry;
 use crate::chemistry::actions::{
     default_actions, ActionDefinition, ActionParam, ActionParamType, ActionSet,
@@ -43,23 +43,52 @@ pub fn construct_chemistry(
     key: &str,
     config: Option<ChemistryConfiguration>,
 ) -> Box<dyn Chemistry> {
-    let _config = config.unwrap_or_default();
     match key {
-        "cheese" => CheeseChemistry::construct(_config),
-        "lever" => LeverChemistry::construct(_config),
-        "nanobots" => NanobotsChemistry::construct(_config),
-        "base" => BaseChemistry::construct(),
+        "cheese" => CheeseChemistry::construct(config.unwrap_or(CheeseChemistry::default_config())),
+        "lever" => LeverChemistry::construct(config.unwrap_or(LeverChemistry::default_config())),
+        "nanobots" => {
+            NanobotsChemistry::construct(config.unwrap_or(NanobotsChemistry::default_config()))
+        }
+        "foo" => FooChemistry::construct(config.unwrap_or(FooChemistry::default_config())),
         _ => panic!("chemistry key not found: {}", key),
     }
 }
 
 pub trait Chemistry {
-    fn init_manifest(&mut self) {
-        let reactions = self.init_chemistry_action_params();
-        let mut manifest = self.get_manifest_mut();
-        manifest.reactions = reactions;
-        manifest.normalize_manifest();
+    fn construct(config: ChemistryConfiguration) -> Box<Self>
+    where
+        Self: Sized;
+
+    fn construct_with_default_config() -> Box<Self>
+    where
+        Self: Sized,
+    {
+        Self::construct(Self::default_config())
     }
+
+    fn construct_manifest(config: &ChemistryConfiguration) -> ChemistryManifest
+    where
+        Self: Sized;
+
+    fn default_manifest() -> ChemistryManifest
+    where
+        Self: Sized,
+    {
+        Self::construct_manifest(&Self::default_config())
+    }
+
+    fn default_config() -> ChemistryConfiguration
+    where
+        Self: Sized,
+    {
+        ChemistryConfiguration::new()
+    }
+
+    // fn init_manifest(&mut self) {
+    //     let config = &self.get_configuration();
+    //     let mut manifest = self.get_manifest_mut();
+    //     init_manifest(manifest, config);
+    // }
 
     fn get_configuration(&self) -> ChemistryConfiguration;
 
@@ -96,18 +125,14 @@ pub trait Chemistry {
     fn get_manifest_mut(&mut self) -> &mut ChemistryManifest;
 
     fn get_key(&self) -> String;
-    fn get_default_simulation_attributes(&self) -> Vec<SimulationAttributeValue>;
-    fn get_default_unit_entry_attributes(&self) -> Vec<UnitEntryAttributeValue>;
-    // fn get_next_unit_resources(
-    //     &self,
-    //     entry: &UnitEntryData,
-    //     pos: &Position,
-    //     unit: &Unit,
-    //     world: &World,
-    //     tick_multiplier: u32,
-    // ) -> UnitResources {
-    //     self.get_manifest().empty_unit_resources()
-    // }
+
+    fn get_default_simulation_attributes(&self) -> Vec<SimulationAttributeValue> {
+        self.get_manifest().empty_simulation_attributes()
+    }
+
+    fn get_default_unit_entry_attributes(&self) -> Vec<UnitEntryAttributeValue> {
+        self.get_manifest().empty_unit_entry_attributes()
+    }
 
     fn allocate_unit_resources(&self, coord: &Coord, sim: &mut SimCell) {}
 
@@ -210,6 +235,42 @@ pub trait Chemistry {
                 sim.unit_manifest,
                 reaction_call,
             );
+        }
+    }
+}
+
+// fn init_manifest(cm: &mut ChemistryManifest, config: &ChemistryConfiguration) {
+//     let reactions = init_chemistry_action_params(cm, config);
+//     cm.normalize_manifest();
+// }
+
+fn init_chemistry_action_params(cm: &mut ChemistryManifest, config: &ChemistryConfiguration) {
+    let mut manifest = cm;
+    let mut reactions = &mut manifest.reactions;
+
+    for i in 0..reactions.len() {
+        let mut reaction = &mut reactions[i];
+        for j in 0..reaction.reagents.len() {
+            let mut reagent = &mut reaction.reagents[j];
+
+            reagent.params = reagent
+                .params
+                .clone()
+                .iter()
+                .map(|param| {
+                    if let ActionParam::ChemistryArgument(key, param_type) = param.clone() {
+                        let value = config.get(&key).expect(&format!(
+                            "Chemistry configuration variable {} is undefined",
+                            key
+                        ));
+                        let action_param_value =
+                            convert_configurable_to_action_param(value.clone(), param_type);
+                        action_param_value
+                    } else {
+                        param.clone()
+                    }
+                })
+                .collect::<Vec<_>>();
         }
     }
 }

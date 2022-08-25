@@ -1,4 +1,4 @@
-use crate::chemistry::variants::{BaseChemistry, CheeseChemistry};
+use crate::chemistry::variants::CheeseChemistry;
 use crate::simulation::common::{
     ChemistryInstance, Coord, GridSize2D, NullBehavior, SimCell, Simulation, SimulationAttributes,
     UnitEntry, UnitEntryData, UnitManifest,

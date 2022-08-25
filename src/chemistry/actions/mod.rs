@@ -237,6 +237,9 @@ impl ActionSet {
         self
     }
 
+    /**
+     * Populate the mapping between the action keys and the action index
+     */
     pub fn normalize(&mut self) {
         for i in 0..self.actions.len() {
             self.actions[i].index = i;

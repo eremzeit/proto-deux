@@ -410,8 +410,9 @@ pub mod tests {
     #[test]
     pub fn test_parse_multiple_frames() {
         use super::super::common::*;
-
-        let gm = GeneticManifest::defaults(&CheeseChemistry::default_manifest());
+        let gm = GeneticManifest::defaults(&CheeseChemistry::construct_manifest(
+            &ChemistryConfiguration::new(),
+        ));
 
         let mut frame1 = frame_from_single_channel(vec![gene(
             if_any(vec![if_all(vec![

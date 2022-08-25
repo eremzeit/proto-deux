@@ -125,35 +125,6 @@ pub mod defs {
     //trace_macros!(false);
 }
 impl CheeseChemistry {
-    pub fn construct(config: ChemistryConfiguration) -> ChemistryInstance {
-        let mut chemistry = CheeseChemistry {
-            manifest: CheeseChemistry::default_manifest(),
-            configuration: config,
-        };
-
-        chemistry.init_manifest();
-        wrap_chemistry!(chemistry)
-    }
-
-    // TODO: modify this to require a ChemistryConfig
-    pub fn default_manifest() -> ChemistryManifest {
-        let mut manifest = ChemistryManifest {
-            all_properties: vec![],
-            simulation_attributes: defs::SimulationAttributesLookup::make_defs(),
-            unit_entry_attributes: defs::UnitEntryAttributesLookup::make_defs(),
-            action_set: default_actions().add(Self::custom_actions().actions.clone()),
-            unit_resources: defs::UnitResourcesLookup::make_defs(),
-            unit_attributes: defs::UnitAttributesLookup::make_defs(),
-            position_attributes: defs::PositionAttributesLookup::make_defs(),
-            position_resources: defs::PositionResourcesLookup::make_defs(),
-            reactions: defs::get_reactions(),
-        };
-
-        manifest.normalize_manifest();
-
-        manifest
-    }
-
     pub fn custom_actions() -> ActionSet {
         ActionSet::from(vec![ActionDefinition::new(
             &"gobble_cheese",
@@ -219,6 +190,41 @@ impl Chemistry for CheeseChemistry {
         "cheese".to_string()
     }
 
+    fn construct(config: ChemistryConfiguration) -> Box<CheeseChemistry> {
+        let mut chemistry = CheeseChemistry {
+            manifest: CheeseChemistry::construct_manifest(&config),
+            configuration: config,
+        };
+
+        wrap_chemistry!(chemistry)
+    }
+
+    fn construct_manifest(config: &ChemistryConfiguration) -> ChemistryManifest {
+        let mut manifest = ChemistryManifest {
+            all_properties: vec![],
+            simulation_attributes: defs::SimulationAttributesLookup::make_defs(),
+            unit_entry_attributes: defs::UnitEntryAttributesLookup::make_defs(),
+            action_set: default_actions().add(Self::custom_actions().actions.clone()),
+            unit_resources: defs::UnitResourcesLookup::make_defs(),
+            unit_attributes: defs::UnitAttributesLookup::make_defs(),
+            position_attributes: defs::PositionAttributesLookup::make_defs(),
+            position_resources: defs::PositionResourcesLookup::make_defs(),
+            reactions: defs::get_reactions(),
+        };
+
+        manifest.normalize_manifest(config); // TODO make this accect a config.
+
+        manifest
+    }
+
+    fn default_manifest() -> ChemistryManifest {
+        Self::construct_manifest(&ChemistryConfiguration::new())
+    }
+
+    fn default_config() -> ChemistryConfiguration {
+        ChemistryConfiguration::new()
+    }
+
     fn get_configuration(&self) -> ChemistryConfiguration {
         self.configuration.clone()
     }
@@ -267,11 +273,6 @@ impl Chemistry for CheeseChemistry {
             resources[unit_resources.air] = std::cmp::max(resources[unit_resources.air] - 1, 0);
         }
 
-        //println!("is_cheese_source: {}", is_cheese_source);
-        //let id_cheese: PositionAttributeIndex = self.get_manifest().unit_resource_by_key("cheese").id as usize;
-        //println!("id_air: {}", id_air);
-        //println!("id_cheese: {}", id_cheese);
-
         if is_cheese_source {
             let amount = 20;
             resources[unit_resources.cheese] += amount;
@@ -282,88 +283,12 @@ impl Chemistry for CheeseChemistry {
         }
     }
 
-    // fn construct_specs(
-    //     &self,
-    //     unit_placement: &PlaceUnitsMethod,
-    // ) -> Vec<std::boxed::Box<dyn SimulationSpec>> {
-    //     vec![
-    //         Box::new(PlaceUnits {
-    //             method: unit_placement.clone(),
-    //         }),
-    //         Box::new(ResourceAllocation {
-    //             stored_method: StoredResourceAllocationMethod::Every,
-    //         }),
-    //         Box::new(PhenotypeExecution {}),
-    //         Box::new(specs::PostTick {}),
-    //     ]
-    // }
-    // fn get_next_unit_resources(
-    //     &self,
-    //     entry: &UnitEntryData,
-    //     pos: &Position,
-    //     unit: &Unit,
-    //     world: &World,
-    //     tick_multiplier: u32,
-    // ) -> UnitResources {
-    //     //println!("unit resources before: {:?}", &unit.resources);
-
-    //     // is_air_source
-    //     let mut resources = unit.resources.clone();
-
-    //     let position_attributes = defs::PositionAttributesLookup::new();
-    //     let unit_resources = defs::UnitResourcesLookup::new();
-    //     let unit_attributes = defs::UnitAttributesLookup::new();
-    //     let sim_attributes = defs::SimulationAttributesLookup::new();
-    //     let position_resources = defs::PositionResourcesLookup::new();
-
-    //     let is_air_source = pos
-    //         .get_attribute(position_attributes.is_air_source)
-    //         .unwrap_bool();
-
-    //     if is_air_source {
-    //         resources[unit_resources.air] = 10;
-    //     } else {
-    //         resources[unit_resources.air] = std::cmp::max(resources[unit_resources.air] - 1, 0);
-    //     }
-
-    //     let is_cheese_source = pos
-    //         .get_attribute(position_attributes.is_cheese_source)
-    //         .unwrap_bool();
-    //     //println!("is_cheese_source: {}", is_cheese_source);
-    //     //let id_cheese: PositionAttributeIndex = self.get_manifest().unit_resource_by_key("cheese").id as usize;
-    //     //println!("id_air: {}", id_air);
-    //     //println!("id_cheese: {}", id_cheese);
-
-    //     if is_cheese_source {
-    //         resources[unit_resources.cheese] += 20;
-    //     }
-
-    //     // println!("resources: {:?}", resources);
-    //     resources
-    // }
-
     fn get_manifest(&self) -> &ChemistryManifest {
         &self.manifest
     }
     fn get_manifest_mut(&mut self) -> &mut ChemistryManifest {
         &mut self.manifest
     }
-
-    // fn get_base_streamed_resource_allocation(
-    //     &self,
-    //     world: &mut World,
-    //     coord: &Coord,
-    // ) -> SomeUnitResources {
-    //     return self.manifest.unit_resources_of(vec![("air", 11)]);
-    // }
-
-    // fn get_base_stored_resource_allocation(
-    //     &self,
-    //     world: &mut World,
-    //     coord: &Coord,
-    // ) -> SomeUnitResources {
-    //     return self.manifest.unit_resources_of(vec![("cheese", 50)]);
-    // }
 
     fn on_simulation_init(&self, sim: &mut SimCell) {
         self.init_pos_properties(&mut sim.world);
@@ -431,14 +356,6 @@ impl Chemistry for CheeseChemistry {
                 world.set_pos_resource_tab_offset(&coord, position_resources.cheese, 2);
             }
         }
-    }
-
-    fn get_default_simulation_attributes(&self) -> Vec<SimulationAttributeValue> {
-        self.get_manifest().empty_simulation_attributes()
-    }
-
-    fn get_default_unit_entry_attributes(&self) -> Vec<UnitEntryAttributeValue> {
-        self.get_manifest().empty_unit_entry_attributes()
     }
 
     fn get_default_unit_seed_attributes(

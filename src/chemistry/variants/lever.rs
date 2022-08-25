@@ -66,31 +66,6 @@ pub mod defs {
     }
 }
 impl LeverChemistry {
-    pub fn construct(config: ChemistryConfiguration) -> ChemistryInstance {
-        let mut chemistry = LeverChemistry {
-            manifest: LeverChemistry::default_manifest(),
-            configuration: config,
-        };
-        chemistry.init_manifest();
-        wrap_chemistry!(chemistry)
-    }
-
-    pub fn default_manifest() -> ChemistryManifest {
-        let mut manifest = ChemistryManifest {
-            all_properties: vec![],
-            simulation_attributes: defs::SimulationAttributesLookup::make_defs(),
-            unit_entry_attributes: defs::UnitEntryAttributesLookup::make_defs(),
-            action_set: default_actions().add(Self::custom_actions().actions.clone()),
-            unit_resources: defs::UnitResourcesLookup::make_defs(),
-            unit_attributes: defs::UnitAttributesLookup::make_defs(),
-            position_attributes: defs::PositionAttributesLookup::make_defs(),
-            position_resources: defs::PositionResourcesLookup::make_defs(),
-            reactions: defs::get_reactions(),
-        };
-        manifest.normalize_manifest();
-        manifest
-    }
-
     pub fn custom_actions() -> ActionSet {
         ActionSet::from(vec![ActionDefinition::new(
             &"pull_lever",
@@ -117,11 +92,38 @@ impl LeverChemistry {
 }
 
 impl Chemistry for LeverChemistry {
+    fn construct(config: ChemistryConfiguration) -> Box<LeverChemistry> {
+        let mut chemistry = LeverChemistry {
+            manifest: LeverChemistry::construct_manifest(&config),
+            configuration: config,
+        };
+        wrap_chemistry!(chemistry)
+    }
+
     fn get_key(&self) -> String {
         "lever".to_string()
     }
     fn get_configuration(&self) -> ChemistryConfiguration {
         self.configuration.clone()
+    }
+
+    fn construct_manifest(config: &ChemistryConfiguration) -> ChemistryManifest
+    where
+        Self: Sized,
+    {
+        let mut manifest = ChemistryManifest {
+            all_properties: vec![],
+            simulation_attributes: defs::SimulationAttributesLookup::make_defs(),
+            unit_entry_attributes: defs::UnitEntryAttributesLookup::make_defs(),
+            action_set: default_actions().add(Self::custom_actions().actions.clone()),
+            unit_resources: defs::UnitResourcesLookup::make_defs(),
+            unit_attributes: defs::UnitAttributesLookup::make_defs(),
+            position_attributes: defs::PositionAttributesLookup::make_defs(),
+            position_resources: defs::PositionResourcesLookup::make_defs(),
+            reactions: defs::get_reactions(),
+        };
+        manifest.normalize_manifest(config);
+        manifest
     }
 
     // fn get_next_unit_resources(
@@ -144,14 +146,6 @@ impl Chemistry for LeverChemistry {
     }
 
     fn init_world_custom(&self, world: &mut World) {}
-
-    fn get_default_simulation_attributes(&self) -> Vec<SimulationAttributeValue> {
-        self.get_manifest().empty_simulation_attributes()
-    }
-
-    fn get_default_unit_entry_attributes(&self) -> Vec<UnitEntryAttributeValue> {
-        self.get_manifest().empty_unit_entry_attributes()
-    }
 
     fn get_default_unit_seed_attributes(
         &self,

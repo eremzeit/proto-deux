@@ -56,13 +56,13 @@ pub mod defs {
        [foo_stored_resource, false]
     ]}
 
-    pub const REACTION_ID_GOBBLE_CHEESE: ReactionId = 0;
+    pub const REACTION_ID_NEW_UNIT: ReactionId = 0;
 
     def_reactions! {
         reaction!("new_unit",
             reagent!("offset_unit_resource",
                 param_value!(UnitResourceKey, "foo_stored_resource"),
-                param_value!(UnitResourceAmount, -constants::NEW_UNIT_COST),
+                chemistry_arg!(UnitResourceAmount, new_unit_cost),
                 param_value!(Boolean, false),
             ),
             reagent!("new_unit",
@@ -72,23 +72,31 @@ pub mod defs {
     }
 }
 
-pub struct BaseChemistry {
+/**
+ * TODO: rename to FooChemistry.
+ */
+pub struct FooChemistry {
     pub manifest: ChemistryManifest,
     pub configuration: ChemistryConfiguration,
 }
 
-impl BaseChemistry {
-    pub fn construct() -> ChemistryInstance {
-        let mut chemistry = BaseChemistry {
-            manifest: BaseChemistry::default_manifest(),
-            configuration: ChemistryConfiguration::new(),
+impl FooChemistry {
+    pub fn custom_actions() -> ActionSet {
+        ActionSet::from(vec![])
+    }
+}
+
+impl Chemistry for FooChemistry {
+    fn construct(config: ChemistryConfiguration) -> Box<FooChemistry> {
+        let mut chemistry = FooChemistry {
+            manifest: FooChemistry::construct_manifest(&config),
+            configuration: config,
         };
 
-        chemistry.init_manifest();
         wrap_chemistry!(chemistry)
     }
 
-    pub fn default_manifest() -> ChemistryManifest {
+    fn construct_manifest(config: &ChemistryConfiguration) -> ChemistryManifest {
         let mut manifest = ChemistryManifest {
             all_properties: vec![],
             simulation_attributes: defs::SimulationAttributesLookup::make_defs(),
@@ -101,27 +109,29 @@ impl BaseChemistry {
             reactions: defs::get_reactions(),
         };
 
-        manifest.normalize_manifest();
+        manifest.normalize_manifest(config);
 
         manifest
     }
 
-    pub fn custom_actions() -> ActionSet {
-        ActionSet::from(vec![])
+    fn default_config() -> ChemistryConfiguration
+    where
+        Self: Sized,
+    {
+        let mut config = ChemistryConfiguration::new();
+        config.insert(
+            "new_unit_cost".to_owned(),
+            ChemistryConfigValue::Integer(10),
+        );
+        config
     }
-}
-
-impl Chemistry for BaseChemistry {
-    // fn get_unit_placement(&self) -> PlaceUnitsMethod {
-    //     self.place_units_method.clone()
-    // }
 
     fn get_configuration(&self) -> ChemistryConfiguration {
         self.configuration.clone()
     }
 
     fn get_key(&self) -> String {
-        "base".to_string()
+        "foo".to_string()
     }
 
     fn get_manifest(&self) -> &ChemistryManifest {
@@ -130,13 +140,6 @@ impl Chemistry for BaseChemistry {
 
     fn get_manifest_mut(&mut self) -> &mut ChemistryManifest {
         &mut self.manifest
-    }
-
-    fn get_default_simulation_attributes(&self) -> Vec<SimulationAttributeValue> {
-        self.get_manifest().empty_simulation_attributes()
-    }
-    fn get_default_unit_entry_attributes(&self) -> Vec<UnitEntryAttributeValue> {
-        self.get_manifest().empty_unit_entry_attributes()
     }
 
     fn allocate_unit_resources(&self, coord: &Coord, sim: &mut SimCell) {

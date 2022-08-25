@@ -16,28 +16,22 @@ pub struct NanobotsChemistry {
     configuration: ChemistryConfiguration,
 }
 
-impl NanobotsChemistry {
-    pub fn construct(config: ChemistryConfiguration) -> ChemistryInstance {
+impl NanobotsChemistry {}
+
+impl Chemistry for NanobotsChemistry {
+    fn construct(config: ChemistryConfiguration) -> Box<NanobotsChemistry> {
         let mut chemistry = NanobotsChemistry {
-            manifest: NanobotsChemistry::default_manifest(),
+            manifest: NanobotsChemistry::construct_manifest(&config),
             configuration: config,
         };
-        chemistry.init_manifest();
         wrap_chemistry!(chemistry)
     }
-    pub fn default_manifest() -> ChemistryManifest {
-        let reactions = vec![ReactionDefinition::new(
-            &"new_unit_right",
-            vec![
-                reagent!(
-                    "offset_unit_resource",
-                    param_value!(UnitResourceKey, "energy"),
-                    param_value!(UnitResourceAmount, -10),
-                ),
-                reagent!("new_unit", unit_behavior_arg!(Direction),),
-            ],
-        )];
 
+    fn get_key(&self) -> String {
+        "nanobots".to_string()
+    }
+
+    fn construct_manifest(config: &ChemistryConfiguration) -> ChemistryManifest {
         let mut manifest = ChemistryManifest {
             action_set: default_actions(),
             all_properties: vec![],
@@ -51,19 +45,12 @@ impl NanobotsChemistry {
                 0,
             )],
             unit_entry_attributes: vec![],
-
-            reactions,
+            reactions: vec![],
         };
 
-        manifest.normalize_manifest();
+        manifest.normalize_manifest(config);
 
         manifest
-    }
-}
-
-impl Chemistry for NanobotsChemistry {
-    fn get_key(&self) -> String {
-        "nanobots".to_string()
     }
 
     fn get_configuration(&self) -> ChemistryConfiguration {
