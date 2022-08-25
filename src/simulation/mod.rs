@@ -168,7 +168,29 @@ impl Simulation {
             _ => self.place_units_method.clone(),
         };
 
-        PlaceUnitsMethod::place_units(&mut self.editable(), &method);
+        match &method {
+            PlaceUnitsMethod::Chemistry => {
+                self.chemistry.custom_place_units(&mut SimCell {
+                    attributes: &mut self.attributes,
+                    world: &mut self.world,
+                    unit_entry_attributes: &mut self.unit_entry_attributes,
+                    unit_manifest: &self.unit_manifest,
+                    chemistry: &self.chemistry,
+                });
+            }
+            _ => {
+                PlaceUnitsMethod::place_units(
+                    &mut SimCell {
+                        attributes: &mut self.attributes,
+                        world: &mut self.world,
+                        unit_entry_attributes: &mut self.unit_entry_attributes,
+                        unit_manifest: &self.unit_manifest,
+                        chemistry: &self.chemistry,
+                    },
+                    &method,
+                );
+            }
+        }
     }
 
     pub fn _start(&mut self) {

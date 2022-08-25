@@ -76,7 +76,7 @@ impl World {
         src_coord: &Coord,
         dest_coord: &Coord,
         unit_manifest: &UnitManifest,
-        chemistry: &ChemistryInstance,
+        chemistry: &dyn Chemistry,
     ) {
         let manifest = chemistry.get_manifest();
         let src_unit = self.get_unit_at(src_coord).unwrap();
@@ -89,7 +89,7 @@ impl World {
 
         // maybe eventually the chemistry can define a list of attributes that are copied by
         // default from the src unit
-        self.seed_unit_at(dest_coord, &unit_entry.info, None, &chemistry);
+        self.seed_unit_at(dest_coord, &unit_entry.info, None, chemistry);
     }
 
     pub fn seed_unit_at(
@@ -97,7 +97,7 @@ impl World {
         coord: &Coord,
         unit_entry: &UnitEntryData,
         _attributes: Option<UnitAttributes>,
-        chemistry: &ChemistryInstance,
+        chemistry: &dyn Chemistry,
     ) {
         let manifest = chemistry.get_manifest();
         let mut attributes: UnitAttributes =
@@ -422,7 +422,7 @@ pub mod tests {
         let mut world = World::new((5, 5), &chemistry);
         let unit_entry = UnitEntry::new("foo_unit", NullBehavior::construct());
         let coord = (2, 2);
-        world.seed_unit_at(&coord, &unit_entry.info, None, &chemistry);
+        world.seed_unit_at(&coord, &unit_entry.info, None, chemistry.as_ref());
 
         world.set_some_unit_resources_at(&coord, &vec![Some(0), Some(0)], &chemistry);
         assert_eq!(world.get_unit_resource_at(&coord, 0), 0);

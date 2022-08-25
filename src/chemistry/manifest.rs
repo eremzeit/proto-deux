@@ -437,14 +437,14 @@ impl ChemistryManifest {
         // Lookup string keys and replace them with the numerical id
         for (i, reaction) in self.reactions.iter().enumerate() {
             reactions[i].id = i;
-            println!("processing reaction key: {}", &reaction.key);
+            // println!("processing reaction key: {}", &reaction.key);
             for (j, reagent) in reaction.reagents.iter().enumerate() {
                 let action_key = &reaction.reagents[j].action_key;
                 reactions[i].reagents[j].action_index = self.action_set.by_key(action_key).index;
 
-                println!("\tfor reagent: {}", &reagent.action_key);
+                // println!("\tfor reagent: {}", &reagent.action_key);
                 for (param_idx, param_value) in reagent.params.iter().enumerate() {
-                    println!("\t\tinitial param value: {:?}", param_value);
+                    // println!("\t\tinitial param value: {:?}", param_value);
                     match param_value {
                         ActionParam::UnitAttributeKey(key) => {
                             let idx = self.unit_attribute_by_key(key).id as usize;
@@ -484,10 +484,10 @@ impl ChemistryManifest {
          * Normalize reagent definitions
          */
 
-        println!("NORMALIZING REACTIONS");
-        println!("--- pre: {:?}\n", &self.reactions);
-        println!("--- post: {:?}\n", &reactions);
-        println!("END NORMALIZING REACTIONS\n");
+        // println!("NORMALIZING REACTIONS");
+        // println!("--- pre: {:?}\n", &self.reactions);
+        // println!("--- post: {:?}\n", &reactions);
+        // println!("END NORMALIZING REACTIONS\n");
 
         self.reactions = reactions;
     }

@@ -109,13 +109,13 @@ mod tests {
             &(1, 0),
             &sim.unit_manifest.units[0].info,
             None,
-            &sim.chemistry,
+            sim.chemistry.as_ref(),
         );
         sim.world.seed_unit_at(
             &(3, 0),
             &sim.unit_manifest.units[0].info,
             None,
-            &sim.chemistry,
+            sim.chemistry.as_ref(),
         );
 
         // cheese

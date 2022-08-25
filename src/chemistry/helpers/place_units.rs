@@ -28,7 +28,14 @@ pub enum PlaceUnitsMethod {
         units_per_entry: u32,
     },
 
-    RandomRegionDrop {
+    // StaticRegionRandomDrop {
+    //     attributes: Option<UnitAttributes>,
+    //     units_per_entry: u32,
+
+    //     // (pct_start_x, pct_start_y, pct_end_x, pct_end_y)
+    //     region_pct_rect: ((Coord, Coord), (Coord, Coord)),
+    // },
+    RandomPctRegionDrop {
         attributes: Option<UnitAttributes>,
         units_per_entry: u32,
 
@@ -40,6 +47,8 @@ pub enum PlaceUnitsMethod {
 
     #[default]
     Default,
+
+    Chemistry,
 }
 
 impl PlaceUnitsMethod {
@@ -74,7 +83,7 @@ pub fn place_units(sim: &mut SimCell, method: &PlaceUnitsMethod) {
             );
         }
 
-        PlaceUnitsMethod::RandomRegionDrop {
+        PlaceUnitsMethod::RandomPctRegionDrop {
             attributes,
             region_pct_rect,
             units_per_entry,
@@ -142,8 +151,14 @@ pub fn place_units(sim: &mut SimCell, method: &PlaceUnitsMethod) {
                 sim.chemistry,
             );
         }
+
         PlaceUnitsMethod::Skip => {}
-        PlaceUnitsMethod::Default => {}
+        PlaceUnitsMethod::Default => {
+            panic!("Not meant to be called directly");
+        }
+        PlaceUnitsMethod::Chemistry => {
+            sim.chemistry.custom_place_units(sim);
+        }
     }
 }
 
@@ -162,7 +177,7 @@ pub fn place_linear_middle_bottom(
             &(x + i as usize, 0 as usize),
             &unit_manifest.units[i].info,
             attributes.clone(),
-            &chemistry,
+            chemistry.as_ref(),
         );
     }
 }
@@ -175,6 +190,7 @@ pub fn place_pct_region(
     units_per_entry: u32,
     region_pct_rect: &(f32, f32, f32, f32),
 ) {
+    let c = chemistry.as_ref();
     let manifest = unit_manifest.clone();
     let mut rng = rand::thread_rng();
     let mut attempts = 0;
@@ -198,7 +214,12 @@ pub fn place_pct_region(
                 );
                 let can_place = !world.has_unit_at(&coord);
                 if can_place {
-                    world.seed_unit_at(&coord, &unit_entry.info, attributes.clone(), chemistry);
+                    world.seed_unit_at(
+                        &coord,
+                        &unit_entry.info,
+                        attributes.clone(),
+                        chemistry.as_ref(),
+                    );
                     break;
                 } else {
                     attempts += 1;
@@ -223,7 +244,7 @@ pub fn place_manual(
 ) {
     // println!("[PlaceUnits] placing units at coords: {:?}", coords);
     for coord in coords {
-        world.seed_unit_at(coord, unit_entry, attributes.clone(), &chemistry);
+        world.seed_unit_at(coord, unit_entry, attributes.clone(), chemistry.as_ref());
     }
 }
 
@@ -255,7 +276,7 @@ mod tests {
 
         let mut sim = SimulationBuilder::default()
             .size((100, 100))
-            .place_units_method(PlaceUnitsMethod::RandomRegionDrop {
+            .place_units_method(PlaceUnitsMethod::RandomPctRegionDrop {
                 attributes: None,
                 units_per_entry: 2,
                 region_pct_rect: (0.25, 0.25, 0.75, 0.75),

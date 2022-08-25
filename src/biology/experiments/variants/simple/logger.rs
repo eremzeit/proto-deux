@@ -151,7 +151,7 @@ impl SimpleExperimentLogger {
         sorted_entries.sort_by(|e1, e2| {
             e1.max_fitness_metric
                 .unwrap()
-                .cmp(&e2.max_fitness_metric.unwrap())
+                .cmp(&(u64::MAX - e2.max_fitness_metric.unwrap()))
         });
 
         for entry in sorted_entries.iter() {

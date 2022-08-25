@@ -193,10 +193,17 @@ pub trait Chemistry {
     //     vec![]
     // }
 
+    fn custom_place_units(&self, sim: &mut SimCell) {
+        panic!("Not implemented for chemistry");
+    }
+
     fn get_default_place_units_method(&self) -> PlaceUnitsMethod {
         PlaceUnitsMethod::SimpleDrop { attributes: None }
     }
 
+    /**
+     * This runs before units are placed
+     */
     fn on_simulation_init(&self, sim: &mut SimCell) {
         self.init_pos_properties(&mut sim.world);
         self.init_world_custom(&mut sim.world);

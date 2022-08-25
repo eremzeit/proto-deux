@@ -4,6 +4,7 @@ use crate::chemistry::properties::*;
 use crate::chemistry::reactions::*;
 use crate::chemistry::*;
 
+use crate::simulation::common::helpers::place_units::place_pct_region;
 use crate::simulation::common::helpers::place_units::place_units;
 use crate::simulation::common::helpers::resource_allocation::allocate_stored_resources;
 use crate::simulation::common::helpers::resource_allocation::StoredResourceAllocationMethod;
@@ -125,6 +126,16 @@ pub mod defs {
     //trace_macros!(false);
 }
 impl CheeseChemistry {
+    pub fn unit_drop_area(&self, world: &World) -> [Coord; 2] {
+        let x_size = if world.size.0 > 10 { 4 } else { world.size.0 };
+        let y_size = if world.size.1 > 10 { 4 } else { world.size.1 };
+
+        let x = (world.size.0 - x_size) / 2;
+        let y = (world.size.1 - y_size) / 2;
+
+        [(x, y), (x + x_size, y + y_size)]
+    }
+
     pub fn custom_actions() -> ActionSet {
         ActionSet::from(vec![ActionDefinition::new(
             &"gobble_cheese",
@@ -229,12 +240,13 @@ impl Chemistry for CheeseChemistry {
         self.configuration.clone()
     }
 
+    fn custom_place_units(&self, sim: &mut SimCell) {
+        let area = self.unit_drop_area(sim.world);
+        place_units_static_region(sim.world, self, sim.unit_manifest, &None, 2, &area);
+    }
+
     fn get_default_place_units_method(&self) -> PlaceUnitsMethod {
-        PlaceUnitsMethod::RandomRegionDrop {
-            attributes: None,
-            units_per_entry: 1,
-            region_pct_rect: (0.25, 0.25, 0.75, 0.75),
-        }
+        PlaceUnitsMethod::Chemistry
     }
 
     fn allocate_unit_resources(&self, coord: &Coord, sim: &mut SimCell) {
@@ -327,6 +339,10 @@ impl Chemistry for CheeseChemistry {
     // }
 
     fn init_world_custom(&self, world: &mut World) {
+        let unit_drop_area = self.unit_drop_area(&world);
+
+        use rand::Rng;
+        let mut rng = rand::thread_rng();
         for coord in CoordIterator::new(world.size.clone()) {
             if (coord.0 * world.size.1 + coord.1) % 2 == 0 {
                 world.set_pos_attribute_at(
@@ -338,10 +354,12 @@ impl Chemistry for CheeseChemistry {
                 );
             }
 
-            use rand::Rng;
-            let mut rng = rand::thread_rng();
-            let is_bottom_left = coord.0 == 0 && coord.1 == 0 || coord.0 == 1 && coord.1 == 0;
-            if is_bottom_left || rng.gen_range(0..(coord.0 + coord.1) % 5 + 10) == 0 {
+            let is_unit_drop_area = coord.0 >= unit_drop_area[0].0
+                && coord.0 < unit_drop_area[1].0
+                && coord.1 >= unit_drop_area[0].1
+                && coord.1 < unit_drop_area[1].1;
+
+            if !is_unit_drop_area && rng.gen_range(0..(coord.0 + coord.1) % 5 + 5) == 0 {
                 world.set_pos_attribute_at(
                     &coord,
                     self.get_manifest()
@@ -351,7 +369,7 @@ impl Chemistry for CheeseChemistry {
                 );
             }
 
-            if is_bottom_left || rng.gen_range(0..(coord.0 + coord.1) % 5 + 5) == 0 {
+            if !is_unit_drop_area && rng.gen_range(0..(coord.0 + coord.1) % 5 + 1) == 0 {
                 let position_resources = defs::PositionResourcesLookup::new();
                 world.set_pos_resource_tab_offset(&coord, position_resources.cheese, 2);
             }
@@ -368,6 +386,52 @@ impl Chemistry for CheeseChemistry {
             "rolling_consumption",
             UnitAttributeValue::Integer(0),
         )])
+    }
+}
+
+pub fn place_units_static_region(
+    world: &mut World,
+    chemistry: &CheeseChemistry,
+    unit_manifest: &UnitManifest,
+    attributes: &Option<UnitAttributes>,
+    units_per_entry: u32,
+    region_rect: &[Coord; 2],
+) {
+    use rand::Rng;
+    let manifest = unit_manifest.clone();
+    let mut rng = rand::thread_rng();
+    let mut attempts = 0;
+
+    // println!("[PlaceUnits] placing units in region: {:?}", rect);
+
+    let max_attempts = manifest.units.len() * units_per_entry as usize * 5;
+
+    for (i, unit_entry) in manifest.units.iter().enumerate() {
+        for i in 0..units_per_entry {
+            loop {
+                let x1 = region_rect[0].0;
+                let x2 = region_rect[1].0;
+                let y1 = region_rect[0].1;
+                let y2 = region_rect[1].1;
+
+                let coord = (rng.gen_range(x1..x2), rng.gen_range(y1..y2));
+                let can_place = !world.has_unit_at(&coord);
+                let a = Box::new(&1).as_ref();
+
+                if can_place {
+                    world.seed_unit_at(&coord, &unit_entry.info, attributes.clone(), chemistry);
+                    break;
+                } else {
+                    attempts += 1;
+                    if attempts > max_attempts {
+                        panic!(
+                            "Random unit placement failed too many times within rect: {:?}",
+                            &region_rect
+                        );
+                    }
+                }
+            }
+        }
     }
 }
 

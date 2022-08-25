@@ -355,7 +355,7 @@ pub fn default_actions() -> ActionSet {
                                 context.coord,
                                 &_dest_coord,
                                 &sim_cell.unit_manifest,
-                                &sim_cell.chemistry,
+                                sim_cell.chemistry.as_ref(),
                             );
                             return true;
                         }
