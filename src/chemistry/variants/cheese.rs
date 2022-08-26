@@ -127,8 +127,8 @@ pub mod defs {
 }
 impl CheeseChemistry {
     pub fn unit_drop_area(&self, world: &World) -> [Coord; 2] {
-        let x_size = if world.size.0 > 10 { 4 } else { world.size.0 };
-        let y_size = if world.size.1 > 10 { 4 } else { world.size.1 };
+        let x_size = if world.size.0 > 10 { 5 } else { world.size.0 };
+        let y_size = if world.size.1 > 10 { 5 } else { world.size.1 };
 
         let x = (world.size.0 - x_size) / 2;
         let y = (world.size.1 - y_size) / 2;
@@ -286,7 +286,7 @@ impl Chemistry for CheeseChemistry {
         }
 
         if is_cheese_source {
-            let amount = 20;
+            let amount = 50;
             resources[unit_resources.cheese] += amount;
 
             sim.unit_entry_attributes[unit.entry_id]
@@ -359,7 +359,8 @@ impl Chemistry for CheeseChemistry {
                 && coord.1 >= unit_drop_area[0].1
                 && coord.1 < unit_drop_area[1].1;
 
-            if !is_unit_drop_area && rng.gen_range(0..(coord.0 + coord.1) % 5 + 5) == 0 {
+            // if !is_unit_drop_area && rng.gen_range(0..(coord.0 + coord.1) % 5 + 5) == 0 {
+            if rng.gen_range(0..(coord.0 + coord.1) % 5 + 5) == 0 {
                 world.set_pos_attribute_at(
                     &coord,
                     self.get_manifest()
@@ -369,9 +370,10 @@ impl Chemistry for CheeseChemistry {
                 );
             }
 
-            if !is_unit_drop_area && rng.gen_range(0..(coord.0 + coord.1) % 5 + 1) == 0 {
+            // if !is_unit_drop_area && rng.gen_range(0..(coord.0 + coord.1) % 5 + 1) == 0 {
+            if rng.gen_range(0..(coord.0 + coord.1) % 5 + 1) == 0 {
                 let position_resources = defs::PositionResourcesLookup::new();
-                world.set_pos_resource_tab_offset(&coord, position_resources.cheese, 2);
+                world.set_pos_resource_tab_offset(&coord, position_resources.cheese, 2, Some(60));
             }
         }
     }
@@ -404,7 +406,7 @@ pub fn place_units_static_region(
 
     // println!("[PlaceUnits] placing units in region: {:?}", rect);
 
-    let max_attempts = manifest.units.len() * units_per_entry as usize * 5;
+    let max_attempts = manifest.units.len() * units_per_entry as usize * 100;
 
     for (i, unit_entry) in manifest.units.iter().enumerate() {
         for i in 0..units_per_entry {

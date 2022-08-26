@@ -13,6 +13,8 @@ use crate::{
 };
 use rand::Rng;
 use std::fmt::{Debug, Formatter, Result};
+use std::ops::{Add, Div};
+use std::time::Duration;
 
 use self::logger::SimpleExperimentLogger;
 use self::utils::SimpleExperimentSettings;
@@ -251,8 +253,8 @@ impl SimpleExperiment {
             perf_timer_start!("building_unit_entries");
             let maybe_idx = self._find_by_uid(*uid);
             let idx = maybe_idx.unwrap();
-            let genome_vals = self.genome_entries[idx].genome.clone();
-            let genome = FramedGenomeCompiler::compile(genome_vals, &self.settings.gm);
+
+            let genome = self.genome_entries[idx].compile(&self.settings.gm);
 
             let unit_entry = UnitEntryBuilder::default()
                 .species_name(format!("species: {}", count))
@@ -311,16 +313,28 @@ impl SimpleExperiment {
 
         perf_timer_start!("experiment_fitness_tally");
         let mut fitness_scores = vec![];
-        let unit_entries = executor.simulation.unit_manifest.units.clone();
+        let mut unit_entries = executor.simulation.unit_manifest.units.clone();
+        unit_entries.sort_by_key(|entry| entry.info.id);
+        // println!(
+        //     "unit_entries after sim: {:?}",
+        //     unit_entries
+        //         .iter()
+        //         .map(|entry| entry.info.clone())
+        //         .collect::<Vec<_>>()
+        // );
 
         assert_eq!(unit_entries.len(), genome_uids.len());
+
+        for (i, entry) in unit_entries.iter().enumerate() {}
+
         for i in (0..genome_uids.len()) {
             let entry = &unit_entries[i];
             let sim_unit_entry_id = entry.info.id;
             let genome_uid = genome_uids[i as usize];
             let genome_idx = self._find_by_uid(genome_uid).unwrap();
 
-            self.genome_entries[genome_idx].num_evaluations += 1;
+            let mut genome_entry = &mut self.genome_entries[genome_idx];
+            genome_entry.num_evaluations += 1;
 
             // println!("fitness key: {}", self.settings.fitness_calculation_key);
             let fitness_score = calculate_fitness(
@@ -331,7 +345,7 @@ impl SimpleExperiment {
 
             let resultItem = TrialResultItem {
                 sim_unit_entry_id,
-                genome_uid,
+                experiment_genome_uid: genome_uid,
                 genome_idx,
                 fitness_score,
             };
@@ -386,34 +400,32 @@ impl SimpleExperiment {
         }
     }
 
-    pub fn adjust_ranks_based_on_result(&mut self, fitness_result: &Vec<TrialResultItem>) {
+    pub fn update_genomes_with_fitness_result(&mut self, fitness_result: &Vec<TrialResultItem>) {
         let mut sorted_result = fitness_result.clone();
         sorted_result.sort_by_key(|x| x.fitness_score);
-        //sorted_result.reverse();
-        // println!("sorted: {:?}", sorted_result);
 
         for (result_rank, fitness_result_item) in sorted_result.iter().enumerate() {
             let our_genome_idx = fitness_result_item.genome_idx;
-            let our_genome_uid = fitness_result_item.genome_uid;
+            let our_genome_uid = fitness_result_item.experiment_genome_uid;
             let our_fitness_score = fitness_result_item.fitness_score;
-            //let genome_idx = self._find_by_uid(*genome_uid).unwrap() as usize;
-            let existing_max = self.genome_entries[our_genome_idx].max_fitness_metric;
-            let mut new_max_fitness = existing_max;
 
-            match existing_max {
-                Some(_max_fitness) => {
-                    let fitness_diff_from_max = _max_fitness as i64 - our_fitness_score as i64;
-                    if fitness_diff_from_max < 0 {
-                        new_max_fitness = Some(our_fitness_score);
-                    }
-                }
-                None => {
-                    new_max_fitness = Some(our_fitness_score);
-                }
+            let mut max_fitness = self.genome_entries[our_genome_idx]
+                .max_fitness_metric
+                .unwrap_or(0);
+
+            let mut is_new_max = false;
+            if our_fitness_score > max_fitness {
+                max_fitness = our_fitness_score;
+                is_new_max = true;
             }
 
-            self.genome_entries[our_genome_idx].max_fitness_metric = new_max_fitness;
+            self.genome_entries[our_genome_idx].max_fitness_metric = Some(max_fitness);
 
+            push_into_with_max(
+                &mut self.genome_entries[our_genome_idx].last_fitness_metrics,
+                our_fitness_score,
+                10,
+            );
             // println!(
             //     "processing fitness for id: {} with score {}",
             //     genome_id, self.genome_entries[*genome_id as usize].current_rank_score
@@ -422,7 +434,7 @@ impl SimpleExperiment {
             let our_rank_score = self.genome_entries[our_genome_idx].current_rank_score;
 
             for i in (0..sorted_result.len()) {
-                let their_uid = sorted_result[i].genome_uid;
+                let their_uid = sorted_result[i].experiment_genome_uid;
                 let their_genome_idx = sorted_result[i].genome_idx;
 
                 let their_rank_score = self.genome_entries[their_genome_idx].current_rank_score;
@@ -451,14 +463,29 @@ impl SimpleExperiment {
     }
 
     pub fn cull_and_replace(&mut self) {
-        let target_count = (self.settings.num_genomes as f64 * 0.90) as usize;
+        let target_count = (self.settings.num_genomes as f64 * 0.70) as usize;
         let to_remove = self.genome_entries.len() - target_count;
         let mut by_rank = self.genome_entries.clone();
         by_rank.sort_by_key(|entry| entry.current_rank_score);
+        // by_rank.reverse();
+
+        // println!("Current genome ranks...");
+        // for genome in by_rank.iter() {
+        //     println!(
+        //         "{:?}",
+        //         (
+        //             genome.uid,
+        //             genome.current_rank_score,
+        //             genome.max_fitness_metric,
+        //             calculate_mean(&genome.last_fitness_metrics)
+        //         )
+        //     );
+        // }
 
         let mut removed_count = 0;
         let mut uids_to_remove = vec![];
 
+        // TODO: this might be incorrect
         let mut offset_from_bottom = 0;
         while removed_count < to_remove && offset_from_bottom < self.genome_entries.len() {
             while offset_from_bottom < self.genome_entries.len()
@@ -467,6 +494,16 @@ impl SimpleExperiment {
                 offset_from_bottom += 1;
             }
             let item = by_rank.remove(offset_from_bottom);
+            // println!(
+            //     "Removing genome: {:?}",
+            //     (
+            //         item.uid,
+            //         item.current_rank_score,
+            //         item.max_fitness_metric,
+            //         calculate_mean(&item.last_fitness_metrics)
+            //     )
+            // );
+
             uids_to_remove.push(item.uid);
             removed_count += 1;
         }
@@ -543,11 +580,28 @@ impl SimpleExperiment {
         statuses
     }
 
-    pub fn tick(&mut self) {
-        if self.current_tick % 100 == 0 {
-            println!("EXPERIMENT TICK: {}", self.current_tick);
-        }
+    fn get_max_fitness_for_genome(&self, uid: ExperimentGenomeUid) -> Option<FitnessScore> {
+        let idx = self._find_by_uid(uid).unwrap();
+        self.genome_entries[idx].max_fitness_metric
+    }
 
+    fn get_mean_fitness_for_genome(&self, uid: ExperimentGenomeUid) -> Option<FitnessScore> {
+        let idx = self._find_by_uid(uid).unwrap();
+        calculate_mean(&self.genome_entries[idx].last_fitness_metrics)
+    }
+
+    fn _highest_fitness_idx(&self) -> usize {
+        let uid = self
+            .genome_entries
+            .iter()
+            .max_by_key(|entry| self.get_mean_fitness_for_genome(entry.uid).unwrap_or(0))
+            .unwrap()
+            .uid
+            .clone();
+        self._find_by_uid(uid).unwrap()
+    }
+
+    pub fn tick(&mut self) {
         perf_timer_start!("experiment_partition");
         let groups = self.partition_into_groups();
         explog!("groups: {:?}", &groups);
@@ -555,10 +609,11 @@ impl SimpleExperiment {
 
         perf_timer_start!("experiment_sim_eval");
         for group in groups {
+            std::thread::sleep(Duration::from_millis(1));
             let fitness_result = self.run_evaluation_for_uids(&group);
             // println!("fitness_scores: {:?}", fitness_result);
             perf_timer_start!("adjust_ranks");
-            self.adjust_ranks_based_on_result(&fitness_result);
+            self.update_genomes_with_fitness_result(&fitness_result);
             perf_timer_stop!("adjust_ranks");
         }
         perf_timer_stop!("experiment_sim_eval");
@@ -591,6 +646,38 @@ impl SimpleExperiment {
             }
             perf_timer_stop!("experiment_logging");
         }
+
+        if self.current_tick % 100 == 0 {
+            println!(
+                "EXPERIMENT TICK: {} -- fitness: {:?}",
+                self.current_tick,
+                self.genome_entries[self._highest_fitness_idx()].last_fitness_metrics
+            );
+        }
+    }
+}
+
+pub fn calculate_mean(vec: &Vec<FitnessScore>) -> Option<FitnessScore> {
+    if vec.len() == 0 {
+        return None;
+    }
+
+    let mut ave = vec[0];
+
+    let mut i = 1;
+    while i < vec.len() {
+        ave = ave + vec[i];
+        i += 1;
+    }
+
+    Some(ave / vec.len() as FitnessScore)
+}
+
+pub fn push_into_with_max<T>(vec: &mut Vec<T>, item: T, max_size: usize) {
+    vec.insert(0, item);
+
+    while vec.len() > max_size {
+        vec.pop();
     }
 }
 
@@ -713,24 +800,24 @@ pub mod tests {
             TrialResultItem {
                 genome_idx: 0,
                 sim_unit_entry_id: 0,
-                genome_uid: 0,
+                experiment_genome_uid: 0,
                 fitness_score: 200,
             },
             TrialResultItem {
                 genome_idx: 1,
                 sim_unit_entry_id: 1,
-                genome_uid: 1,
+                experiment_genome_uid: 1,
                 fitness_score: 125,
             },
             TrialResultItem {
                 genome_idx: 2,
                 sim_unit_entry_id: 2,
-                genome_uid: 2,
+                experiment_genome_uid: 2,
                 fitness_score: 100,
             },
         ];
 
-        exp.adjust_ranks_based_on_result(&fitness_result);
+        exp.update_genomes_with_fitness_result(&fitness_result);
 
         assert_eq!(
             collect_max_fitnesses(&exp),
@@ -773,8 +860,11 @@ pub mod tests {
 #[derive(Clone)]
 pub struct TrialResultItem {
     sim_unit_entry_id: UnitEntryId,
+
+    // Refers to the index of the genome in the current experiment genome listing.  As such,
+    // TrialResultItems are only valid data until the genome listing is updated.
     genome_idx: UnitEntryId,
-    genome_uid: ExperimentGenomeUid,
+    experiment_genome_uid: ExperimentGenomeUid,
     fitness_score: FitnessScore,
 }
 
@@ -783,7 +873,7 @@ impl Debug for TrialResultItem {
         write!(
             f,
             "TrialResult(uid: {}, score: {})",
-            self.genome_uid, self.fitness_score
+            self.experiment_genome_uid, self.fitness_score
         )
     }
 }

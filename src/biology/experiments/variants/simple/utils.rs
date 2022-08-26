@@ -11,7 +11,9 @@ use std::path::PathBuf;
 
 use super::logger::LoggingSettings;
 
-pub type _ExperimentGenomeId = usize;
+/**
+ * Uniquely identifies a genome over the course of the entire experiment
+ */
 pub type ExperimentGenomeUid = usize;
 
 pub type GenomeEntryId = usize;
@@ -28,6 +30,12 @@ pub struct GenomeExperimentEntry {
     pub genome: RawFramedGenome,
     pub uid: ExperimentGenomeUid,
     pub current_rank_score: usize,
+}
+
+impl GenomeExperimentEntry {
+    pub fn compile(&self, gm: &GeneticManifest) -> CompiledFramedGenome {
+        FramedGenomeCompiler::compile(self.genome.clone(), gm)
+    }
 }
 
 pub struct ExperimentSimSettings {

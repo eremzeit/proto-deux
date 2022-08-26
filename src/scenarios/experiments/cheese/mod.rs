@@ -42,7 +42,7 @@ pub fn simple_experiment(runner_args: ExperimentRunnerArgs) -> SimpleExperiment 
     let settings = SimpleExperimentSettings {
         cull_strategy: CullStrategy::WorstFirst,
         fitness_calculation_key: "total_cheese_consumed".to_string(),
-        num_genomes: 20,
+        num_genomes: 50,
         sim_settings: ExperimentSimSettings {
             num_simulation_ticks: 50,
             grid_size: (20, 20),
@@ -52,7 +52,7 @@ pub fn simple_experiment(runner_args: ExperimentRunnerArgs) -> SimpleExperiment 
             place_units_method: PlaceUnitsMethod::Default,
         },
 
-        iterations: 1000000,
+        iterations: 10000000,
         alteration_set: alterations(),
         experiment_key: runner_args.experiment_name_key.to_string(),
         logging_settings: Some(LoggingSettings {

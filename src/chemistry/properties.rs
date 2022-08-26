@@ -211,6 +211,7 @@ pub struct ResourceTabulation {
     pub last_update_tick: u64,
     pub offset_per_tick: i32,
     pub last_amount: ResourceAmount,
+    pub max_amount: Option<ResourceAmount>,
 }
 
 impl ResourceTabulation {
@@ -219,6 +220,7 @@ impl ResourceTabulation {
             last_update_tick: 0,
             offset_per_tick: 0,
             last_amount: 0,
+            max_amount: None,
         }
     }
 
@@ -226,7 +228,15 @@ impl ResourceTabulation {
         let tick_diff = (current_tick - self.last_update_tick) as i32;
         let amount = (tick_diff * self.offset_per_tick + self.last_amount) as ResourceAmount;
 
-        amount
+        if let Some(max) = self.max_amount {
+            if amount > max {
+                max
+            } else {
+                amount
+            }
+        } else {
+            amount
+        }
     }
 
     pub fn update(&mut self, current_tick: u64, amount: ResourceAmount) {

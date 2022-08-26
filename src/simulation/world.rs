@@ -283,10 +283,12 @@ impl World {
         coord: &Coord,
         resource_idx: PositionResourceIndex,
         offset: i32,
+        max: Option<i32>,
     ) {
         let mut item = self.grid.get_mut([coord.0, coord.1]).unwrap();
         if let Some(pos) = item {
             pos.resources[resource_idx].offset_per_tick = offset;
+            pos.resources[resource_idx].max_amount = max
         }
     }
 
