@@ -59,13 +59,13 @@ pub fn with_genome(sim_args: &SimulationRunnerArgs) -> SimulationBuilder {
     let entry1 = UnitEntryBuilder::default()
         .species_name("species1".to_string())
         .behavior(FramedGenomeUnitBehavior::new(frames1, gm.clone()).construct())
-        .default_resources(vec![("cheese", 100)])
+        .default_resources(vec![("cheese".to_string(), 100)])
         .build(&chemistry_builder.manifest());
 
     let entry2 = UnitEntryBuilder::default()
         .species_name("species2".to_string())
         .behavior(FramedGenomeUnitBehavior::new(frames2, gm.clone()).construct())
-        .default_resources(vec![("cheese", 100)])
+        .default_resources(vec![("cheese".to_owned(), 100)])
         .build(&chemistry_builder.manifest());
 
     SimulationBuilder::default()
@@ -81,5 +81,5 @@ pub fn get_unit_entries_for_cheese() -> Vec<UnitEntryBuilder> {
     vec![UnitEntryBuilder::default()
         .species_name("main".to_string())
         .behavior(Rc::new(Box::new(SimpleMouse::construct())))
-        .default_resources(vec![("cheese", 200)])]
+        .default_resources(vec![("cheese".to_owned(), 200)])]
 }

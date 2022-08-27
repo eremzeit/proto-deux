@@ -1,3 +1,5 @@
+use serde::{Deserialize, Serialize};
+
 use crate::biology::genetic_manifest::predicates::OperatorParam;
 use crate::simulation::common::{
     ChemistryManifest, PositionAttributeIndex, PositionAttributeValue, PositionResourceAmount,
@@ -17,7 +19,7 @@ pub enum PropertyValue {
     SimulationAttribute(SimulationAttributeValue),
 }
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub enum PropertyId {
     UnitAttributeId(UnitAttributeIndex),
     PositionAttributeId(PositionAttributeIndex),
@@ -67,7 +69,7 @@ impl PropertyId {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Serialize, Deserialize)]
 pub struct Property {
     pub key: String,
     pub long_key: String,
@@ -75,7 +77,7 @@ pub struct Property {
     pub id: usize,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Serialize, Deserialize)]
 pub struct ResourceDefinition {
     pub key: String,
     pub id: ResourceIndex,
@@ -100,7 +102,7 @@ pub type ResourceAmount = i32;
 pub type AttributeIndex = usize;
 pub type RawPropertyId = usize;
 
-#[derive(Clone)]
+#[derive(Clone, Serialize, Deserialize)]
 pub enum AttributeDefinitionType {
     Number,
     Str,
@@ -109,7 +111,7 @@ pub enum AttributeDefinitionType {
 
 pub type AttributeInteger = i32;
 
-#[derive(Clone, PartialEq)]
+#[derive(Clone, PartialEq, Serialize, Deserialize)]
 pub enum AttributeValue {
     Bool(bool),
     Integer(AttributeInteger),
@@ -174,7 +176,7 @@ impl Debug for AttributeValue {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Serialize, Deserialize)]
 pub struct AttributeDefinition {
     pub key: String,
     pub value_type: AttributeDefinitionType,

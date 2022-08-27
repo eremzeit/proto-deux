@@ -24,7 +24,7 @@ pub fn test_with_genome() {
             units: vec![UnitEntryBuilder::default()
                 .species_name("species1".to_string())
                 .behavior(FramedGenomeUnitBehavior::new(frames1, gm.clone()).construct())
-                .default_resources(vec![("cheese", 100)])
+                .default_resources(vec![("cheese".to_owned(), 100)])
                 .build(&gm.chemistry_manifest)],
         })
         .to_simulation();

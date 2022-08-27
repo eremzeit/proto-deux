@@ -209,6 +209,12 @@ pub fn merge_channels_into_frame(
 
     // find length of the longest channel
     for values in channel_values.iter() {
+        if values.len() > MAX_FRAME_LENGTH as usize {
+            panic!(
+                "Channel length exceeds the max frame size: {}",
+                MAX_FRAME_LENGTH
+            );
+        }
         if max_length < values.len() {
             max_length = values.len()
         }
@@ -268,6 +274,8 @@ pub struct RawFrameParser {
     values: Vec<FramedGenomeWord>,
 }
 
+pub const MAX_FRAME_LENGTH: u64 = 300;
+
 impl RawFrameParser {
     pub fn parse(values: Vec<FramedGenomeWord>) -> Vec<RawFrame> {
         let mut parser = RawFrameParser {
@@ -280,7 +288,7 @@ impl RawFrameParser {
     }
 
     fn frame_val_to_frame_size(val: FramedGenomeWord) -> u16 {
-        (val % 1000) as u16
+        (val % MAX_FRAME_LENGTH) as u16
     }
 
     /**
@@ -292,9 +300,8 @@ impl RawFrameParser {
         while (self.idx as i64) < (self.values.len() as i64 - FRAME_META_DATA_SIZE as i64) {
             // let idx_frame_start = self.idx;
 
-            // AOEUAOEU
-            let frame_size = self.values[self.idx] as usize;
-            // let frame_size = Self::frame_val_to_frame_size(self.values[self.idx]) as usize;
+            // let frame_size = self.values[self.idx] as usize;
+            let frame_size = Self::frame_val_to_frame_size(self.values[self.idx]) as usize;
 
             let mut default_channel = self.values[self.idx + 1] as u8;
 

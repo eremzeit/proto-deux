@@ -5,6 +5,7 @@ use crate::{
     biology::genome::framed::common::*, simulation::common::helpers::place_units::PlaceUnitsMethod,
 };
 use rand::Rng;
+use serde::{Deserialize, Serialize};
 use std::fmt::{Debug, Formatter, Result};
 use std::fs;
 use std::fs::OpenOptions;
@@ -15,7 +16,7 @@ use super::utils::{get_data_dir, GenomeExperimentEntry};
 
 const DATA_DIR_NAME: &str = "data";
 
-#[derive(Clone)]
+#[derive(Clone, Serialize, Deserialize)]
 pub struct LoggingSettings {
     pub experiment_key: String,
     pub allow_overwrite: bool,
@@ -86,7 +87,7 @@ impl SimpleExperimentLogger {
         genetic_manifest: &GeneticManifest,
     ) {
         if tick != 0 && tick % self.settings.checkpoint_interval == 0 {
-            self._log_checkpoint(tick, genome_entries, genetic_manifest);
+            self._log_status(tick, genome_entries, genetic_manifest);
         }
 
         self._log_fitness_percentiles(tick, genome_entries);
@@ -136,7 +137,7 @@ impl SimpleExperimentLogger {
         self._write_to_file(path, s.as_bytes(), true)
     }
 
-    pub fn _log_checkpoint(
+    pub fn _log_status(
         &self,
         tick: usize,
         genome_entries: &Vec<GenomeExperimentEntry>,
@@ -148,10 +149,10 @@ impl SimpleExperimentLogger {
             .iter()
             .filter(|e| e.max_fitness_metric.is_some())
             .collect::<Vec<_>>();
-        sorted_entries.sort_by(|e1, e2| {
-            e1.max_fitness_metric
+        sorted_entries.sort_by_key(|e| {
+            e.max_fitness_metric
                 .unwrap()
-                .cmp(&(u64::MAX - e2.max_fitness_metric.unwrap()))
+                .cmp(&(u64::MAX - e.max_fitness_metric.unwrap()))
         });
 
         for entry in sorted_entries.iter() {
@@ -172,7 +173,7 @@ impl SimpleExperimentLogger {
         }
 
         let mut path = self.get_log_dir();
-        path.push(format!("checkpoint-{}.csv", tick));
+        path.push(format!("status-{}.txt", tick));
         self._write_to_file(path, s.as_bytes(), false);
     }
 }

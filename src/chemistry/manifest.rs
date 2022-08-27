@@ -1,3 +1,6 @@
+use serde::Deserialize;
+use serde::Serialize;
+
 use self::properties::*;
 use self::reactions::*;
 use crate::biology::genetic_manifest::predicates::OperatorParam;
@@ -114,14 +117,14 @@ impl ChemistryManifest {
 
     pub fn unit_resources_of(
         &self,
-        resource_list: Vec<(&'static str, UnitResourceAmount)>,
+        resource_list: Vec<(String, UnitResourceAmount)>,
     ) -> SomeUnitResources {
         let length = self.unit_resources.len();
         let mut resources: SomeUnitResources = Vec::with_capacity(length);
         resources.resize(length, None);
 
         for pair in resource_list.iter() {
-            let idx = self.unit_resource_by_key(pair.0).id as UnitResourceIndex;
+            let idx = self.unit_resource_by_key(&pair.0).id as UnitResourceIndex;
             resources[idx] = Some(pair.1);
         }
 
@@ -130,14 +133,14 @@ impl ChemistryManifest {
 
     pub fn unit_attributes_of(
         &self,
-        attribute_list: Vec<(&'static str, UnitAttributeValue)>,
+        attribute_list: Vec<(String, UnitAttributeValue)>,
     ) -> UnitAttributes {
         let length = self.unit_attributes.len();
         let mut attributes: UnitAttributes = Vec::with_capacity(length);
         attributes.resize(length, UnitAttributeValue::Nil);
 
         for pair in attribute_list.iter() {
-            let idx = self.unit_attribute_by_key(pair.0).id as UnitAttributeIndex;
+            let idx = self.unit_attribute_by_key(&pair.0).id as UnitAttributeIndex;
             attributes[idx] = pair.1.clone();
         }
 
@@ -145,7 +148,7 @@ impl ChemistryManifest {
     }
     pub fn unit_entry_attributes_of(
         &self,
-        attribute_list: Vec<(&'static str, UnitEntryAttributeValue)>,
+        attribute_list: Vec<(String, UnitEntryAttributeValue)>,
     ) -> UnitEntryAttributes {
         let length = self.unit_entry_attributes.len();
 
@@ -153,7 +156,7 @@ impl ChemistryManifest {
         attributes.resize(length, UnitEntryAttributeValue::Nil);
 
         for pair in attribute_list.iter() {
-            let idx = self.unit_attribute_by_key(pair.0).id as UnitAttributeIndex;
+            let idx = self.unit_attribute_by_key(&pair.0).id as UnitAttributeIndex;
             attributes[idx] = pair.1.clone();
         }
 

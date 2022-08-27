@@ -165,7 +165,7 @@ pub mod test {
                 units: vec![UnitEntryBuilder::default()
                     .species_name("main".to_string())
                     .behavior(FramedGenomeUnitBehavior::new(frames, gm.clone()).construct())
-                    .default_resources(vec![("cheese", 1000)])
+                    .default_resources(vec![("cheese".to_string(), 1000)])
                     .build(&cm)],
             })
             .to_simulation();

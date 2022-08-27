@@ -385,7 +385,7 @@ impl Chemistry for CheeseChemistry {
         entry: &UnitEntryData,
     ) -> UnitAttributes {
         self.get_manifest().unit_attributes_of(vec![(
-            "rolling_consumption",
+            "rolling_consumption".to_owned(),
             UnitAttributeValue::Integer(0),
         )])
     }

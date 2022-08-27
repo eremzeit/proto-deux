@@ -22,6 +22,7 @@ use crate::biology::unit_behavior::framed::types::*;
 use crate::chemistry::reactions::ReactionCall;
 use std::convert::TryInto;
 
+pub const MAX_JUMP_AHEAD_FRAMES: u64 = 3;
 /** Represents the final result of a gene operation with the literal values that can be used for executing. */
 pub enum ExecutableGeneOperation {
     ReactionCall(ReactionCall),
@@ -140,7 +141,10 @@ impl<'a> GenomeExecutionContext<'a> {
                     Some(ExecutableGeneOperation::SetChannel(channel))
                 }
                 ParamedMetaReactionCall::JumpAheadFrames(param) => {
-                    let mut frame_count: u8 = (self.eval_param(&param) % 3).try_into().unwrap();
+                    let mut frame_count: u8 = (self.eval_param(&param)
+                        % MAX_JUMP_AHEAD_FRAMES as i32)
+                        .try_into()
+                        .unwrap();
                     Some(ExecutableGeneOperation::JumpAheadFrames(frame_count))
                 }
                 ParamedMetaReactionCall::SetRegister(r, v) => {

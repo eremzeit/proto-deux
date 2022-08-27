@@ -1,3 +1,5 @@
+use serde::{Deserialize, Serialize};
+
 use crate::biology::unit_behavior::NUM_REACTION_PARAMS;
 use crate::chemistry::actions::{ActionDefinitionIndex, ActionParam, ActionParamType, ActionSet};
 use crate::chemistry::ReactionId;
@@ -34,7 +36,7 @@ pub type ReagentValue = u8;
 pub type ActionIndex = u8;
 //use crate::chemistry::actions::{};
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct ReagentDefinition {
     pub action_key: &'static str,
     pub action_index: ActionDefinitionIndex,

@@ -1,3 +1,5 @@
+use serde::{Deserialize, Serialize};
+
 use super::{
     construct_chemistry, manifest::ChemistryManifest, ChemistryConfiguration, ChemistryInstance,
 };
@@ -5,6 +7,7 @@ use super::{
 /**
  * Stores everything needed to create a new chemistry instance. (similar to a builder)
  */
+#[derive(Serialize, Deserialize)]
 pub struct ChemistryBuilder {
     pub chemistry_key: String,
     pub chemistry_configuration: Option<ChemistryConfiguration>,

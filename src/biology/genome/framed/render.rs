@@ -81,6 +81,14 @@ pub fn render_conjunction(
     let _items = clause.1.iter();
     let is_negated = clause.0;
 
+    if _items.len() == 0 {
+        return if is_negated {
+            "FALSE".to_owned()
+        } else {
+            "TRUE".to_owned()
+        };
+    }
+
     let result = _items.fold(
         "".to_string(),
         |acc: String, x: &BooleanVariable| -> String {

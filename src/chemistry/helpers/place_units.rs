@@ -8,10 +8,11 @@ use crate::simulation::config::*;
 use crate::simulation::unit::{UnitAttributeValue, UnitAttributes};
 use crate::simulation::world::*;
 use rand::Rng;
+use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use typemap::{CloneMap, Key};
 
-#[derive(Clone, Default, Debug)]
+#[derive(Clone, Default, Debug, Serialize, Deserialize)]
 pub enum PlaceUnitsMethod {
     LinearBottomMiddle {
         attributes: Option<UnitAttributes>,

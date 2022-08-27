@@ -1,11 +1,11 @@
 pub mod predicates;
 use std::rc::Rc;
 
-use self::predicates::*;
-
 use crate::biology::genome::framed::types::FramedGenomeValue;
 use crate::chemistry::actions::ActionSet;
 use crate::simulation::common::{ChemistryManifest, SensorManifest};
+
+use self::predicates::{OperatorId, OperatorSet};
 
 use super::unit_behavior::framed::PhenotypeRegisterValue;
 

@@ -4,6 +4,7 @@ pub mod text_grid;
 #[macro_use]
 pub mod macros;
 
+use serde::{Deserialize, Serialize};
 use std::cmp::{max, min};
 use std::time::{Duration, Instant};
 
@@ -44,7 +45,7 @@ impl RateCounter {
     }
 }
 
-#[derive(Clone, PartialEq)]
+#[derive(Clone, PartialEq, Serialize, Deserialize)]
 pub enum GridDirection {
     Up,
     Right,

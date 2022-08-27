@@ -1,6 +1,6 @@
 use crate::{
     biology::experiments::{
-        alterations::{self, AlterationTypeSet},
+        alterations::{self, CompiledAlterationSet},
         variants::simple::{
             logger::LoggingSettings,
             utils::{CullStrategy, ExperimentSimSettings, SimpleExperimentSettings},
@@ -14,8 +14,8 @@ use crate::{
     },
 };
 
-pub fn alterations() -> AlterationTypeSet {
-    AlterationTypeSet::from_keys(&vec![
+pub fn alterations() -> CompiledAlterationSet {
+    CompiledAlterationSet::from_keys(&vec![
         "insertion".to_string(),
         "point_mutation".to_string(),
         // "deletion".to_string(),

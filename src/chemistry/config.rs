@@ -1,3 +1,4 @@
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
 use crate::chemistry::actions::ActionSet;
@@ -74,7 +75,7 @@ pub enum ChemistryConfigValueType {
     Direction,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub enum ChemistryConfigValue {
     Integer(u64),
     Boolean(bool),

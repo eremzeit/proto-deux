@@ -3,6 +3,7 @@ pub mod tests;
 use std::rc::Rc;
 
 use crate::chemistry::ChemistryInstance;
+use serde::{Deserialize, Serialize};
 
 use crate::simulation::common::SimCell;
 use crate::simulation::config::SimulationConfig;
@@ -29,7 +30,7 @@ pub type ActionParamNumber = i32;
 pub type ActionDefinitionIndex = usize;
 pub type ExecuteActionFunction = dyn Fn(&mut SimCell, &ActionExecutionContext) -> bool;
 
-#[derive(Clone, PartialEq, Debug)]
+#[derive(Clone, PartialEq, Debug, Serialize, Deserialize)]
 pub enum ActionParamType {
     UnitResourceAmount,
     UnitResourceIndex,
@@ -69,7 +70,7 @@ pub enum ActionParamType {
 //     Nil,
 // }
 
-#[derive(Clone, PartialEq, Debug)]
+#[derive(Clone, PartialEq, Debug, Serialize, Deserialize)]
 pub enum ActionParam {
     UnitResourceAmount(ActionParamNumber),
     UnitResourceIndex(UnitResourceIndex),
@@ -169,7 +170,7 @@ impl ActionParam {
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct ActionParamDefinition {
     pub name: String,
     pub param_type: ActionParamType,

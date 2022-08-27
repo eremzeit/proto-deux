@@ -139,9 +139,9 @@ pub mod builder {
     pub struct UnitEntry {
         pub behavior: Rc<Box<dyn UnitBehavior>>,
         pub species_name: String,
-        pub default_attributes: Vec<(&'static str, UnitAttributeValue)>,
-        pub default_resources: Vec<(&'static str, UnitResourceAmount)>,
-        pub default_entry_attributes: Vec<(&'static str, UnitEntryAttributeValue)>,
+        pub default_attributes: Vec<(String, UnitAttributeValue)>,
+        pub default_resources: Vec<(String, UnitResourceAmount)>,
+        pub default_entry_attributes: Vec<(String, UnitEntryAttributeValue)>,
         pub place_units_method: Option<PlaceUnitsMethod>,
         pub id: UnitEntryId,
     }

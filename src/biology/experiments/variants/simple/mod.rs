@@ -1,4 +1,5 @@
 pub mod logger;
+pub mod serialize;
 pub mod utils;
 
 use crate::biology::experiments::alterations;
@@ -145,7 +146,7 @@ impl SimpleExperiment {
         }
 
         if let Some(logger) = &self._logger  && self.current_tick == 0{
-            logger._log_checkpoint(
+            logger._log_status(
                 self.current_tick as usize,
                 &self.genome_entries,
                 &self.settings.gm,
@@ -337,11 +338,23 @@ impl SimpleExperiment {
             genome_entry.num_evaluations += 1;
 
             // println!("fitness key: {}", self.settings.fitness_calculation_key);
-            let fitness_score = calculate_fitness(
+            let mut fitness_score = calculate_fitness(
                 &self.settings.fitness_calculation_key,
                 entry.info.id,
                 &mut executor.simulation.editable(),
             );
+
+            let penalty = if genome_entry.genome.len() > 1000 {
+                (genome_entry.genome.len() / 4) as u64
+            } else {
+                0 as u64
+            };
+
+            if penalty < fitness_score {
+                fitness_score -= penalty;
+            } else {
+                fitness_score = 0;
+            }
 
             let resultItem = TrialResultItem {
                 sim_unit_entry_id,
@@ -463,7 +476,7 @@ impl SimpleExperiment {
     }
 
     pub fn cull_and_replace(&mut self) {
-        let target_count = (self.settings.num_genomes as f64 * 0.70) as usize;
+        let target_count = (self.settings.num_genomes as f64 * 0.50) as usize;
         let to_remove = self.genome_entries.len() - target_count;
         let mut by_rank = self.genome_entries.clone();
         by_rank.sort_by_key(|entry| entry.current_rank_score);
@@ -609,7 +622,7 @@ impl SimpleExperiment {
 
         perf_timer_start!("experiment_sim_eval");
         for group in groups {
-            // std::thread::sleep(Duration::from_millis(1));
+            // std::thread::sleep(Duration::from_millis(10));
             let fitness_result = self.run_evaluation_for_uids(&group);
             // println!("fitness_scores: {:?}", fitness_result);
             perf_timer_start!("adjust_ranks");
@@ -642,7 +655,7 @@ impl SimpleExperiment {
                 || _tick >= self.settings.iterations as u64
                 || self.current_tick == 1;
             if should_log_checkpoint {
-                logger._log_checkpoint(_tick as usize, &self.genome_entries, &self.settings.gm)
+                logger._log_status(_tick as usize, &self.genome_entries, &self.settings.gm)
             }
             perf_timer_stop!("experiment_logging");
         }
@@ -721,7 +734,7 @@ pub mod tests {
                 num_simulation_ticks: 10,
                 grid_size: (10, 10),
                 num_genomes_per_sim: 2,
-                default_unit_resources: vec![("cheese", 200)],
+                default_unit_resources: vec![("cheese".to_owned(), 200)],
                 default_unit_attr: vec![],
                 place_units_method: PlaceUnitsMethod::Default,
             })

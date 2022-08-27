@@ -5,11 +5,12 @@ use crate::simulation::common::*;
 use rand::Rng;
 use std::convert::TryInto;
 
+pub type GenomeAlterationTypeKey = String;
 pub type ExecuteGenomeAlterationFn<A> = dyn Fn(&[Vec<A>], &[A]) -> Vec<A>;
 pub type PrepareAlterationParamsFn<A> = dyn Fn(&[Vec<A>]) -> Vec<A>;
 
 #[derive(Clone)]
-pub struct GenomeAlterationDefinition {
+pub struct GenomeAlterationImplementation {
     pub key: String,
     pub index: ActionDefinitionIndex,
     pub execute: Rc<ExecuteGenomeAlterationFn<FramedGenomeWord>>,
@@ -17,13 +18,13 @@ pub struct GenomeAlterationDefinition {
     pub prepare: Rc<PrepareAlterationParamsFn<FramedGenomeWord>>,
 }
 
-pub struct AlterationTypeSet {
-    pub alterations: Vec<GenomeAlterationDefinition>,
+pub struct CompiledAlterationSet {
+    pub alterations: Vec<GenomeAlterationImplementation>,
 }
 
-impl AlterationTypeSet {
-    pub fn new(alterations: Vec<GenomeAlterationDefinition>) -> AlterationTypeSet {
-        let mut set = AlterationTypeSet {
+impl CompiledAlterationSet {
+    pub fn new(alterations: Vec<GenomeAlterationImplementation>) -> CompiledAlterationSet {
+        let mut set = CompiledAlterationSet {
             alterations: alterations.clone(),
         };
         set.normalize();
@@ -47,10 +48,10 @@ impl AlterationTypeSet {
             .to_owned()
             .collect::<Vec<_>>();
 
-        AlterationTypeSet::new(alterations)
+        CompiledAlterationSet::new(alterations)
     }
 
-    pub fn alteration_for_key<S: AsRef<str>>(&self, key: S) -> GenomeAlterationDefinition {
+    pub fn alteration_for_key<S: AsRef<str>>(&self, key: S) -> GenomeAlterationImplementation {
         let _key = key.as_ref();
         self.alterations
             .iter()
@@ -76,17 +77,17 @@ pub fn get_random_genome_value() -> FramedGenomeValue {
     rng.gen_range(0..FramedGenomeValue::MAX)
 }
 
-pub fn default_alteration_set() -> AlterationTypeSet {
-    let mut set = AlterationTypeSet {
+pub fn default_alteration_set() -> CompiledAlterationSet {
+    let mut set = CompiledAlterationSet {
         alterations: default_alterations(),
     };
     set.normalize();
     set
 }
 
-pub fn default_alterations() -> Vec<GenomeAlterationDefinition> {
+pub fn default_alterations() -> Vec<GenomeAlterationImplementation> {
     vec![
-        GenomeAlterationDefinition {
+        GenomeAlterationImplementation {
             key: "insertion".to_string(),
             index: 0,
             genomes_required: 1,
@@ -109,7 +110,7 @@ pub fn default_alterations() -> Vec<GenomeAlterationDefinition> {
                 },
             ),
         },
-        GenomeAlterationDefinition {
+        GenomeAlterationImplementation {
             key: "deletion".to_string(),
             index: 0,
             genomes_required: 1,
@@ -129,7 +130,7 @@ pub fn default_alterations() -> Vec<GenomeAlterationDefinition> {
                 },
             ),
         },
-        GenomeAlterationDefinition {
+        GenomeAlterationImplementation {
             key: "crossover".to_string(),
             index: 0,
             genomes_required: 2,
@@ -165,7 +166,7 @@ pub fn default_alterations() -> Vec<GenomeAlterationDefinition> {
 
                     let src_start = rng.gen_range(0..genomes[0].len());
                     let mut src_end = rng.gen_range(src_start..genomes[0].len());
-                    // src_end = src_end.min(src_start + 10); // TEMP: limit the size of cutout regions as a hack to contain genome sizes
+                    src_end = src_end.min(src_start + 10); // TEMP: limit the size of cutout regions as a hack to contain genome sizes
 
                     let dest_start = rng.gen_range(0..genomes[1].len());
                     let dest_end = rng.gen_range(dest_start..genomes[1].len());
@@ -178,7 +179,7 @@ pub fn default_alterations() -> Vec<GenomeAlterationDefinition> {
                 },
             ),
         },
-        GenomeAlterationDefinition {
+        GenomeAlterationImplementation {
             key: "point_mutation".to_string(),
             index: 0,
             genomes_required: 1,
@@ -201,7 +202,7 @@ pub fn default_alterations() -> Vec<GenomeAlterationDefinition> {
                 },
             ),
         },
-        GenomeAlterationDefinition {
+        GenomeAlterationImplementation {
             key: "point_mutation_in_channel".to_string(),
             index: 0,
             genomes_required: 1,
@@ -276,10 +277,10 @@ pub fn default_alterations() -> Vec<GenomeAlterationDefinition> {
 // 	FramesCrossover(usize, usize, usize, usize),
 // }
 pub mod tests {
-    use super::{default_alterations, AlterationTypeSet};
+    use super::{default_alterations, CompiledAlterationSet};
 
-    pub fn get_alterations() -> AlterationTypeSet {
-        AlterationTypeSet::new(default_alterations())
+    pub fn get_alterations() -> CompiledAlterationSet {
+        CompiledAlterationSet::new(default_alterations())
     }
     #[test]
     pub fn test_crossover() {
