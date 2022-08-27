@@ -11,6 +11,8 @@
 #![allow(unused_must_use)]
 #![feature(trace_macros)]
 
+use crate::{runners::RunMode, scenarios::one_offs::run_one_off};
+
 #[macro_use]
 extern crate derive_builder;
 
@@ -48,16 +50,18 @@ pub mod scenarios;
 pub mod tests;
 pub mod ui;
 
+use biology::genetic_manifest::GeneticManifest;
+use chemistry::builder::ChemistryBuilder;
 use common::ThreadedSimulationExecutor;
 use ndarray::*;
 use ndarray::{Array2, Dim, Shape};
 use perf::{perf_timer_print, perf_timer_start, perf_timer_stop};
-use runners::RunMode;
-use scenarios::one_offs::run_one_off;
 use simulation::simulation_data::new_threaded_simulation_reference;
 use std::cell::RefCell;
 use std::collections::HashMap;
 
+use crate::biology::genome::framed::builders::FramedGenomeCompiler;
+use crate::biology::genome::framed::common::FramedGenomeWord;
 use crate::biology::*;
 use crate::scenarios::simulations::get_simulation_scenario;
 use crate::simulation::*;

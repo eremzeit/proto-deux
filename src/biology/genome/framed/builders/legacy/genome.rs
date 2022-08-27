@@ -441,14 +441,22 @@ Channel #0 (DEFAULT)
 CALL new_unit(Constant(0)) IF unit_res::cheese(0, 0) == Constant(1)
 
 Channel #1
+CALL gobble_cheese() IF FALSE
+CALL gobble_cheese() IF FALSE
 
 Channel #2
+CALL gobble_cheese() IF FALSE
+CALL gobble_cheese() IF FALSE
 
-Channel #3\n\n";
+Channel #3
+CALL gobble_cheese() IF FALSE
+CALL gobble_cheese() IF FALSE\n\n";
+
+        println!("{}", frames.display(&gm));
         assert_eq!(
             frames.display(&gm),
             target
-        )
+        );
     }
 
     //#[test]
@@ -526,10 +534,25 @@ CALL new_unit(Constant(0)) IF (unit_res::cheese(0, 0) == Constant(5) && pos_res:
 CALL move_unit(Constant(0)) IF is_truthy(pos_attr::is_cheese_source(0, 0))
 
 Channel #1
+CALL gobble_cheese() IF FALSE
+CALL gobble_cheese() IF FALSE
+CALL gobble_cheese() IF FALSE
+CALL gobble_cheese() IF FALSE
+CALL gobble_cheese() IF FALSE
 
 Channel #2
+CALL gobble_cheese() IF FALSE
+CALL gobble_cheese() IF FALSE
+CALL gobble_cheese() IF FALSE
+CALL gobble_cheese() IF FALSE
+CALL gobble_cheese() IF FALSE
 
-Channel #3\n\n";
+Channel #3
+CALL gobble_cheese() IF FALSE
+CALL gobble_cheese() IF FALSE
+CALL gobble_cheese() IF FALSE
+CALL gobble_cheese() IF FALSE
+CALL gobble_cheese() IF FALSE\n\n";
 
         assert_eq!(
             render_frames(&frames.frames, &gm),

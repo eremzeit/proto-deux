@@ -629,10 +629,18 @@ Channel #0 (DEFAULT)
 CALL move_unit(Constant(75)) IF is_truthy(pos_attr::is_cheese_source(0, 0))
 
 Channel #1
+CALL gobble_cheese() IF FALSE
+CALL gobble_cheese() IF FALSE
 
 Channel #2
+CALL gobble_cheese() IF FALSE
+CALL gobble_cheese() IF FALSE
 
-Channel #3\n\n";
+Channel #3
+CALL gobble_cheese() IF FALSE
+CALL gobble_cheese() IF FALSE\n\n";
+
+        println!("{}", render_frames(&genome.frames, &gm));
         assert_eq!(s, render_frames(&genome.frames, &gm))
     }
     #[test]
@@ -666,10 +674,25 @@ CALL move_unit(Constant(75)) IF (is_truthy(pos_attr::is_cheese_source(0, 0)) && 
 CALL new_unit(Register(1)) IF NOT NOT sim_attr::total_cheese_consumed(0, 0) < Constant(100)
 
 Channel #1
+CALL gobble_cheese() IF FALSE
+CALL gobble_cheese() IF FALSE
+CALL gobble_cheese() IF FALSE
+CALL gobble_cheese() IF FALSE
+CALL gobble_cheese() IF FALSE
 
 Channel #2
+CALL gobble_cheese() IF FALSE
+CALL gobble_cheese() IF FALSE
+CALL gobble_cheese() IF FALSE
+CALL gobble_cheese() IF FALSE
+CALL gobble_cheese() IF FALSE
 
-Channel #3\n\n";
+Channel #3
+CALL gobble_cheese() IF FALSE
+CALL gobble_cheese() IF FALSE
+CALL gobble_cheese() IF FALSE
+CALL gobble_cheese() IF FALSE
+CALL gobble_cheese() IF FALSE\n\n";
 
         println!("{}", &s);
         println!("{}", &render_frames(&genome.frames, &gm));

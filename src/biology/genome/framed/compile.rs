@@ -50,8 +50,8 @@ impl<'a> FramedGenomeCompiler<'a> {
         raw_genome: Vec<FramedGenomeWord>,
         genetic_manifest: &'a GeneticManifest,
     ) -> CompiledFramedGenome {
-        flog!("Compiling genome of size {}", raw_genome.len());
-        flog!("raw genome values: {:?}", &raw_genome);
+        flog!("\n\nCompiling genome of size {}", raw_genome.len());
+        // flog!("raw genome values: {:?}", &raw_genome);
 
         perf_timer_start!("genome_compiling");
         let mut s = Self::new(raw_genome, genetic_manifest);
@@ -63,7 +63,7 @@ impl<'a> FramedGenomeCompiler<'a> {
 
     pub fn new(values: Vec<FramedGenomeWord>, genetic_manifest: &'a GeneticManifest) -> Self {
         let raw_frames = RawFrameParser::parse(values);
-        flog!("raw frames: {:?}", &raw_frames);
+        // flog!("raw frames: {:?}", &raw_frames);
 
         Self {
             genetic_manifest,
@@ -84,6 +84,11 @@ impl<'a> FramedGenomeCompiler<'a> {
         if result.len() == n {
             return Some(result);
         } else {
+            flog!(
+                "Cant fulfill pop_n_in_frame (channel: {}) (idx: {})",
+                &self.current_channel,
+                &self.idx
+            );
             return None;
         }
     }
@@ -92,6 +97,11 @@ impl<'a> FramedGenomeCompiler<'a> {
         let channel_vals = &frame.channel_values[self.current_channel];
 
         if self.idx >= channel_vals.len() {
+            // println!(
+            //     "breaking because {} is >= channel_vals.len() {}",
+            //     self.idx,
+            //     channel_vals.len()
+            // );
             return None;
         }
 
@@ -105,6 +115,7 @@ impl<'a> FramedGenomeCompiler<'a> {
         self.current_frame = 0;
 
         while self.current_frame < self.raw_frames.len() {
+            flog!("\n\nFRAME {}", self.current_frame);
             let frame = self.compile_frame();
 
             if frame.is_some() {
@@ -121,7 +132,17 @@ impl<'a> FramedGenomeCompiler<'a> {
         let default_channel =
             self.raw_frames[self.current_frame].default_channel % NUM_CHANNELS as u8;
 
-        flog!("COMPILING FRAME (current_frame: {:?})", &self.current_frame);
+        let channel_lengths = self.raw_frames[self.current_frame]
+            .channel_values
+            .iter()
+            .map(|v| v.len())
+            .collect::<Vec<_>>();
+        flog!(
+            "COMPILING FRAME (current_frame: {:?}) (channel_lengths: {:?}",
+            &self.current_frame,
+            channel_lengths
+        );
+
         let mut channels = [vec![], vec![], vec![], vec![]];
         for channel in 0..NUM_CHANNELS {
             self.idx = 0;
@@ -152,6 +173,7 @@ impl<'a> FramedGenomeCompiler<'a> {
             if let Some(gene) = self.compile_gene() {
                 genes.push(gene);
             } else {
+                flog!("[{}] no more genes", self.idx);
                 break;
             }
         }
@@ -165,25 +187,29 @@ impl<'a> FramedGenomeCompiler<'a> {
 
     pub fn compile_gene(&mut self) -> Option<Gene> {
         flog!(
-            "COMPILING GENE... (index: {:?}, {})",
+            "COMPILING GENE... (index: {:?}, frame: {}, channel: {})",
             &self.idx,
-            &self.current_frame
+            &self.current_frame,
+            &self.current_channel,
         );
         let predicate = self.compile_disjunctive_predicate();
         let operation = self.compile_operation();
+
+        flog!("compiled disjunction: {:?}", &predicate);
+        flog!("compiled operation: {:?}", &operation);
 
         return if predicate.is_some() && operation.is_some() {
             let pred = predicate.unwrap();
             let _operation = operation.unwrap();
 
-            flog!(
-                "compiled disjunction: {:?}",
-                &render_disjunction(&pred, &self.genetic_manifest,)
-            );
-            flog!(
-                "compiled operation: {:?}",
-                &render_gene_operation(&_operation, &self.genetic_manifest)
-            );
+            // flog!(
+            //     "compiled disjunction: {:?}",
+            //     &render_disjunction(&pred, &self.genetic_manifest,)
+            // );
+            // flog!(
+            //     "compiled operation: {:?}",
+            //     &render_gene_operation(&_operation, &self.genetic_manifest)
+            // );
 
             Some(Gene {
                 conditional: pred,
@@ -207,7 +233,8 @@ impl<'a> FramedGenomeCompiler<'a> {
                 return None;
             }
         };
-        flog!("num OR clauses: {}", n_clauses);
+
+        // flog!("num OR clauses: {}", n_clauses);
 
         let mut clauses: Vec<ConjunctiveClause> = vec![];
 
@@ -215,12 +242,15 @@ impl<'a> FramedGenomeCompiler<'a> {
             let pred = self.compile_conjunctive_predicate();
             if pred.is_some() {
                 clauses.push(pred.unwrap());
+            } else {
+                flog!("empty AND predicate");
             }
         }
 
-        if clauses.len() > 0 {
+        if clauses.len() == n_clauses {
             Some((is_negated, clauses))
         } else {
+            flog!("clauses {}", clauses.len());
             None
         }
     }
@@ -238,7 +268,7 @@ impl<'a> FramedGenomeCompiler<'a> {
                 return None;
             }
         };
-        flog!("num AND clauses: {}", n_conditionals);
+        // flog!("num AND clauses: {}", n_conditionals);
 
         let mut vars: Vec<BooleanVariable> = vec![];
         for i in (0..n_conditionals) {
@@ -247,7 +277,7 @@ impl<'a> FramedGenomeCompiler<'a> {
                 vars.push(bool_var.unwrap());
             }
         }
-        if vars.len() > 0 {
+        if vars.len() == n_conditionals {
             Some((is_negated, vars))
         } else {
             None
@@ -282,7 +312,7 @@ impl<'a> FramedGenomeCompiler<'a> {
         }
 
         let popped_params = _popped_params.iter().flatten().collect::<Vec<_>>();
-        flog!("Conditional popped_params: {:?}", popped_params);
+        // flog!("Conditional popped_params: {:?}", popped_params);
 
         // if we don't have enough to make the call then just give up
         if popped_params.len() < num_required_vals {
@@ -297,7 +327,7 @@ impl<'a> FramedGenomeCompiler<'a> {
 
             processed_params[i] =
                 ParsedGenomeParam::from(*param_meta, *param_val, &self.genetic_manifest);
-            flog!("processed param {}: {:?}", i, &processed_params[i]);
+            // flog!("processed param {}: {:?}", i, &processed_params[i]);
         }
 
         let conditional = BooleanVariable::Conditional(
@@ -362,23 +392,14 @@ impl<'a> FramedGenomeCompiler<'a> {
         let (op_type, op_id, param1, param2, param3) = maybe_op.unwrap();
 
         if convert::operation::is_meta_reaction(op_type) {
-            let meta_reaction: Option<ParamedMetaReactionCall> =
-                match &MetaReaction::from_val(op_id) {
-                    MetaReaction::JumpAheadFrames => {
-                        Some(ParamedMetaReactionCall::JumpAheadFrames(param1))
-                    }
-                    MetaReaction::SetChannel => Some(ParamedMetaReactionCall::SetChannel(param1)),
-                    MetaReaction::SetRegister => {
-                        Some(ParamedMetaReactionCall::SetRegister(param1, param2))
-                    }
-                    MetaReaction::Nil => None,
-                };
+            let meta_reaction: ParamedMetaReactionCall = match &MetaReaction::from_val(op_id) {
+                MetaReaction::JumpAheadFrames => ParamedMetaReactionCall::JumpAheadFrames(param1),
+                MetaReaction::SetChannel => ParamedMetaReactionCall::SetChannel(param1),
+                MetaReaction::SetRegister => ParamedMetaReactionCall::SetRegister(param1, param2),
+                MetaReaction::Nil => ParamedMetaReactionCall::Nil,
+            };
 
-            if let Some(_meta_reaction) = meta_reaction {
-                return Some(ParamedGeneOperationCall::MetaReaction(_meta_reaction));
-            } else {
-                return None;
-            }
+            return Some(ParamedGeneOperationCall::MetaReaction(meta_reaction));
         } else {
             let num_reactions = self.genetic_manifest.chemistry_manifest.reactions.len();
             let reaction_id = (op_id as usize % num_reactions) as ReactionId;

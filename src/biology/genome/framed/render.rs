@@ -102,6 +102,14 @@ pub fn render_disjunction(dis: &DisjunctiveClause, genetic_manifest: &GeneticMan
     let _items = dis.1.iter();
     let is_negated = dis.0;
 
+    if _items.len() == 0 {
+        return if is_negated {
+            "TRUE".to_owned()
+        } else {
+            "FALSE".to_owned()
+        };
+    }
+
     let result = _items.fold(
         "".to_string(),
         |acc: String, x: &ConjunctiveClause| -> String {
