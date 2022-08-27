@@ -11,7 +11,7 @@ macro_rules! frames_from_genome {
 macro_rules! genome {
     ($(gene(if_any$if_any:tt, then_do$then_do:tt)),*) => ({ 
         {
-            use crate::biology::genome::framed::builders::legacy::util::{GenomeBuilder, GenomeBuildFunction};
+            use crate::biology::genome::framed::builders::legacy::util::{GenomeBuilderLegacy, GenomeBuildFunction};
             use crate::biology::genome::framed::types::{FramedGenomeValue};
             use crate::simulation::common::{SensorManifest, GeneticManifest, ChemistryManifest};
             use std::rc::Rc;
@@ -32,7 +32,7 @@ macro_rules! genome {
 
                     values
             });
-            GenomeBuilder::new(build_fn)
+            GenomeBuilderLegacy::new(build_fn)
         }
     });
 }
@@ -145,7 +145,7 @@ macro_rules! __gene_bool_var {
 
             use crate::biology::genome::framed::convert;
             use crate::biology::genome::framed::convert::param_meta;
-            use crate::biology::genome::framed::builders::legacy::util::{GenomeBuilder, GenomeBuildFunction};
+            use crate::biology::genome::framed::builders::legacy::util::{GenomeBuilderLegacy, GenomeBuildFunction};
             use crate::biology::genome::framed::util;
             use crate::biology::genetic_manifest::predicates::{OperatorParam};
             use std::convert::TryInto;

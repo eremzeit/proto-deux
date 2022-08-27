@@ -351,7 +351,7 @@ impl<'a> FramedGenomeCompiler<'a> {
         return Some((op_type, raw_operation_id, param1, param2, param3));
     }
 
-    pub fn compile_operation(&mut self) -> Option<GeneOperationCall> {
+    pub fn compile_operation(&mut self) -> Option<ParamedGeneOperationCall> {
         //println!("COMPILING OPERATION");
         let maybe_op = self.pop_operation();
 
@@ -375,14 +375,14 @@ impl<'a> FramedGenomeCompiler<'a> {
                 };
 
             if let Some(_meta_reaction) = meta_reaction {
-                return Some(GeneOperationCall::MetaReaction(_meta_reaction));
+                return Some(ParamedGeneOperationCall::MetaReaction(_meta_reaction));
             } else {
                 return None;
             }
         } else {
             let num_reactions = self.genetic_manifest.chemistry_manifest.reactions.len();
             let reaction_id = (op_id as usize % num_reactions) as ReactionId;
-            return Some(GeneOperationCall::Reaction((
+            return Some(ParamedGeneOperationCall::Reaction((
                 reaction_id,
                 param1,
                 param2,
@@ -408,7 +408,7 @@ pub mod tests {
     use super::*;
 
     #[test]
-    pub fn test_parse_multiple_frames() {
+    pub fn test_compile_multiple_frames() {
         use super::super::common::*;
         let gm = GeneticManifest::defaults(&CheeseChemistry::construct_manifest(
             &ChemistryConfiguration::new(),

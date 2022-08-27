@@ -19,7 +19,7 @@ use crate::biology::genome::framed::convert::param_meta;
 use crate::biology::genome::framed::types::{FramedGenomeValue, RegisterId};
 use std::convert::TryInto;
 
-pub type PhenotypeRegisterValue = u8;
+pub type PhenotypeRegisterValue = u16;
 pub type PhenotypeRegisters = Vec<PhenotypeRegisterValue>;
 pub type MetaReactionCallParam = u32;
 pub type MetaReactionId = u8;
@@ -177,8 +177,11 @@ pub struct PhenotypeRegisterChange {
     pub new_value: PhenotypeRegisterValue,
 }
 
+/**
+ * Represents a gene operation call that has parameters that still need to be evaluated.  ie. they aren't literal
+ */
 #[derive(PartialEq, Debug, Clone)]
-pub enum GeneOperationCall {
+pub enum ParamedGeneOperationCall {
     Reaction(
         ParamedReactionCall, // ReactionId,
                              // ParsedGenomeParam,
@@ -189,11 +192,11 @@ pub enum GeneOperationCall {
     Nil,
 }
 
-impl GeneOperationCall {
+impl ParamedGeneOperationCall {
     pub fn as_reaction_call(self) -> ParamedReactionCall {
         match &self {
             //GeneOperationCall::Reaction(id, param1, param2, param3) => { (*id, param1.clone(), param2.clone(), param3.clone())},
-            GeneOperationCall::Reaction(call) => {
+            ParamedGeneOperationCall::Reaction(call) => {
                 (call.0, call.1.clone(), call.2.clone(), call.3.clone())
             }
             _ => {

@@ -115,7 +115,7 @@ pub fn get_genome1(gm: &GeneticManifest) -> CompiledFramedGenome {
     FramedGenomeCompiler::compile(get_genome1_raw(gm), gm.clone())
 }
 
-pub fn get_genome2() -> GenomeBuilder {
+pub fn get_genome2() -> GenomeBuilderLegacy {
     genome!(
         gene(
             if_any(all(
@@ -241,7 +241,7 @@ pub fn get_genome2() -> GenomeBuilder {
 
 use crate::biology::genome::framed::builders::legacy::util::*;
 
-pub fn get_genome3() -> GenomeBuilder {
+pub fn get_genome3() -> GenomeBuilderLegacy {
     genome!(gene(
         if_any(all((true, 0, 0, 0))),
         then_do(move_unit(right))

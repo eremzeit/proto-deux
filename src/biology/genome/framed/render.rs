@@ -14,7 +14,7 @@ use crate::simulation::world::World;
 use crate::util::Coord;
 use std::fmt::{Debug, Formatter, Result};
 
-use crate::biology::unit_behavior::framed::{GeneOperationCall, ParsedGenomeParam};
+use crate::biology::unit_behavior::framed::{ParamedGeneOperationCall, ParsedGenomeParam};
 
 pub fn render_param(param: &ParsedGenomeParam, sensor_manifest: &SensorManifest) -> String {
     match param {
@@ -118,11 +118,11 @@ pub fn render_disjunction(dis: &DisjunctiveClause, genetic_manifest: &GeneticMan
 }
 
 pub fn render_gene_operation(
-    call: &GeneOperationCall,
+    call: &ParamedGeneOperationCall,
     genetic_manifest: &GeneticManifest,
 ) -> String {
     match &call {
-        GeneOperationCall::Reaction((reaction_id, p1, p2, p3)) => {
+        ParamedGeneOperationCall::Reaction((reaction_id, p1, p2, p3)) => {
             let reaction = &genetic_manifest.chemistry_manifest.reactions[*reaction_id as usize];
             let required_count = genetic_manifest
                 .chemistry_manifest
@@ -138,10 +138,10 @@ pub fn render_gene_operation(
                 format!("{}({:?}, {:?}, {:?})", reaction.key, p1, p2, p3)
             }
         }
-        GeneOperationCall::MetaReaction(meta_reaction) => {
+        ParamedGeneOperationCall::MetaReaction(meta_reaction) => {
             format!("{:?}", meta_reaction)
         }
-        GeneOperationCall::Nil => {
+        ParamedGeneOperationCall::Nil => {
             format!("NilGeneOperationCall")
         }
     }
@@ -300,7 +300,7 @@ pub mod tests {
                 ],
             ),
 
-            operation: GeneOperationCall::Nil,
+            operation: ParamedGeneOperationCall::Nil,
         };
 
         let gm = GeneticManifest::defaults(&CheeseChemistry::construct_manifest(
@@ -328,7 +328,7 @@ pub mod tests {
                     ],
                 ),
 
-                operation: GeneOperationCall::Reaction((
+                operation: ParamedGeneOperationCall::Reaction((
                     0,
                     ParsedGenomeParam::Constant(0),
                     ParsedGenomeParam::Constant(0),
@@ -344,7 +344,7 @@ pub mod tests {
                     ],
                 ),
 
-                operation: GeneOperationCall::Reaction((
+                operation: ParamedGeneOperationCall::Reaction((
                     1,
                     ParsedGenomeParam::Constant(0),
                     ParsedGenomeParam::Constant(0),
@@ -377,7 +377,7 @@ CALL move_unit(Constant(0)) IF ( Value(true) || Value(false) )\n";
                     ],
                 ),
 
-                operation: GeneOperationCall::Reaction((
+                operation: ParamedGeneOperationCall::Reaction((
                     0,
                     ParsedGenomeParam::Constant(0),
                     ParsedGenomeParam::Constant(0),
@@ -392,7 +392,7 @@ CALL move_unit(Constant(0)) IF ( Value(true) || Value(false) )\n";
                         (false, vec![BooleanVariable::Literal(true)]),
                     ],
                 ),
-                operation: GeneOperationCall::Reaction((
+                operation: ParamedGeneOperationCall::Reaction((
                     1,
                     ParsedGenomeParam::Constant(0),
                     ParsedGenomeParam::Constant(0),

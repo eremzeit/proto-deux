@@ -5,12 +5,12 @@ use crate::simulation::simulation_data::{
     new_threaded_simulation_reference, ThreadedSimulationReference,
 };
 
-use crate::biology::genome::framed::builders::legacy::util::GenomeBuilder;
+use crate::biology::genome::framed::builders::legacy::util::GenomeBuilderLegacy;
 use crate::biology::genome::framed::*;
 use crate::biology::unit_behavior::framed::*;
 use crate::simulation::common::UnitEntryBuilder;
 
-pub fn get_genome1() -> GenomeBuilder {
+pub fn get_genome1() -> GenomeBuilderLegacy {
     genome!(
         gene(
             if_any(all(
@@ -119,7 +119,7 @@ pub fn get_genome1() -> GenomeBuilder {
         )
     )
 }
-pub fn get_genome2() -> GenomeBuilder {
+pub fn get_genome2() -> GenomeBuilderLegacy {
     genome!(
         gene(
             if_any(all(
@@ -245,7 +245,7 @@ pub fn get_genome2() -> GenomeBuilder {
 
 use crate::biology::genome::framed::builders::legacy::util::*;
 
-pub fn get_genome3() -> GenomeBuilder {
+pub fn get_genome3() -> GenomeBuilderLegacy {
     genome!(gene(
         if_any(all((true, 0, 0, 0))),
         then_do(move_unit(right))

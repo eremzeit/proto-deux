@@ -14,8 +14,8 @@
 #[macro_use]
 extern crate derive_builder;
 
-#[macro_use]
-extern crate serde_json;
+// #[macro_use]
+// extern crate serde_json;
 
 extern crate chrono;
 extern crate clap;
@@ -54,7 +54,6 @@ use ndarray::{Array2, Dim, Shape};
 use perf::{perf_timer_print, perf_timer_start, perf_timer_stop};
 use runners::RunMode;
 use scenarios::one_offs::run_one_off;
-use serde_json::{Result, Value};
 use simulation::simulation_data::new_threaded_simulation_reference;
 use std::cell::RefCell;
 use std::collections::HashMap;

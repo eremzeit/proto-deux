@@ -50,7 +50,7 @@ pub type SensorId = usize;
 pub struct SensorDefinition {
     pub id: SensorId,
     pub key: String,
-    pub prop_key: String, //for display purposes
+    pub prop_key: String, //for display purposes.  is used to store the original property key that corresponds to this sensor
     pub sensor_type: SensorType,
 }
 

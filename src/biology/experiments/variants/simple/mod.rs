@@ -609,7 +609,7 @@ impl SimpleExperiment {
 
         perf_timer_start!("experiment_sim_eval");
         for group in groups {
-            std::thread::sleep(Duration::from_millis(1));
+            // std::thread::sleep(Duration::from_millis(1));
             let fitness_result = self.run_evaluation_for_uids(&group);
             // println!("fitness_scores: {:?}", fitness_result);
             perf_timer_start!("adjust_ranks");

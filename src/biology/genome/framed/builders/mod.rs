@@ -13,12 +13,12 @@ pub use crate::biology::genome::framed::util::identify_raw_param_string;
 
 use std::convert::TryInto;
 
-use super::common::{FramedGenomeValue, FramedGenomeWord};
+use super::common::{FramedGenomeValue, FramedGenomeWord, NUM_CHANNELS};
 
 type BuildFunction<T> = Rc<dyn Fn(&GeneticManifest) -> Vec<T>>;
 
 macro_rules! _make_builder_type {
-    ($builder_type:ident, $output_type:ident) => {
+    ($builder_type:ident, $output_type:ty) => {
         #[derive(Clone)]
         pub struct $builder_type {
             pub build_fn: BuildFunction<$output_type>,
@@ -35,6 +35,8 @@ macro_rules! _make_builder_type {
     };
 }
 
+_make_builder_type!(GenomeBuilder, FramedGenomeWord);
+// _make_builder_type!(FramesBuilder, Vec<FramedGenomeWord>);
 _make_builder_type!(FrameBuilder, FramedGenomeWord);
 _make_builder_type!(GeneBuilder, FramedGenomeValue);
 _make_builder_type!(PredicateBuilder, FramedGenomeValue);
@@ -42,6 +44,105 @@ _make_builder_type!(OperationBuilder, FramedGenomeValue);
 _make_builder_type!(ConjunctiveClauseBuilder, FramedGenomeValue);
 _make_builder_type!(ConditionalBuilder, FramedGenomeValue);
 
+// pub fn genes_into_frames(channels: Vec<Vec<GeneBuilder>>) -> FramesBuilder {
+//     FramesBuilder::new(Rc::new(
+//         move |gm: &GeneticManifest| -> Vec<Vec<FramedGenomeWord>> {
+//             let genes_by_channel = channels
+//                 .iter()
+//                 .map(|x| {
+//                     x.iter()
+//                         .map(|builder| builder.build(gm))
+//                         .collect::<Vec<_>>()
+//                 })
+//                 .collect::<Vec<_>>();
+
+//             let mut channel_gene_idxs: Vec<usize> = vec![];
+//             channel_gene_idxs.resize(NUM_CHANNELS, 0);
+
+//             loop {
+//                 let is_finished = (0..NUM_CHANNELS)
+//                     .map(|i| channel_gene_idxs[i] >= channels[i].len())
+//                     .all(|x| x);
+
+//                 let minimum_frame_size = (0..100).find_map(|frame_size| {
+//                     for c in 0..NUM_CHANNELS {
+//                         genes_by_channel[c]
+//                     }
+//                     // let required_frame_sizes = (0..NUM_CHANNELS).map_find(|channel| {
+
+//                     // });
+//                 });
+//             }
+
+//             vec![vec![]]
+//         },
+//     ))
+// }
+
+// pub type GeneBuilderList = Vec<GeneBuilder>;
+// pub type FrameChannelBuilder = Vec<GeneBuilderList>;
+
+// pub fn frame(frames: Vec<FrameChannelBuilder>) -> FramesBuilder {
+//     FramesBuilder::new(Rc::new(
+//         move |gm: &GeneticManifest| -> Vec<Vec<FramedGenomeWord>> {},
+//     ))
+
+//     //
+//     framed_genome(frame(channel(vec![])));
+// }
+
+pub fn framed_genome(frames: Vec<FrameBuilder>) -> GenomeBuilder {
+    GenomeBuilder::new(Rc::new(
+        move |gm: &GeneticManifest| -> Vec<FramedGenomeWord> {
+            frames
+                .iter()
+                .map(|f| f.build(gm))
+                .flatten()
+                .collect::<Vec<_>>()
+        },
+    ))
+}
+
+pub fn frame(
+    channel1: Vec<GeneBuilder>,
+    channel2: Vec<GeneBuilder>,
+    channel3: Vec<GeneBuilder>,
+    channel4: Vec<GeneBuilder>,
+) -> FrameBuilder {
+    // FrameBuilder::new(Rc::new(
+    //     move |gm: &GeneticManifest| -> Vec<FramedGenomeWord> {
+
+    //         let frame = merge_channels_into_frame(channel_values, 0);
+    //         frame
+    //     },
+    // ))
+
+    _frame_from_channels(vec![channel1, channel2, channel3, channel4])
+}
+
+/**
+ * Given 4 channels of genes, compile into a single frame.
+ */
+pub fn _frame_from_channels(channels: Vec<Vec<GeneBuilder>>) -> FrameBuilder {
+    FrameBuilder::new(Rc::new(
+        move |gm: &GeneticManifest| -> Vec<FramedGenomeWord> {
+            let mut channel_values = channels
+                .iter()
+                .map(|channel_genes| {
+                    channel_genes
+                        .iter()
+                        .map(|gene| gene.build(gm))
+                        .collect::<Vec<Vec<FramedGenomeValue>>>()
+                        .concat()
+                })
+                .collect::<Vec<_>>();
+
+            channel_values.resize(4, vec![]);
+            let frame = merge_channels_into_frame(channel_values, 0);
+            frame
+        },
+    ))
+}
 /**
  * Given a single list of genes, create a frame with the given genes in the first channel
  */

@@ -1,3 +1,5 @@
+use chemistry::reactions::ReactionCallParam;
+
 use crate::biology::genetic_manifest::predicates::{
     Operator, OperatorParamDefinition, OperatorParamType, OperatorSet,
 };
@@ -20,6 +22,16 @@ use crate::biology::unit_behavior::framed::types::*;
 use crate::chemistry::reactions::ReactionCall;
 use std::convert::TryInto;
 
+/** Represents the final result of a gene operation with the literal values that can be used for executing. */
+pub enum ExecutableGeneOperation {
+    ReactionCall(ReactionCall),
+
+    // jumping ahead 0 frames means terminating the current frame and jumping to the next one
+    JumpAheadFrames(u8),
+    SetChannel(u8),
+    SetRegister(RegisterId, PhenotypeRegisterValue),
+}
+
 pub struct GenomeExecutionContext<'a> {
     pub genetic_manifest: &'a GeneticManifest,
     frames: &'a Vec<Frame>,
@@ -29,8 +41,8 @@ pub struct GenomeExecutionContext<'a> {
     pub allotted_compute_points: u64,
 
     pub sensor_context: &'a SensorContext<'a>,
-    registers: PhenotypeRegisters,
-    pub register_changes: PhenotypeRegisterChanges,
+    pub registers: PhenotypeRegisters,
+    // pub register_changes: PhenotypeRegisterChanges,
 }
 
 use crate::biology::genome::framed::render::render_gene;
@@ -50,7 +62,7 @@ impl<'a> GenomeExecutionContext<'a> {
             current_frame: 0,
             override_channel: None,
             registers,
-            register_changes: vec![],
+            // register_changes: vec![],
             consumed_compute_points: 0,
             allotted_compute_points: compute_points,
         }
@@ -79,42 +91,71 @@ impl<'a> GenomeExecutionContext<'a> {
 
         let genes = &frame.channels[channel as usize];
 
-        for (i, gene) in genes.iter().enumerate() {
+        'gene_loop: for (i, gene) in genes.iter().enumerate() {
             let cond = &gene.conditional;
-            // println!("executing conditional: {:?}", &cond);
-            let cond_result = self.execute_conditional(&cond);
+
             if self.consumed_compute_points > self.allotted_compute_points {
                 return None;
             }
+            // println!("executing conditional: {:?}", &cond);
+            let cond_result = self.execute_conditional(&cond);
 
             if cond_result {
                 let op = &gene.operation;
-                let result = self.execute_operation(op);
-
-                if result.is_some() {
-                    // let s = render_gene(
-                    //     gene,
-                    //     &self.chemistry_manifest,
-                    //     &self.genetic_manifest,
-                    //     &self.sensor_manifest,
-                    // );
-                    //flog!("Gene {} triggered: {:?}", i, &s);
-                    return result;
+                let _result = self.evaluate_gene_operation_call(op);
+                if let Some(result) = _result {
+                    match result {
+                        ExecutableGeneOperation::ReactionCall(reaction_call) => {
+                            return Some(reaction_call)
+                        }
+                        ExecutableGeneOperation::JumpAheadFrames(frames) => {
+                            self.current_frame += frames as usize;
+                            break 'gene_loop;
+                        }
+                        ExecutableGeneOperation::SetChannel(channel) => {
+                            self.override_channel = Some(channel);
+                            break 'gene_loop;
+                        }
+                        ExecutableGeneOperation::SetRegister(reg_id, reg_val) => {
+                            self.registers[reg_id] = reg_val;
+                        }
+                    }
                 }
             }
         }
 
         None
     }
-    pub fn execute_operation(&mut self, operation: &GeneOperationCall) -> Option<ReactionCall> {
+    pub fn evaluate_gene_operation_call(
+        &mut self,
+        operation: &ParamedGeneOperationCall,
+    ) -> Option<ExecutableGeneOperation> {
+        self.consumed_compute_points += 1;
+
         match operation {
-            GeneOperationCall::MetaReaction(meta_reaction) => {
-                self.consumed_compute_points += 1;
-                None
-                //TODO
-                //panic!("meta reactions not supported yet");
-            }
-            GeneOperationCall::Reaction(paramed_reaction_call) => {
+            ParamedGeneOperationCall::MetaReaction(meta_reaction) => match meta_reaction {
+                ParamedMetaReactionCall::SetChannel(param) => {
+                    let param_val = self.eval_param(&param);
+                    let channel: u8 = (param_val % NUM_CHANNELS as i32).try_into().unwrap();
+                    Some(ExecutableGeneOperation::SetChannel(channel))
+                }
+                ParamedMetaReactionCall::JumpAheadFrames(param) => {
+                    let mut frame_count: u8 = (self.eval_param(&param) % 3).try_into().unwrap();
+                    Some(ExecutableGeneOperation::JumpAheadFrames(frame_count))
+                }
+                ParamedMetaReactionCall::SetRegister(r, v) => {
+                    let reg_id = (self.eval_param(&r)
+                        % self.genetic_manifest.number_of_registers as i32)
+                        .try_into()
+                        .unwrap();
+                    let reg_val = (self.eval_param(&v) % u16::MAX as i32).try_into().unwrap();
+
+                    Some(ExecutableGeneOperation::SetRegister(reg_id, reg_val))
+                }
+
+                ParamedMetaReactionCall::Nil => None,
+            },
+            ParamedGeneOperationCall::Reaction(paramed_reaction_call) => {
                 self.consumed_compute_points += 1;
 
                 let param_val1 = self.eval_param(&paramed_reaction_call.1);
@@ -122,14 +163,14 @@ impl<'a> GenomeExecutionContext<'a> {
                 let param_val3 = self.eval_param(&paramed_reaction_call.3);
 
                 //flog!("REACTION TO EXECUTE: {:?}", paramed_reaction_call);
-                return Some((
+                Some(ExecutableGeneOperation::ReactionCall((
                     paramed_reaction_call.0,
                     (param_val1 % (u16::MAX as i32)).try_into().unwrap(),
                     (param_val2 % (u16::MAX as i32)).try_into().unwrap(),
                     (param_val3 % (u16::MAX as i32)).try_into().unwrap(),
-                ));
+                )))
             }
-            GeneOperationCall::Nil => None,
+            ParamedGeneOperationCall::Nil => None,
         }
     }
 
@@ -216,44 +257,203 @@ impl<'a> GenomeExecutionContext<'a> {
 }
 
 pub mod tests {
-    use crate::simulation::common::{
-        properties::CheeseChemistry, Chemistry, ChemistryConfiguration, ChemistryInstance,
-        GeneticManifest,
+    use crate::{
+        biology::unit_behavior::framed::GenomeExecutionContext,
+        simulation::common::{
+            helpers::place_units::PlaceUnitsMethod, properties::CheeseChemistry,
+            variants::FooChemistry, Chemistry, ChemistryConfiguration, ChemistryInstance,
+            ChemistryManifest, GeneticManifest, NullBehavior, SensorContext, SimulationBuilder,
+            UnitEntry, UnitManifest,
+        },
     };
 
     use super::super::common::*;
+
+    pub fn sim_builder(chemistry: ChemistryInstance) -> SimulationBuilder {
+        SimulationBuilder::default()
+            .chemistry(chemistry)
+            .size((5, 5))
+            .place_units_method(PlaceUnitsMethod::ManualSingleEntry {
+                attributes: None,
+                coords: vec![(1, 1)],
+            })
+            .unit_manifest(UnitManifest {
+                units: vec![UnitEntry::new("main", NullBehavior::construct())],
+            })
+    }
     #[test]
     pub fn test_set_register() {
-        let gm = GeneticManifest::defaults(&CheeseChemistry::construct_manifest(
-            &ChemistryConfiguration::new(),
-        ));
+        let chemistry = FooChemistry::construct_with_default_config();
+        let gm = GeneticManifest::defaults(chemistry.get_manifest()).wrap_rc();
 
-        let mut frame1 = frame_from_single_channel(vec![gene(
-            if_any(vec![if_all(vec![
-                conditional!(is_truthy, pos_attr::is_cheese_source(0, 0)),
-                conditional!(gt, unit_res::cheese, 100),
-            ])]),
-            then_do!(move_unit, 75),
-        )])
-        .build(&gm);
-
-        let mut frame2 = frame_from_single_channel(vec![gene(
-            if_none(vec![if_not_all(vec![conditional!(
-                lt,
-                sim_attr::total_cheese_consumed,
-                100
-            )])]),
-            then_do!(new_unit, register(1), 69, 69),
-        )])
+        let mut frame1 = frame_from_single_channel(vec![
+            gene(
+                if_any(vec![if_all(vec![conditional!(is_truthy, 1)])]),
+                then_do!(set_register, 0, 100),
+            ),
+            gene(
+                if_any(vec![if_all(vec![conditional!(is_truthy, 1)])]),
+                then_do!(set_register, 1, 101),
+            ),
+            gene(
+                if_any(vec![if_all(vec![conditional!(is_truthy, 1)])]),
+                then_do!(set_register, 2, 102),
+            ),
+            gene(
+                if_any(vec![if_all(vec![conditional!(is_truthy, 1)])]),
+                then_do!(set_register, 3, 103),
+            ),
+            gene(
+                if_any(vec![if_all(vec![conditional!(is_truthy, 1)])]),
+                then_do!(set_register, 4, 104),
+            ),
+            gene(
+                if_any(vec![if_all(vec![conditional!(is_truthy, 1)])]),
+                then_do!(set_register, 5, 111),
+            ),
+        ])
         .build(&gm);
 
         let mut genome_words = vec![];
         genome_words.append(&mut frame1);
-        genome_words.append(&mut frame2);
 
         let compiled = FramedGenomeCompiler::compile(genome_words, &gm);
 
-        println!("genome:\n{}", compiled.display(&gm));
-        assert_eq!(compiled.frames.len(), 2);
+        let registers = gm.empty_registers();
+
+        let sim = sim_builder(chemistry).to_simulation();
+        let sensor_context = SensorContext::from(&sim.world, &sim.attributes, &(1, 1));
+
+        let mut execution =
+            GenomeExecutionContext::new(&compiled.frames, &sensor_context, registers, &gm, 10000);
+        let result = execution.execute();
+
+        println!("execution: {:?}", result);
+        println!("registers: {:?}", execution.registers);
+
+        // setting the register at r_id=5 means overflowing to the r_id=0 register
+        assert_eq!(execution.registers, vec![111, 101, 102, 103, 104]);
+    }
+
+    #[test]
+    pub fn test_set_channel() {
+        let chemistry = FooChemistry::construct_with_default_config();
+        let gm = GeneticManifest::defaults(chemistry.get_manifest()).wrap_rc();
+
+        let raw_genome = framed_genome(vec![
+            frame(
+                vec![
+                    gene(
+                        if_any(vec![if_all(vec![conditional!(is_truthy, 1)])]),
+                        then_do!(set_register, 0, 100),
+                    ),
+                    gene(
+                        if_any(vec![if_all(vec![conditional!(is_truthy, 1)])]),
+                        then_do!(set_channel, 1),
+                    ),
+                    gene(
+                        if_any(vec![if_all(vec![conditional!(is_truthy, 1)])]),
+                        then_do!(set_register, 0, 101),
+                    ),
+                ],
+                vec![],
+                vec![],
+                vec![],
+            ),
+            frame(
+                vec![],
+                vec![gene(
+                    if_any(vec![if_all(vec![conditional!(is_truthy, 1)])]),
+                    then_do!(set_register, 1, 1337),
+                )],
+                vec![],
+                vec![],
+            ),
+        ])
+        .build(&gm);
+
+        let compiled = FramedGenomeCompiler::compile(raw_genome, &gm);
+
+        let registers = gm.empty_registers();
+
+        let sim = sim_builder(chemistry).to_simulation();
+        let sensor_context = SensorContext::from(&sim.world, &sim.attributes, &(1, 1));
+
+        let mut execution =
+            GenomeExecutionContext::new(&compiled.frames, &sensor_context, registers, &gm, 10000);
+        let result = execution.execute();
+
+        println!("execution: {:?}", result);
+        println!("registers: {:?}", execution.registers);
+
+        // setting the register at r_id=5 means overflowing to the r_id=0 register
+        assert_eq!(execution.registers[0], 100);
+        assert_eq!(execution.registers[1], 1337);
+        assert_eq!(execution.override_channel, Some(1));
+    }
+
+    #[test]
+    pub fn test_jump_ahead() {
+        let chemistry = FooChemistry::construct_with_default_config();
+        let gm = GeneticManifest::defaults(chemistry.get_manifest()).wrap_rc();
+
+        let raw_genome = framed_genome(vec![
+            frame(
+                vec![
+                    gene(
+                        if_any(vec![if_all(vec![conditional!(is_truthy, 1)])]),
+                        then_do!(set_register, 0, 100),
+                    ),
+                    gene(
+                        if_any(vec![if_all(vec![conditional!(is_truthy, 1)])]),
+                        then_do!(jump_ahead_frames, 1),
+                    ),
+                    gene(
+                        if_any(vec![if_all(vec![conditional!(is_truthy, 1)])]),
+                        then_do!(set_register, 0, 101),
+                    ),
+                ],
+                vec![],
+                vec![],
+                vec![],
+            ),
+            frame(
+                vec![gene(
+                    if_any(vec![if_all(vec![conditional!(is_truthy, 1)])]),
+                    then_do!(set_register, 2, 13),
+                )],
+                vec![],
+                vec![],
+                vec![],
+            ),
+            frame(
+                vec![gene(
+                    if_any(vec![if_all(vec![conditional!(is_truthy, 1)])]),
+                    then_do!(set_register, 1, 1337),
+                )],
+                vec![],
+                vec![],
+                vec![],
+            ),
+        ])
+        .build(&gm);
+
+        let compiled = FramedGenomeCompiler::compile(raw_genome, &gm);
+
+        let registers = gm.empty_registers();
+
+        let sim = sim_builder(chemistry).to_simulation();
+        let sensor_context = SensorContext::from(&sim.world, &sim.attributes, &(1, 1));
+
+        let mut execution =
+            GenomeExecutionContext::new(&compiled.frames, &sensor_context, registers, &gm, 10000);
+        let result = execution.execute();
+
+        println!("execution: {:?}", result);
+        println!("registers: {:?}", execution.registers);
+
+        assert_eq!(execution.registers[0], 100);
+        assert_eq!(execution.registers[1], 1337);
+        assert_ne!(execution.registers[2], 13);
     }
 }

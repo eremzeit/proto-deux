@@ -74,7 +74,7 @@ pub struct Frame {
 #[derive(Debug, Clone)]
 pub struct Gene {
     pub conditional: DisjunctiveClause,
-    pub operation: GeneOperationCall,
+    pub operation: ParamedGeneOperationCall,
 }
 
 // impl Gene {

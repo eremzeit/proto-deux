@@ -7,9 +7,12 @@ use crate::biology::genome::framed::types::FramedGenomeValue;
 use crate::chemistry::actions::ActionSet;
 use crate::simulation::common::{ChemistryManifest, SensorManifest};
 
+use super::unit_behavior::framed::PhenotypeRegisterValue;
+
 /**
  * Contains the information that is required to interpret a genome.
  */
+// #[derive(Serialize, Deserialize)]
 pub struct GeneticManifest {
     pub chemistry_manifest: Rc<ChemistryManifest>,
     pub sensor_manifest: Rc<SensorManifest>,
@@ -33,6 +36,12 @@ impl GeneticManifest {
 
     pub fn operator_id_for_key(&self, s: &str) -> OperatorId {
         self.operator_set.by_key(s).index
+    }
+
+    pub fn empty_registers(&self) -> Vec<PhenotypeRegisterValue> {
+        let mut v = Vec::new();
+        v.resize(self.number_of_registers, 0);
+        v
     }
 
     pub fn wrap_rc(self) -> Rc<Self> {

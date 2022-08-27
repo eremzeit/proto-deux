@@ -17,11 +17,11 @@ use std::rc::Rc;
 
 pub type GenomeBuildFunction = Rc<dyn Fn(&GeneticManifest) -> Vec<FramedGenomeValue>>;
 
-pub struct GenomeBuilder {
+pub struct GenomeBuilderLegacy {
     pub build_fn: GenomeBuildFunction,
 }
 
-impl GenomeBuilder {
+impl GenomeBuilderLegacy {
     pub fn new(build_fn: GenomeBuildFunction) -> Self {
         Self { build_fn }
     }
