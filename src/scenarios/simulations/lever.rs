@@ -26,7 +26,8 @@ pub fn basic(sim_args: &SimulationRunnerArgs) -> SimulationBuilder {
 
 pub fn with_genome(sim_args: &SimulationRunnerArgs) -> SimulationBuilder {
     let chemistry_builder = ChemistryBuilder::with_key("lever");
-    let gm = GeneticManifest::defaults(&chemistry_builder.manifest()).wrap_rc();
+    let chemistry = chemistry_builder.build();
+    let gm = GeneticManifest::from_chemistry(&chemistry).wrap_rc();
 
     use crate::biology::genome::framed::samples::lever::genome1;
     let _genome1 = genome1(&gm);

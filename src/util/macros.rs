@@ -8,6 +8,23 @@ macro_rules! wrap_chemistry {
     };
 }
 
+// macro_rules! _define_const {
+//     ($struct_name:ident, $idx_type:ident, [$([$attribute:ident,  $_: ty]),*]) => {
+//         pub struct $struct_name {
+//             $(
+//                 pub $attribute: $idx_type,
+//             )*
+//         }
+//     };
+//     ($struct_name:ident, $idx_type:ident, [$([$attribute:ident, $_:expr]),*]) => {
+//         pub struct $struct_name {
+//             $(
+//                 pub $attribute: $idx_type,
+//             )*
+//         }
+//     };
+// }
+
 macro_rules! _define_struct {
     ($struct_name:ident, $idx_type:ident, [$([$attribute:ident,  $_: ty]),*]) => {
         pub struct $struct_name {
@@ -168,6 +185,7 @@ macro_rules! def_position_attributes {
 #[macro_export]
 macro_rules! def_unit_resources {
     ($all:tt) => {
+        // _define_const!(unit_resources, $all);
         _define_struct!(UnitResourcesLookup, ResourceIndex, $all);
         _define_impl__res!(UnitResourcesLookup, UnitResourceDefinition, $all);
     };

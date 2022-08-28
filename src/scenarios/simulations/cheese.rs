@@ -36,7 +36,8 @@ pub fn basic(sim_args: &SimulationRunnerArgs) -> SimulationBuilder {
 
 pub fn with_genome(sim_args: &SimulationRunnerArgs) -> SimulationBuilder {
     let chemistry_builder = ChemistryBuilder::with_key("cheese");
-    let gm = GeneticManifest::defaults(&chemistry_builder.manifest()).wrap_rc();
+    let chemistry = chemistry_builder.build();
+    let gm = GeneticManifest::from_chemistry(&chemistry).wrap_rc();
 
     // let specs = SimulationSpecs {
     //     chemistry_key: "cheese".to_string(),

@@ -14,7 +14,7 @@ use crate::simulation::{
         properties::{
             AttributeDefinitionType, PositionAttributeDefinition, UnitResourceDefinition,
         },
-        ActionSet, Chemistry, ChemistryInstance, ChemistryManifest, UnitAttributeDefinition,
+        Chemistry, ChemistryInstance, ChemistryManifest, UnitAttributeDefinition,
         UnitEntryAttributeValue, UnitEntryData,
     },
     position::Position,
@@ -32,33 +32,39 @@ pub mod defs {
     use super::*;
 
     def_unit_entry_attributes! {[
-        [foo_entry_attribute, Number]
+        [foo_entry_attribute, Number],
+        [bar_entry_attribute, Number]
     ]}
 
     def_simulation_attributes! {[
-        [is_sim_foo, Boolean]
+        [is_sim_foo, Boolean],
+        [is_sim_bar, Boolean]
     ]}
 
     def_unit_attributes! {[
-        [is_foo_unit, Boolean]
+        [is_foo_unit, Boolean],
+        [is_bar_unit, Boolean]
     ]}
 
     def_position_attributes! {[
-        [is_foo_position, Boolean]
+        [is_foo_position, Boolean],
+        [is_bar_position, Boolean]
     ]}
 
     def_position_resources! {[
-        [foo_position_resource, false]
+        [foo_position_resource, false],
+        [bar_position_resource, false]
     ]}
 
     def_unit_resources! {[
-       [foo_streamed_resource, false],
-       [foo_stored_resource, false]
+       [foo_stored_resource, false],
+       [bar_stored_resource, false]
     ]}
 
     pub const REACTION_ID_NEW_UNIT: ReactionId = 0;
 
     def_reactions! {
+        reaction!("do_nothing",),
         reaction!("new_unit",
             reagent!("offset_unit_resource",
                 param_value!(UnitResourceKey, "foo_stored_resource"),
@@ -67,6 +73,12 @@ pub mod defs {
             ),
             reagent!("new_unit",
                 unit_behavior_arg!(Direction),
+            ),
+        ),
+        reaction!("set_foo_unit_resource_to_magic_amount",
+            reagent!("set_foo_unit_resource_to_magic_amount",
+                param_value!(UnitResourceKey, "foo_stored_resource"),
+                chemistry_arg!(UnitResourceAmount, magic_foo_unit_resource_amount),
             ),
         ),
     }
@@ -80,14 +92,12 @@ pub struct FooChemistry {
     pub configuration: ChemistryConfiguration,
 }
 
-impl FooChemistry {
-    pub fn custom_actions() -> ActionSet {
-        ActionSet::from(vec![])
-    }
-}
+impl FooChemistry {}
 
 impl Chemistry for FooChemistry {
     fn construct(config: ChemistryConfiguration) -> Box<FooChemistry> {
+        let config = Self::fill_with_defaults(config);
+
         let mut chemistry = FooChemistry {
             manifest: FooChemistry::construct_manifest(&config),
             configuration: config,
@@ -98,10 +108,11 @@ impl Chemistry for FooChemistry {
 
     fn construct_manifest(config: &ChemistryConfiguration) -> ChemistryManifest {
         let mut manifest = ChemistryManifest {
+            chemistry_key: Self::get_key(),
             all_properties: vec![],
             simulation_attributes: defs::SimulationAttributesLookup::make_defs(),
             unit_entry_attributes: defs::UnitEntryAttributesLookup::make_defs(),
-            action_set: default_actions().add(Self::custom_actions().actions.clone()),
+            action_manifest: ActionManifest::new(FooChemistry::construct_action_library()),
             unit_resources: defs::UnitResourcesLookup::make_defs(),
             unit_attributes: defs::UnitAttributesLookup::make_defs(),
             position_attributes: defs::PositionAttributesLookup::make_defs(),
@@ -109,7 +120,8 @@ impl Chemistry for FooChemistry {
             reactions: defs::get_reactions(),
         };
 
-        manifest.normalize_manifest(config);
+        let config = Self::fill_with_defaults(config.clone());
+        manifest.normalize_manifest(&config);
 
         manifest
     }
@@ -123,6 +135,11 @@ impl Chemistry for FooChemistry {
             "new_unit_cost".to_owned(),
             ChemistryConfigValue::Integer(10),
         );
+
+        config.insert(
+            "magic_foo_unit_resource_amount".to_owned(),
+            ChemistryConfigValue::Integer(10),
+        );
         config
     }
 
@@ -130,7 +147,7 @@ impl Chemistry for FooChemistry {
         self.configuration.clone()
     }
 
-    fn get_key(&self) -> String {
+    fn get_key() -> String {
         "foo".to_string()
     }
 
@@ -175,11 +192,7 @@ impl Chemistry for FooChemistry {
         let resources = &mut unit.resources;
 
         if is_foo_position_attr {
-            resources[unit_resources.foo_streamed_resource] = 10;
             resources[unit_resources.foo_stored_resource] += 20;
-        } else {
-            resources[unit_resources.foo_streamed_resource] =
-                std::cmp::max(resources[unit_resources.foo_streamed_resource] - 1, 0);
         }
     }
 
@@ -193,4 +206,34 @@ impl Chemistry for FooChemistry {
     }
 
     fn on_simulation_finish(&self, sim: &mut SimCell) {}
+
+    fn custom_action_definitions() -> Vec<ActionDefinition>
+    where
+        Self: Sized,
+    {
+        let mut actions: Vec<ActionDefinition> = vec![];
+        actions.push(ActionDefinition::new(
+            &"set_foo_unit_resource_to_magic_amount",
+            vec![],
+            // execute action
+            Rc::new(
+                |sim_cell: &mut SimCell, context: &ActionExecutionContext| -> bool {
+                    let unit_resources = defs::UnitResourcesLookup::new();
+                    let pos_resources = defs::PositionResourcesLookup::new();
+                    let sim_attributes = defs::SimulationAttributesLookup::new();
+                    let unit_entry_attributes = defs::UnitEntryAttributesLookup::new();
+                    let configuration = sim_cell.chemistry.get_configuration();
+
+                    sim_cell.world.set_unit_resource_at(
+                        context.coord,
+                        unit_resources.bar_stored_resource,
+                        context.params[0].to_unit_resource_amount(),
+                    );
+                    true
+                },
+            ),
+        ));
+
+        actions
+    }
 }

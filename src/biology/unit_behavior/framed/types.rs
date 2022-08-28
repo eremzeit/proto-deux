@@ -1,8 +1,8 @@
 use crate::biology::genetic_manifest::predicates::OperatorParam;
 use crate::biology::genetic_manifest::predicates::{
-    Operator, OperatorParamDefinition, OperatorParamType, OperatorSet,
+    OperatorImplementation, OperatorManifest, OperatorParamDefinition, OperatorParamType,
 };
-use crate::biology::genetic_manifest::GeneticManifest;
+use crate::biology::genetic_manifest::GeneticManifestData;
 use crate::biology::genome::framed::types::NUM_META_REACTIONS;
 use crate::biology::sensor_manifest::SensorId;
 use crate::biology::unit_behavior::UnitBehavior;

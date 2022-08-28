@@ -1,6 +1,6 @@
 use rand::Rng;
 
-use crate::biology::genetic_manifest::predicates::Operator;
+use crate::biology::genetic_manifest::predicates::OperatorImplementation;
 use crate::biology::unit_behavior::UnitBehavior;
 use crate::chemistry::variants::cheese::defs;
 use crate::chemistry::{ChemistryInstance, ReactionId};

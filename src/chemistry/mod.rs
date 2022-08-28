@@ -15,9 +15,12 @@ use self::properties::*;
 use self::reactions::*;
 use self::variants::foo::FooChemistry;
 use self::variants::LeverChemistry;
-use crate::chemistry::actions::{
-    default_actions, ActionDefinition, ActionParam, ActionParamType, ActionSet,
-};
+use crate::biology::genetic_manifest::predicates::default_operators;
+use crate::biology::genetic_manifest::predicates::OperatorLibrary;
+use crate::biology::sensor_manifest::CustomSensorImplementation;
+use crate::biology::sensor_manifest::CustomSensorLibrary;
+use crate::biology::sensor_manifest::LocalPropertySensorManifest;
+use crate::chemistry::actions::{default_actions, ActionParam, ActionParamType};
 use crate::simulation::common::*;
 use crate::simulation::SimulationAttributes;
 
@@ -33,7 +36,33 @@ pub use crate::chemistry::manifest::*;
 
 pub type ReactionId = u8;
 pub type ChemistryInstance = Box<dyn Chemistry>;
+
 pub type ChemistryConfiguration = HashMap<String, ChemistryConfigValue>;
+
+pub struct ChemistryConfigBuilder {
+    config: ChemistryConfiguration,
+}
+
+impl ChemistryConfigBuilder {
+    pub fn new() -> Self {
+        Self {
+            config: ChemistryConfiguration::new(),
+        }
+    }
+    pub fn set_bool(mut self, key: &str, val: bool) -> Self {
+        self.config
+            .insert(key.to_string(), ChemistryConfigValue::Boolean(val));
+        self
+    }
+    pub fn set_integer(mut self, key: &str, val: u64) -> Self {
+        self.config
+            .insert(key.to_string(), ChemistryConfigValue::Integer(val));
+        self
+    }
+    pub fn build(self) -> ChemistryConfiguration {
+        self.config
+    }
+}
 
 /* used to pass values from the unit_behavior to the action execution
  * to replace placeholders */
@@ -54,10 +83,46 @@ pub fn construct_chemistry(
     }
 }
 
+pub fn construct_chemistry_libraries(key: &str) -> ChemistryLibraries {
+    match key {
+        "cheese" => CheeseChemistry::get_libraries(),
+        "lever" => LeverChemistry::get_libraries(),
+        "nanobots" => NanobotsChemistry::get_libraries(),
+        "foo" => FooChemistry::get_libraries(),
+        _ => panic!("chemistry key not found: {}", key),
+    }
+}
+
+/**
+ * Represents the "universe" of possible implementations of actions, custom sensors
+ * and operators.  Is essentially on a one to one basis with chemistry types.
+ */
+pub struct ChemistryLibraries {
+    pub action_library: ActionLibrary,
+    pub custom_sensor_library: CustomSensorLibrary,
+    pub operator_library: OperatorLibrary,
+}
+
 pub trait Chemistry {
     fn construct(config: ChemistryConfiguration) -> Box<Self>
     where
         Self: Sized;
+
+    fn fill_with_defaults(config: ChemistryConfiguration) -> ChemistryConfiguration
+    where
+        Self: Sized,
+    {
+        let mut _config = config;
+
+        let defaults = Self::default_config();
+        for key in defaults.keys() {
+            _config
+                .entry(key.clone())
+                .or_insert(defaults.get(key).unwrap().clone());
+        }
+
+        _config
+    }
 
     fn construct_with_default_config() -> Box<Self>
     where
@@ -84,6 +149,49 @@ pub trait Chemistry {
         ChemistryConfiguration::new()
     }
 
+    // fn get_action_definitions(&self) -> ActionDefinitionSet;
+
+    fn custom_action_definitions() -> Vec<ActionDefinition>
+    where
+        Self: Sized,
+    {
+        vec![]
+    }
+
+    fn get_libraries() -> ChemistryLibraries
+    where
+        Self: Sized,
+    {
+        ChemistryLibraries {
+            action_library: Self::construct_action_library(),
+            custom_sensor_library: Self::custom_sensor_library(),
+            operator_library: default_operators().operators,
+        }
+    }
+
+    fn construct_action_library() -> ActionLibrary
+    where
+        Self: Sized,
+    {
+        let mut actions = default_actions();
+        actions.append(&mut Self::custom_action_definitions());
+        actions
+    }
+
+    fn custom_sensor_library() -> Vec<CustomSensorImplementation>
+    where
+        Self: Sized,
+    {
+        vec![]
+    }
+
+    /**
+     * Specifies which local properties are to be mapped into sensors
+     */
+    fn default_local_property_sensor_manifest(&self) -> LocalPropertySensorManifest {
+        LocalPropertySensorManifest::from_all_props(self.get_manifest().all_properties.as_slice())
+    }
+
     // fn init_manifest(&mut self) {
     //     let config = &self.get_configuration();
     //     let mut manifest = self.get_manifest_mut();
@@ -92,39 +200,43 @@ pub trait Chemistry {
 
     fn get_configuration(&self) -> ChemistryConfiguration;
 
-    fn init_chemistry_action_params(&self) -> Vec<ReactionDefinition> {
-        let mut manifest = self.get_manifest();
-        let mut reactions = manifest.reactions.clone();
-        let config = &self.get_configuration();
-        for i in 0..reactions.len() {
-            let mut reaction = &mut reactions[i];
-            for j in 0..reaction.reagents.len() {
-                let mut reagent = &mut reaction.reagents[j];
+    // fn init_chemistry_action_params__(&self) -> Vec<ReactionDefinition> {
+    //     let mut manifest = self.get_manifest();
+    //     let mut reactions = manifest.reactions.clone();
+    //     let config = &self.get_configuration();
+    //     for i in 0..reactions.len() {
+    //         let mut reaction = &mut reactions[i];
+    //         for j in 0..reaction.reagents.len() {
+    //             let mut reagent = &mut reaction.reagents[j];
 
-                reagent.params = reagent
-                    .params
-                    .clone()
-                    .iter()
-                    .map(|param| {
-                        if let ActionParam::ChemistryArgument(key, param_type) = param.clone() {
-                            let value = config.get(&key).unwrap();
-                            let action_param_value =
-                                convert_configurable_to_action_param(value.clone(), param_type);
-                            action_param_value
-                        } else {
-                            param.clone()
-                        }
-                    })
-                    .collect::<Vec<_>>();
-            }
-        }
-        reactions
-    }
+    //             reagent.params = reagent
+    //                 .params
+    //                 .clone()
+    //                 .iter()
+    //                 .map(|param| {
+    //                     if let ActionParam::ChemistryArgument(key, param_type) = param.clone() {
+    //                         let value = config.get(&key).unwrap();
+    //                         let action_param_value =
+    //                             convert_configurable_to_action_param(value.clone(), param_type);
+    //                         action_param_value
+    //                     } else {
+    //                         param.clone()
+    //                     }
+    //                 })
+    //                 .collect::<Vec<_>>();
+    //         }
+    //     }
+    //     reactions
+    // }
 
+    // should this return an Rc?
     fn get_manifest(&self) -> &ChemistryManifest;
     fn get_manifest_mut(&mut self) -> &mut ChemistryManifest;
 
-    fn get_key(&self) -> String;
+    // fn get_key(&self) -> String;
+    fn get_key() -> String
+    where
+        Self: Sized;
 
     fn get_default_simulation_attributes(&self) -> Vec<SimulationAttributeValue> {
         self.get_manifest().empty_simulation_attributes()

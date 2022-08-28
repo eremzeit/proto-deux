@@ -27,13 +27,14 @@ impl Chemistry for NanobotsChemistry {
         wrap_chemistry!(chemistry)
     }
 
-    fn get_key(&self) -> String {
+    fn get_key() -> String {
         "nanobots".to_string()
     }
 
     fn construct_manifest(config: &ChemistryConfiguration) -> ChemistryManifest {
         let mut manifest = ChemistryManifest {
-            action_set: default_actions(),
+            chemistry_key: Self::get_key(),
+            action_manifest: ActionManifest::new(Self::construct_action_library()),
             all_properties: vec![],
             simulation_attributes: vec![],
             unit_resources: vec![UnitResourceDefinition::new("energy", false, 0)],
@@ -48,7 +49,8 @@ impl Chemistry for NanobotsChemistry {
             reactions: vec![],
         };
 
-        manifest.normalize_manifest(config);
+        let config = Self::fill_with_defaults(config.clone());
+        manifest.normalize_manifest(&config);
 
         manifest
     }

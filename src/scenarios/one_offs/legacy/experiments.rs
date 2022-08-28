@@ -10,7 +10,7 @@ use crate::simulation::common::*;
 pub fn evolve_lever() {
     let chemistry_builder = ChemistryBuilder::with_key("lever");
     let chemistry = chemistry_builder.build();
-    let gm = GeneticManifest::defaults(chemistry.get_manifest()).wrap_rc();
+    let gm = GeneticManifest::from_chemistry(&chemistry).wrap_rc();
 
     let settings = SimpleExperimentSettings {
         cull_strategy: CullStrategy::WorstFirst,

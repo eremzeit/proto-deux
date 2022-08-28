@@ -1,18 +1,21 @@
 use serde::{Deserialize, Serialize};
 
 use crate::biology::unit_behavior::NUM_REACTION_PARAMS;
-use crate::chemistry::actions::{ActionDefinitionIndex, ActionParam, ActionParamType, ActionSet};
+use crate::chemistry::actions::{ActionDefinitionIndex, ActionParam, ActionParamType};
 use crate::chemistry::ReactionId;
 use crate::simulation::common::*;
 use crate::util::grid_direction_from_num;
 use std::time::Instant;
 
-#[derive(Clone, Debug)]
+#[derive(Debug, Clone)]
+// #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ReactionDefinition {
     pub key: String,
     pub reagents: Vec<ReagentDefinition>,
     pub id: usize,
 }
+
+pub type CompiledReactionDefinition = ReactionDefinition;
 
 pub type ReactionCall = (
     ReactionId,
@@ -38,8 +41,12 @@ pub type ActionIndex = u8;
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct ReagentDefinition {
+    // pub action_key: String,
     pub action_key: &'static str,
+
+    // action_index needs to be set after initialization
     pub action_index: ActionDefinitionIndex,
+
     pub params: Vec<ActionParam>,
 }
 
@@ -67,13 +74,13 @@ pub fn execute_reaction(
     for (i, reagent) in reaction.reagents.iter().enumerate() {
         //println!("reagent: {:?} with INDEX {}", reagent, reagent.action_index);
         //println!("chemistry.get_manifest().action_set: {:?}", chemistry.get_manifest().action_set);
-        let action_def = &chemistry.get_manifest().action_set.actions[reagent.action_index];
+
+        // let action_def = &action_set.actions[reagent.action_index];
         //println!("action_def: {}", action_def.key);
         let then = Instant::now();
         execute_reagent(
             sim_cell,
             coord,
-            action_def,
             reagent,
             chemistry,
             &action_params[i],
@@ -127,7 +134,6 @@ fn replace_unit_behavior_placeholders(
 fn execute_reagent(
     sim_cell: &mut SimCell,
     coord: &Coord,
-    action: &ActionDefinition,
     reagent: &ReagentDefinition,
     chemistry: &ChemistryInstance,
     action_args: &[ActionParam; 3],
@@ -140,6 +146,7 @@ fn execute_reagent(
         params: action_args,
     };
 
+    let action = &chemistry.get_manifest().action_manifest.actions[reagent.action_index];
     //println!("^Executed reagent {}", reagent.action_key);
     (action.execute)(sim_cell, &context)
 }

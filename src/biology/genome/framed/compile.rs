@@ -1,8 +1,7 @@
 use crate::biology::genetic_manifest::predicates::{
-    Operator, OperatorId, OperatorParam, OperatorParamDefinition, OperatorParamType, OperatorSet,
+    OperatorId, OperatorImplementation, OperatorManifest, OperatorParam, OperatorParamDefinition,
+    OperatorParamType,
 };
-use crate::biology::genetic_manifest::GeneticManifest;
-
 use crate::biology::genome::framed::common::{
     BooleanVariable, CompiledFramedGenome, ConjunctiveClause, DisjunctiveClause, Frame,
     FramedGenomeValue, FramedGenomeWord, Gene, CHANNEL_ZERO, FIXED_NUM_CONDITIONAL_PARAMS,
@@ -289,7 +288,7 @@ impl<'a> FramedGenomeCompiler<'a> {
         let num_sensors = sm.sensors.len();
         let manifest = &self.genetic_manifest.chemistry_manifest;
         let operator_id = match &self.pop_in_frame() {
-            Some(v) => (*v as usize) % self.genetic_manifest.operator_set.operators.len(),
+            Some(v) => (*v as usize) % self.genetic_manifest.operator_manifest.operators.len(),
             None => {
                 return None;
             }
@@ -301,7 +300,8 @@ impl<'a> FramedGenomeCompiler<'a> {
             }
         };
 
-        let op: &Operator = &self.genetic_manifest.operator_set.operators[operator_id].clone();
+        let op: &OperatorImplementation =
+            &self.genetic_manifest.operator_manifest.operators[operator_id].clone();
 
         let mut _popped_params: Vec<Option<FramedGenomeValue>> = vec![];
 
@@ -431,9 +431,7 @@ pub mod tests {
     #[test]
     pub fn test_compile_multiple_frames() {
         use super::super::common::*;
-        let gm = GeneticManifest::defaults(&CheeseChemistry::construct_manifest(
-            &ChemistryConfiguration::new(),
-        ));
+        let gm = GeneticManifest::construct::<CheeseChemistry>(&ChemistryConfiguration::new());
 
         let mut frame1 = frame_from_single_channel(vec![gene(
             if_any(vec![if_all(vec![

@@ -45,31 +45,6 @@ pub enum ActionParamType {
     Boolean,
 }
 
-// actually passed to the action functions
-// #[derive(Clone)]
-// pub enum ActionParamValue {
-//     UnitResourceAmount(ActionParamNumber),
-//     UnitResourceIndex(UnitResourceIndex),
-//     UnitResourceKey(&'static str),
-//
-//     UnitAttributeValue(UnitAttributeValue),
-//     UnitAttributeIndex(UnitAttributeIndex),
-//     UnitAttributeKey(&'static str),
-//
-//     PositionResourceAmount(PositionResourceAmount),
-//     PositionResourceIndex(PositionResourceIndex),
-//     PositionResourceKey(&'static str),
-//
-//     PositionAttributeIndex(PositionAttributeIndex),
-//     PositionAttributeValue(PositionAttributeValue),
-//     PositionAttributeKey(&'static str),
-//
-//     Constant(ActionParamNumber),
-//     Direction(GridDirection),
-//
-//     Nil,
-// }
-
 #[derive(Clone, PartialEq, Debug, Serialize, Deserialize)]
 pub enum ActionParam {
     UnitResourceAmount(ActionParamNumber),
@@ -176,22 +151,13 @@ pub struct ActionParamDefinition {
     pub param_type: ActionParamType,
 }
 
+pub type ActionLibrary = Vec<ActionDefinition>;
+
 #[derive(Clone)]
 pub struct ActionDefinition {
     pub key: String,
-    pub index: ActionDefinitionIndex,
     pub execute: Rc<ExecuteActionFunction>,
     pub params: Vec<ActionParamDefinition>,
-}
-
-impl Debug for ActionDefinition {
-    fn fmt(&self, f: &mut Formatter<'_>) -> Result {
-        write!(
-            f,
-            "ActionDefinition {{ key: {}, index: {}, params: {:?} }}",
-            self.key, self.index, self.params
-        )
-    }
 }
 
 impl ActionDefinition {
@@ -199,23 +165,158 @@ impl ActionDefinition {
         key: &str,
         params: Vec<ActionParamDefinition>,
         execute: Rc<ExecuteActionFunction>,
-    ) -> ActionDefinition {
-        ActionDefinition {
+    ) -> Self {
+        Self {
             key: key.to_string(),
-            index: 0,
             params,
             execute,
         }
     }
+
+    // pub fn to_compiled_action(&self, index: usize) -> CompiledActionAoeu {
+    //     CompiledActionAoeu {
+    //         key: self.key.clone(),
+    //         index_aoeu: index,
+    //         execute: self.execute.clone(),
+    //         params: self.params.clone(),
+    //     }
+    // }
+}
+
+impl Debug for ActionDefinition {
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result {
+        write!(
+            f,
+            "ActionDefinition {{ key: {}, params: {:?} }}",
+            self.key, self.params
+        )
+    }
 }
 
 #[derive(Clone)]
-pub struct ActionSet {
-    pub actions: Vec<ActionDefinition>,
+pub struct CompiledActionDefinition {
+    pub key: String,
+    pub index: ActionDefinitionIndex,
+    pub execute: Rc<ExecuteActionFunction>,
+    pub params: Vec<ActionParamDefinition>,
+}
+
+impl CompiledActionDefinition {
+    pub fn from_action(action: ActionDefinition, index: usize) -> CompiledActionDefinition {
+        CompiledActionDefinition {
+            key: action.key.to_string(),
+            index,
+            params: action.params,
+            execute: action.execute,
+        }
+    }
+}
+
+impl Debug for CompiledActionDefinition {
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result {
+        write!(
+            f,
+            "CompiledActionDefinition {{ key: {}, params: {:?}, index: {} }}",
+            self.key, self.params, self.index
+        )
+    }
+}
+
+/**
+ * A serializable set of actions which reperesents the complete
+ * space of actions that are available.  It might include actions that
+ * aren't used by the chemitry.
+ */
+#[derive(Clone, Serialize, Deserialize)]
+pub struct ActionManifestData {
+    pub actions: Vec<String>,
     pub by_string_key: HashMap<String, usize>,
 }
 
-impl Debug for ActionSet {
+impl ActionManifestData {
+    pub fn new(keys: Vec<String>) -> Self {
+        let mut by_string_key: HashMap<String, usize> = HashMap::new();
+
+        for (i, key) in keys.iter().enumerate() {
+            by_string_key.insert(key.to_string(), i);
+        }
+
+        Self {
+            actions: keys,
+            by_string_key,
+        }
+    }
+
+    pub fn by_key(&self, key: &str) -> usize {
+        *self.by_string_key.get(key).unwrap()
+    }
+
+    pub fn to_manifest(&self, action_library: &ActionLibrary) -> ActionManifest {
+        if self.actions.len() != action_library.len() {
+            panic!("Probably something went wrong.");
+        }
+
+        let actions = self
+            .actions
+            .iter()
+            .enumerate()
+            .map(|(i, key)| {
+                let action_def = action_library
+                    .iter()
+                    .find(|def| &def.key == key)
+                    .unwrap()
+                    .clone();
+                CompiledActionDefinition {
+                    key: action_def.key,
+                    index: i,
+                    execute: action_def.execute,
+                    params: action_def.params,
+                }
+            })
+            .collect::<Vec<_>>();
+
+        let mut by_string_key = HashMap::new();
+
+        for (i, action) in actions.iter().enumerate() {
+            by_string_key.insert(action.key.to_string(), i);
+        }
+
+        ActionManifest {
+            actions,
+            by_string_key,
+        }
+    }
+
+    pub fn from_manifest(manifest: &ActionManifest) -> Self {
+        let keys = manifest
+            .actions
+            .iter()
+            .map(|action| action.key.to_string())
+            .collect::<Vec<_>>();
+
+        // let mut by_string_key = HashMap::new();
+
+        // for (i, key) in keys.iter().enumerate() {
+        //     by_string_key.insert(key.to_string(), i);
+        // }
+
+        Self {
+            actions: keys,
+            by_string_key: manifest.by_string_key.clone(),
+        }
+    }
+}
+
+/**
+ * Includes the implementation.  Not serializable.
+ */
+#[derive(Clone)]
+pub struct ActionManifest {
+    pub actions: Vec<CompiledActionDefinition>,
+    pub by_string_key: HashMap<String, usize>,
+}
+
+impl Debug for ActionManifest {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result {
         write!(f, "ActionSet {{")?;
         for i in 0..self.actions.len() {
@@ -226,13 +327,30 @@ impl Debug for ActionSet {
     }
 }
 
-impl ActionSet {
-    pub fn from(actions: Vec<ActionDefinition>) -> Self {
-        to_action_set(actions)
+impl ActionManifest {
+    pub fn new(action_defs: Vec<ActionDefinition>) -> Self {
+        let actions = action_defs
+            .into_iter()
+            .enumerate()
+            .map(|(i, action_def)| CompiledActionDefinition::from_action(action_def, i))
+            .collect::<Vec<_>>();
+
+        let mut set = Self {
+            actions,
+            by_string_key: HashMap::new(),
+        };
+        set.normalize();
+        set
     }
 
     pub fn add(mut self, mut actions: Vec<ActionDefinition>) -> Self {
-        self.actions.append(&mut actions);
+        let mut _actions = actions
+            .into_iter()
+            .enumerate()
+            .map(|(i, action_def)| CompiledActionDefinition::from_action(action_def, 0))
+            .collect::<Vec<_>>();
+
+        self.actions.append(&mut _actions);
 
         self.normalize();
         self
@@ -244,12 +362,12 @@ impl ActionSet {
     pub fn normalize(&mut self) {
         for i in 0..self.actions.len() {
             self.actions[i].index = i;
-            let key = &self.actions[i].key;
+            let key = self.actions[i].key.to_string();
             self.by_string_key.insert(key.to_string(), i as usize);
         }
     }
 
-    pub fn by_key(&self, key: &str) -> &ActionDefinition {
+    pub fn by_key(&self, key: &str) -> &CompiledActionDefinition {
         let maybe_i = self.by_string_key.get(key);
         self.actions
             .get(*maybe_i.expect(&format!("Cannot find action for key: {}", key)))
@@ -257,24 +375,24 @@ impl ActionSet {
     }
 }
 
-fn to_action_set<'a>(mut actions: Vec<ActionDefinition>) -> ActionSet {
-    let mut by_string_key: HashMap<String, usize> = HashMap::new();
+// fn to_compiled_action_set<'a>(mut actions: Vec<CompiledActionAoeu>) -> ActionDefinitionSet {
+//     let mut by_string_key: HashMap<String, usize> = HashMap::new();
 
-    let actions = actions
-        .into_iter()
-        .enumerate()
-        .map(|(i, mut action)| -> ActionDefinition {
-            action.index = i as ActionDefinitionIndex;
-            by_string_key.insert(action.key.to_string(), i);
-            action
-        })
-        .collect::<Vec<_>>();
+//     let actions = actions
+//         .into_iter()
+//         .enumerate()
+//         .map(|(i, mut action)| -> CompiledActionAoeu {
+//             action.index_aoeu = i as ActionDefinitionIndex;
+//             by_string_key.insert(action.key.to_string(), i);
+//             action
+//         })
+//         .collect::<Vec<_>>();
 
-    ActionSet {
-        actions,
-        by_string_key,
-    }
-}
+//     ActionDefinitionSet {
+//         actions,
+//         by_string_key,
+//     }
+// }
 
 /*
  * actions to implement:
@@ -286,23 +404,12 @@ fn to_action_set<'a>(mut actions: Vec<ActionDefinition>) -> ActionSet {
  * convert_to_material
 */
 
-// pub struct ActionExecutionContext<'a> {
-//     pub world: &'a World,
-// }
-
-pub struct ActionExecutionContext<'a> {
-    pub coord: &'a Coord,
-    pub params: &'a [ActionParam],
-    // pub chemistry: &'a ChemistryInstance,
-    // pub unit_manifest: &'a UnitManifest,
-}
-
 /*
  * A public registry of actions.  Any action that isn't shared between
  * chemistries should be included in the specific chemistry.
  */
-pub fn default_actions() -> ActionSet {
-    let actions = vec![
+pub fn default_actions() -> Vec<ActionDefinition> {
+    vec![
         ActionDefinition::new(
             &"move_unit",
             vec![ActionParamDefinition {
@@ -442,7 +549,12 @@ pub fn default_actions() -> ActionSet {
                 },
             ),
         ),
-    ];
+    ]
+}
 
-    to_action_set(actions)
+pub struct ActionExecutionContext<'a> {
+    pub coord: &'a Coord,
+    pub params: &'a [ActionParam],
+    // pub chemistry: &'a ChemistryInstance,
+    // pub unit_manifest: &'a UnitManifest,
 }

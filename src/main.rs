@@ -45,12 +45,12 @@ pub mod chemistry;
 pub mod simulation;
 #[macro_use]
 pub mod biology;
+pub mod fixtures;
 pub mod runners;
 pub mod scenarios;
 pub mod tests;
 pub mod ui;
 
-use biology::genetic_manifest::GeneticManifest;
 use chemistry::builder::ChemistryBuilder;
 use common::ThreadedSimulationExecutor;
 use ndarray::*;

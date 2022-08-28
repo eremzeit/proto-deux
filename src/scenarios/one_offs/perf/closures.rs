@@ -1,7 +1,5 @@
 use std::rc::Rc;
 
-use crate::simulation::common::{ActionDefinition, ActionSet};
-
 pub fn test_closure_perf() {
     let iterations = 400000;
     _test_closures(iterations);

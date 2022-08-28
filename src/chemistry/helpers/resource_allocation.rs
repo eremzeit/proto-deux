@@ -4,7 +4,7 @@ use crate::simulation::config::SimulationConfig;
 use crate::simulation::iterators::*;
 use crate::simulation::unit::{add_resources_to, UnitAttributes, UnitResources};
 use crate::util::text_grid::TextGridOptions;
-use crate::{simulation::common::helpers::place_units::PlaceUnitsMethod, tests::fixtures};
+use crate::{fixtures, simulation::common::helpers::place_units::PlaceUnitsMethod};
 use std::sync::Arc;
 use typemap::{CloneMap, Key};
 

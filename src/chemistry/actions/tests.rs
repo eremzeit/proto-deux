@@ -1,4 +1,4 @@
-use super::{ActionDefinition, ActionParam};
+use super::ActionParam;
 use std::collections::HashMap;
 
 use std::rc::Rc;
@@ -48,7 +48,10 @@ pub mod set_unit_resource {
         ];
 
         let actions = default_actions();
-        let action = actions.by_key("set_unit_resource");
+        let action = actions
+            .iter()
+            .find(|a| a.key == "set_unit_resource")
+            .unwrap();
 
         assert!(execute_action(
             &action,
@@ -69,9 +72,6 @@ pub mod offset_unit_resource {
     #[test]
     fn test_evaluate_strict() {
         let chemistry_builder = ChemistryBuilder::with_key("nanobots");
-
-        let actions = default_actions();
-        let action = actions.by_key("offset_unit_resource");
 
         let mut sim = SimulationBuilder::default()
             .chemistry(chemistry_builder.build())
@@ -94,23 +94,30 @@ pub mod offset_unit_resource {
             param_value!(Boolean, false),
         ];
 
+        let actions = default_actions();
+        let action = actions
+            .iter()
+            .find(|a| a.key == "offset_unit_resource")
+            .unwrap();
+
         // shouldn't execute because not enough resources
         assert!(!execute_action(&action, &(2, 2), &mut sim, &params));
 
         sim.world
             .set_unit_resource_at(&(2, 2), unit_resources.cheese, 10);
+
         assert!(execute_action(&action, &(2, 2), &mut sim, &params));
     }
 }
 
 pub mod grow_unit {
     use super::*;
+    use crate::fixtures;
     use crate::simulation::common::helpers::place_units::PlaceUnitsMethod;
-    use crate::tests::fixtures;
     use crate::util::*;
     fn test_new_unit(src_coord: Coord, dir: GridDirection) {
         let actions = default_actions();
-        let action = actions.by_key("new_unit");
+        let action = actions.iter().find(|a| a.key == "new_unit").unwrap();
 
         let mut sim =
             fixtures::default_base_with_unit_placement(PlaceUnitsMethod::ManualSingleEntry {

@@ -1,9 +1,9 @@
 use chemistry::reactions::ReactionCallParam;
 
 use crate::biology::genetic_manifest::predicates::{
-    Operator, OperatorParamDefinition, OperatorParamType, OperatorSet,
+    OperatorImplementation, OperatorLibrary, OperatorManifest, OperatorParamDefinition,
+    OperatorParamType,
 };
-use crate::biology::genetic_manifest::GeneticManifest;
 use crate::biology::genome::framed::common::*;
 use crate::biology::genome::framed::types::NUM_META_REACTIONS;
 use crate::biology::unit_behavior::UnitBehavior;
@@ -63,7 +63,6 @@ impl<'a> GenomeExecutionContext<'a> {
             current_frame: 0,
             override_channel: None,
             registers,
-            // register_changes: vec![],
             consumed_compute_points: 0,
             allotted_compute_points: compute_points,
         }
@@ -236,7 +235,7 @@ impl<'a> GenomeExecutionContext<'a> {
             }
             BooleanVariable::Conditional(op_id, is_negated, param1, param2, param3) => {
                 self.consumed_compute_points += 1;
-                let op = &self.genetic_manifest.operator_set.operators[*op_id as usize];
+                let op = &self.genetic_manifest.operator_manifest.operators[*op_id as usize];
 
                 let param_val1 = self.eval_param(param1);
                 let param_val2 = self.eval_param(param2);
@@ -247,7 +246,6 @@ impl<'a> GenomeExecutionContext<'a> {
                 //     param_val2.to_string(),
                 //     param_val3.to_string(),
                 // ]);
-
                 let result = (op.evaluate)(&[param_val1, param_val2, param_val3]);
                 //println!("BOOL: {} = {}", &op_str, &result);
                 if *is_negated {
@@ -288,7 +286,8 @@ pub mod tests {
     #[test]
     pub fn test_set_register() {
         let chemistry = FooChemistry::construct_with_default_config();
-        let gm = GeneticManifest::defaults(chemistry.get_manifest()).wrap_rc();
+        let gm =
+            GeneticManifest::construct::<CheeseChemistry>(&ChemistryConfiguration::new()).wrap_rc();
 
         let mut frame1 = frame_from_single_channel(vec![
             gene(
@@ -342,7 +341,7 @@ pub mod tests {
     #[test]
     pub fn test_set_channel() {
         let chemistry = FooChemistry::construct_with_default_config();
-        let gm = GeneticManifest::defaults(chemistry.get_manifest()).wrap_rc();
+        let gm = GeneticManifest::construct::<CheeseChemistry>(&ChemistryConfiguration::new());
 
         let raw_genome = framed_genome(vec![
             frame(
@@ -399,7 +398,7 @@ pub mod tests {
     #[test]
     pub fn test_jump_ahead() {
         let chemistry = FooChemistry::construct_with_default_config();
-        let gm = GeneticManifest::defaults(chemistry.get_manifest()).wrap_rc();
+        let gm = GeneticManifest::construct::<CheeseChemistry>(&ChemistryConfiguration::new());
 
         let raw_genome = framed_genome(vec![
             frame(

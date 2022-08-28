@@ -112,7 +112,7 @@ pub fn get_genome1_raw(gm: &GeneticManifest) -> Vec<u64> {
 }
 
 pub fn get_genome1(gm: &GeneticManifest) -> CompiledFramedGenome {
-    FramedGenomeCompiler::compile(get_genome1_raw(gm), gm.clone())
+    FramedGenomeCompiler::compile(get_genome1_raw(gm), &gm.clone())
 }
 
 pub fn get_genome2() -> GenomeBuilderLegacy {

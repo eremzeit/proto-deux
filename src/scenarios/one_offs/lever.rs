@@ -18,7 +18,7 @@ use std::rc::Rc;
 pub fn test_fitness(key: &str) {
     let exp_key = key.to_string();
     let chemistry_builder = ChemistryBuilder::with_key("cheese");
-    let gm = GeneticManifest::defaults(&chemistry_builder.manifest()).wrap_rc();
+    let gm = GeneticManifest::from_chemistry(&chemistry_builder.build()).wrap_rc();
 
     let genome_vals1 = frame_from_single_channel(vec![gene(
         if_any!(if_all!(conditional!(is_truthy, 1))),

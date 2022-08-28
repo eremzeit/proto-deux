@@ -1,3 +1,5 @@
+use serde::{Deserialize, Serialize};
+
 use crate::HashMap;
 use std::rc::Rc;
 
@@ -16,10 +18,15 @@ pub struct OperatorParamDefinition {
     pub operator_type: OperatorParamType,
 }
 
-//pub type OperatorIndex = u8;
+#[derive(Clone, Serialize, Deserialize)]
+pub struct OperatorEntry {
+    pub name: String,
+    pub index: OperatorId,
+    pub num_params: usize,
+}
 
 #[derive(Clone)]
-pub struct Operator {
+pub struct OperatorImplementation {
     pub name: &'static str,
     pub num_params: usize,
     pub evaluate: OperatorFunctionInstance,
@@ -34,18 +41,79 @@ pub type OperatorFunctionInstance = Rc<OperatorFunction>;
 pub type OperatorRenderFunction = Rc<dyn Fn(&[String]) -> String>;
 pub type OperatorRenderFunctionInstance = Rc<OperatorRenderFunction>;
 
-#[derive(Clone)]
-pub struct OperatorSet {
-    pub operators: Vec<Operator>,
+#[derive(Clone, Serialize, Deserialize)]
+pub struct OperatorManifestData {
+    pub operators: Vec<OperatorEntry>,
     pub by_string_key: HashMap<String, usize>,
 }
 
-impl OperatorSet {
-    pub fn default_operators() -> OperatorSet {
+impl OperatorManifestData {
+    pub fn default() -> OperatorManifestData {
+        let mut manifest = Self {
+            operators: default_operators()
+                .operators
+                .iter()
+                .map(|op| OperatorEntry {
+                    name: op.name.to_string(),
+                    index: op.index,
+                    num_params: op.num_params,
+                })
+                .collect::<Vec<_>>(),
+
+            by_string_key: HashMap::new(),
+        };
+
+        manifest.normalize();
+        manifest
+    }
+
+    pub fn normalize(&mut self) {
+        self.by_string_key = HashMap::new();
+        for (i, operator) in self.operators.iter().enumerate() {
+            self.by_string_key.insert(operator.name.clone(), i);
+        }
+    }
+
+    pub fn by_key(&self, key: &str) -> &OperatorEntry {
+        let i = self.by_string_key.get(key).unwrap();
+        &self.operators[*i]
+    }
+
+    pub fn to_compiled(&self, library: OperatorLibrary) -> OperatorManifest {
+        let operators = self
+            .operators
+            .iter()
+            .map(|op| {
+                library
+                    .iter()
+                    .find(|op_impl| op_impl.name == op.name)
+                    .unwrap()
+                    .clone()
+            })
+            .collect::<Vec<_>>();
+
+        OperatorManifest::new(operators)
+    }
+}
+
+pub type OperatorLibrary = Vec<OperatorImplementation>;
+
+#[derive(Clone)]
+pub struct OperatorManifest {
+    pub operators: Vec<OperatorImplementation>,
+    pub by_string_key: HashMap<String, usize>,
+}
+
+impl OperatorManifest {
+    pub fn new(mut operators: Vec<OperatorImplementation>) -> Self {
+        to_operator_set(operators)
+    }
+
+    pub fn default_operators() -> OperatorManifest {
         default_operators()
     }
 
-    pub fn by_key(&self, key: &str) -> &Operator {
+    pub fn by_key(&self, key: &str) -> &OperatorImplementation {
         let i: usize = *self
             .by_string_key
             .get(key)
@@ -54,28 +122,28 @@ impl OperatorSet {
     }
 }
 
-fn to_operator_set<'a>(mut operators: Vec<Operator>) -> OperatorSet {
+fn to_operator_set<'a>(mut operators: Vec<OperatorImplementation>) -> OperatorManifest {
     let mut by_string_key: HashMap<String, usize> = HashMap::new();
 
     let operators = operators
         .into_iter()
         .enumerate()
-        .map(|(i, mut op)| -> Operator {
+        .map(|(i, mut op)| -> OperatorImplementation {
             op.index = i as OperatorId;
             by_string_key.insert(op.name.to_string(), i);
             op
         })
         .collect::<Vec<_>>();
 
-    OperatorSet {
+    OperatorManifest {
         operators: operators,
         by_string_key: by_string_key,
     }
 }
 
-pub fn default_operators() -> OperatorSet {
+pub fn default_operators() -> OperatorManifest {
     return to_operator_set(vec![
-        Operator {
+        OperatorImplementation {
             index: 0,
             name: "eq",
             num_params: 2,
@@ -87,7 +155,7 @@ pub fn default_operators() -> OperatorSet {
                 format!("{} == {}", &param_strs[0], &param_strs[1])
             }),
         },
-        Operator {
+        OperatorImplementation {
             index: 0,
             name: "is_truthy",
             num_params: 1,
@@ -100,7 +168,7 @@ pub fn default_operators() -> OperatorSet {
                 format!("is_truthy({})", param_strs[0])
             }),
         },
-        Operator {
+        OperatorImplementation {
             index: 0,
             name: "is_falsy",
             num_params: 1,
@@ -113,7 +181,7 @@ pub fn default_operators() -> OperatorSet {
                 format!("is_truthy({})", param_strs[0])
             }),
         },
-        Operator {
+        OperatorImplementation {
             index: 0,
             name: "gt",
             num_params: 2,
@@ -123,7 +191,7 @@ pub fn default_operators() -> OperatorSet {
                 format!("{} > {}", param_strs[0], param_strs[1])
             }),
         },
-        Operator {
+        OperatorImplementation {
             index: 0,
             name: "gte",
             num_params: 2,
@@ -133,7 +201,7 @@ pub fn default_operators() -> OperatorSet {
                 format!("{} >= {}", param_strs[0], param_strs[1])
             }),
         },
-        Operator {
+        OperatorImplementation {
             index: 0,
             name: "lt",
             num_params: 2,
@@ -143,7 +211,7 @@ pub fn default_operators() -> OperatorSet {
                 format!("{} < {}", param_strs[0], param_strs[1])
             }),
         },
-        Operator {
+        OperatorImplementation {
             index: 0,
             name: "lte",
             num_params: 2,
@@ -153,7 +221,7 @@ pub fn default_operators() -> OperatorSet {
                 format!("{} <= {}", param_strs[0], param_strs[1])
             }),
         },
-        Operator {
+        OperatorImplementation {
             index: 0,
             name: "true",
             num_params: 0,
@@ -161,7 +229,7 @@ pub fn default_operators() -> OperatorSet {
             evaluate: Rc::new(|params: &[OperatorParam]| -> bool { true }),
             render: Rc::new(|param_strs: &[String]| -> String { format!("TRUE") }),
         },
-        Operator {
+        OperatorImplementation {
             index: 0,
             name: "false",
             num_params: 0,
@@ -169,7 +237,7 @@ pub fn default_operators() -> OperatorSet {
             evaluate: Rc::new(|params: &[OperatorParam]| -> bool { false }),
             render: Rc::new(|param_strs: &[String]| -> String { format!("FALSE") }),
         },
-        Operator {
+        OperatorImplementation {
             index: 0,
             name: "is_even",
             num_params: 0,

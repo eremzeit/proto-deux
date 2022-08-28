@@ -1,4 +1,5 @@
 use crate::biology::experiments::alterations;
+use crate::biology::genetic_manifest::GeneticManifest;
 use crate::biology::unit_behavior::framed::common::*;
 use crate::simulation::common::builder::ChemistryBuilder;
 use crate::simulation::common::*;
@@ -64,7 +65,7 @@ pub struct SimpleExperimentSettings {
     pub fitness_calculation_key: String, // needed?  should this be a trait object?  how will fitness calculation change?
     pub cull_strategy: CullStrategy,
     pub chemistry_options: ChemistryBuilder,
-    pub gm: Rc<GeneticManifest>,
+    pub gm: Rc<GeneticManifest>, // note: eventually this might be defined on a per-genome basis
 }
 
 // pub mod builder {

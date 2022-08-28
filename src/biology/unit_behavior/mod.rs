@@ -2,7 +2,7 @@ pub mod framed;
 pub mod lever;
 pub mod mouse;
 
-use crate::biology::genetic_manifest::predicates::Operator;
+use crate::biology::genetic_manifest::predicates::OperatorImplementation;
 pub use crate::biology::unit_behavior::framed::ParsedGenomeParam;
 use crate::chemistry::reactions::ReactionCall;
 use crate::simulation::common::*;

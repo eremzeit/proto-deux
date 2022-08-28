@@ -1,4 +1,3 @@
-use crate::chemistry::actions::ActionSet;
 use crate::chemistry::actions::*;
 use crate::chemistry::properties::*;
 use crate::chemistry::reactions::*;
@@ -65,31 +64,7 @@ pub mod defs {
         ),
     }
 }
-impl LeverChemistry {
-    pub fn custom_actions() -> ActionSet {
-        ActionSet::from(vec![ActionDefinition::new(
-            &"pull_lever",
-            vec![],
-            Rc::new(
-                |sim_cell: &mut SimCell, context: &ActionExecutionContext| -> bool {
-                    let unit = sim_cell.world.get_unit_at(context.coord).unwrap();
-                    let entry_id = unit.entry_id;
-
-                    let uea_lookup = defs::UnitEntryAttributesLookup::new();
-                    let to_add = context.params[0].to_constant();
-                    // println!("pulling lever: {}", to_add);
-                    // panic!("pulled a lever");
-                    let existing = sim_cell.unit_entry_attributes[entry_id as usize]
-                        [uea_lookup.lever_pulls]
-                        .unwrap_integer();
-                    sim_cell.unit_entry_attributes[entry_id][uea_lookup.lever_pulls] =
-                        AttributeValue::Integer(existing + to_add);
-                    true
-                },
-            ),
-        )])
-    }
-}
+impl LeverChemistry {}
 
 impl Chemistry for LeverChemistry {
     fn construct(config: ChemistryConfiguration) -> Box<LeverChemistry> {
@@ -100,9 +75,10 @@ impl Chemistry for LeverChemistry {
         wrap_chemistry!(chemistry)
     }
 
-    fn get_key(&self) -> String {
+    fn get_key() -> String {
         "lever".to_string()
     }
+
     fn get_configuration(&self) -> ChemistryConfiguration {
         self.configuration.clone()
     }
@@ -112,10 +88,11 @@ impl Chemistry for LeverChemistry {
         Self: Sized,
     {
         let mut manifest = ChemistryManifest {
+            chemistry_key: Self::get_key(),
             all_properties: vec![],
             simulation_attributes: defs::SimulationAttributesLookup::make_defs(),
             unit_entry_attributes: defs::UnitEntryAttributesLookup::make_defs(),
-            action_set: default_actions().add(Self::custom_actions().actions.clone()),
+            action_manifest: ActionManifest::new(Self::construct_action_library()),
             unit_resources: defs::UnitResourcesLookup::make_defs(),
             unit_attributes: defs::UnitAttributesLookup::make_defs(),
             position_attributes: defs::PositionAttributesLookup::make_defs(),
@@ -171,6 +148,33 @@ impl Chemistry for LeverChemistry {
     }
 
     fn on_simulation_finish(&self, sim: &mut SimCell) {}
+
+    fn custom_action_definitions() -> Vec<ActionDefinition>
+    where
+        Self: Sized,
+    {
+        vec![ActionDefinition::new(
+            &"pull_lever",
+            vec![],
+            Rc::new(
+                |sim_cell: &mut SimCell, context: &ActionExecutionContext| -> bool {
+                    let unit = sim_cell.world.get_unit_at(context.coord).unwrap();
+                    let entry_id = unit.entry_id;
+
+                    let uea_lookup = defs::UnitEntryAttributesLookup::new();
+                    let to_add = context.params[0].to_constant();
+                    // println!("pulling lever: {}", to_add);
+                    // panic!("pulled a lever");
+                    let existing = sim_cell.unit_entry_attributes[entry_id as usize]
+                        [uea_lookup.lever_pulls]
+                        .unwrap_integer();
+                    sim_cell.unit_entry_attributes[entry_id][uea_lookup.lever_pulls] =
+                        AttributeValue::Integer(existing + to_add);
+                    true
+                },
+            ),
+        )]
+    }
 }
 
 mod tests {
@@ -179,8 +183,8 @@ mod tests {
     use crate::biology::unit_behavior::lever::SimpleLever;
     use crate::chemistry::actions::tests::execute_action;
     use crate::chemistry::actions::*;
+    use crate::fixtures;
     use crate::simulation::common::builder::ChemistryBuilder;
-    use crate::tests::fixtures;
 
     #[test]
     fn do_action() {
@@ -195,8 +199,11 @@ mod tests {
 
         assert!(sim.world.has_unit_at(&(0, 0)));
 
-        let actions = LeverChemistry::custom_actions();
-        let action = actions.by_key("pull_lever");
+        let actions = LeverChemistry::custom_action_definitions();
+        let action = actions
+            .iter()
+            .find(|a| a.key == "pull_lever".to_string())
+            .unwrap();
 
         assert!(execute_action(
             &action,

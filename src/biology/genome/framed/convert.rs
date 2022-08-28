@@ -4,9 +4,9 @@ use super::types::{
     FIXED_NUM_OPERATION_PARAMS, FRAME_META_DATA_SIZE, MIN_FRAME_SIZE, NUM_CHANNELS,
 };
 use crate::biology::genetic_manifest::predicates::{
-    Operator, OperatorId, OperatorParam, OperatorParamDefinition, OperatorParamType, OperatorSet,
+    OperatorId, OperatorImplementation, OperatorManifest, OperatorParam, OperatorParamDefinition,
+    OperatorParamType,
 };
-use crate::biology::genetic_manifest::GeneticManifest;
 use crate::biology::sensor_manifest::SensorManifest;
 use crate::biology::unit_behavior::framed::ParsedGenomeParam;
 use crate::biology::unit_behavior::UnitBehavior;
@@ -490,7 +490,7 @@ pub mod tests {
     pub fn test_compile_multiple_frames() {
         use super::super::common::*;
 
-        let gm = GeneticManifest::defaults(&CheeseChemistry::default_manifest());
+        let gm = GeneticManifest::construct::<CheeseChemistry>(&ChemistryConfiguration::new());
 
         let mut frame1 = frame_from_single_channel(vec![gene(
             if_any(vec![if_all(vec![

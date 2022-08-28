@@ -1,9 +1,10 @@
 use crate::{
     biology::{
-        genetic_manifest::GeneticManifest,
+        genetic_manifest::GeneticManifestData,
         genome::framed::{builders::FramedGenomeCompiler, common::FramedGenomeWord},
     },
     chemistry::builder::ChemistryBuilder,
+    simulation::common::GeneticManifest,
 };
 
 pub mod cheese;
@@ -58,7 +59,7 @@ pub fn inspect_genome() {
         .collect::<Vec<_>>();
 
     let chemistry = ChemistryBuilder::with_key("cheese").build();
-    let gm = Rc::new(GeneticManifest::defaults(chemistry.get_manifest()));
+    let gm = GeneticManifest::from_chemistry(&chemistry).wrap_rc();
     let genome = FramedGenomeCompiler::compile(vals, &gm);
     println!("genome:\n{}", genome.display(&gm));
 }

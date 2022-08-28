@@ -140,10 +140,11 @@ mod tests {
         };
 
         let chemistry_builder = ChemistryBuilder::with_key("cheese");
-        let gm = GeneticManifest::defaults(&chemistry_builder.manifest()).wrap_rc();
+        let chemistry = chemistry_builder.build();
+        let gm = GeneticManifest::from_chemistry(&chemistry);
 
         let mut sim = SimulationBuilder::default()
-            .chemistry(chemistry_builder.build())
+            .chemistry(chemistry)
             .size((2, 2))
             .place_units_method(PlaceUnitsMethod::LinearBottomMiddle { attributes: None })
             .unit_manifest(UnitManifest {

@@ -3,7 +3,8 @@ pub mod types;
 use rand::Rng;
 
 use crate::biology::genetic_manifest::predicates::{
-    Operator, OperatorParam, OperatorParamDefinition, OperatorParamType, OperatorSet,
+    OperatorImplementation, OperatorManifest, OperatorParam, OperatorParamDefinition,
+    OperatorParamType,
 };
 use crate::biology::genetic_manifest::GeneticManifest;
 pub use crate::biology::genome::framed::execution::GenomeExecutionContext;
@@ -140,7 +141,8 @@ pub mod test {
     #[test]
     fn genome_execution__execute() {
         let chemistry = ChemistryBuilder::with_key("cheese").build();
-        let gm = Rc::new(GeneticManifest::defaults(chemistry.get_manifest()));
+        let gm = Rc::new(GeneticManifest::from_chemistry(&chemistry));
+
         let cm = &gm.chemistry_manifest;
         let genome_values = genome!(gene(
             if_any(all((is_truthy, 1, 0, 0))),

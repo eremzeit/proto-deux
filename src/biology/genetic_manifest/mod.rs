@@ -1,22 +1,34 @@
 pub mod predicates;
 use std::rc::Rc;
 
+use serde::{Deserialize, Serialize};
+
 use crate::biology::genome::framed::types::FramedGenomeValue;
-use crate::chemistry::actions::ActionSet;
-use crate::simulation::common::{ChemistryManifest, SensorManifest};
+use crate::chemistry::actions::ActionManifest;
+use crate::simulation::common::serialize::ChemistryManifestData;
+use crate::simulation::common::{
+    ActionDefinition, ActionLibrary, Chemistry, ChemistryConfiguration, ChemistryInstance,
+    ChemistryManifest,
+};
 
-use self::predicates::{OperatorId, OperatorSet};
+use self::predicates::{OperatorId, OperatorLibrary, OperatorManifest, OperatorManifestData};
 
+use super::sensor_manifest::{
+    CustomSensorImplementation, CustomSensorLibrary, LocalPropertySensorManifest, SensorManifest,
+    SensorManifestData,
+};
 use super::unit_behavior::framed::PhenotypeRegisterValue;
 
 /**
- * Contains the information that is required to interpret a genome.
+ * Used when actually executing genomes
  */
-// #[derive(Serialize, Deserialize)]
+#[derive(Clone)]
 pub struct GeneticManifest {
     pub chemistry_manifest: Rc<ChemistryManifest>,
+
     pub sensor_manifest: Rc<SensorManifest>,
-    pub operator_set: Rc<OperatorSet>,
+
+    pub operator_manifest: Rc<OperatorManifest>,
 
     /**
      * question: what ultimately should determine this?  should this be defined by the chemistry?
@@ -25,17 +37,48 @@ pub struct GeneticManifest {
 }
 
 impl GeneticManifest {
-    pub fn defaults(chemistry_manifest: &ChemistryManifest) -> Self {
+    pub fn from_chemistry(chemistry: &ChemistryInstance) -> Self {
+        let cm = chemistry.get_manifest();
+        Self::new(
+            cm.clone(),
+            LocalPropertySensorManifest::from_all_props(cm.all_properties.as_slice()),
+        )
+    }
+
+    pub fn from_default_chemistry_config<C: Chemistry>() -> Self {
+        let config = C::default_config();
+        Self::construct::<C>(&config)
+    }
+
+    pub fn construct<C: Chemistry>(chemistry_config: &ChemistryConfiguration) -> Self {
+        let cm = C::construct_manifest(&chemistry_config);
+        let local_property_sensor_manifest =
+            LocalPropertySensorManifest::from_all_props(&cm.all_properties);
+
+        Self::new(cm, local_property_sensor_manifest)
+    }
+
+    pub fn new(
+        chemistry_manifest: ChemistryManifest,
+        local_property_sensors: LocalPropertySensorManifest,
+    ) -> Self {
         Self {
-            chemistry_manifest: Rc::new(chemistry_manifest.clone()),
-            sensor_manifest: Rc::new(SensorManifest::with_default_sensors(&chemistry_manifest)),
-            operator_set: Rc::new(OperatorSet::default_operators()),
+            sensor_manifest: Rc::new(SensorManifest::new(
+                &chemistry_manifest,
+                &local_property_sensors,
+            )),
+            chemistry_manifest: Rc::new(chemistry_manifest),
+            operator_manifest: Rc::new(OperatorManifest::default_operators()),
             number_of_registers: 5,
         }
     }
 
+    pub fn wrap_rc(self) -> Rc<Self> {
+        Rc::new(self)
+    }
+
     pub fn operator_id_for_key(&self, s: &str) -> OperatorId {
-        self.operator_set.by_key(s).index
+        self.operator_manifest.by_key(s).index
     }
 
     pub fn empty_registers(&self) -> Vec<PhenotypeRegisterValue> {
@@ -43,35 +86,47 @@ impl GeneticManifest {
         v.resize(self.number_of_registers, 0);
         v
     }
-
-    pub fn wrap_rc(self) -> Rc<Self> {
-        Rc::new(self)
-    }
 }
 
-// #[derive(Clone)]
-// pub struct GeneticManifest {
-//     pub operator_set: OperatorSet,
-//     pub number_of_registers: usize,
-// }
+/**
+ * Contains the information that is required to interpret a genome.
+ *
+ * Question: Is this constant per each chemistry type or does it change across unit entries?
+ *
+ *
+ */
+// #[derive(Clone, Serialize, Deserialize)]
+#[derive(Clone)]
+pub struct GeneticManifestData {
+    pub chemistry_manifest: ChemistryManifestData,
 
-// impl GeneticManifest {
-//     pub fn new() -> GeneticManifest {
-//         Self {
-//             operator_set: default_operators(),
-//             number_of_registers: 5,
-//         }
-//     }
+    pub sensor_manifest: SensorManifestData,
 
-//     pub fn operator_id_for_key(&self, s: &str) -> OperatorId {
-//         self.operator_set.by_key(s).index
-//     }
-// }
+    pub operator_manifest: OperatorManifestData,
 
-// fn test() {
-//     let manifest = GeneticManifest {
-//         //action_set: ActionSet {},
-//         operator_set: default_operators(),
-//         number_of_registers: 5,
-//     };
-// }
+    /**
+     * question: what ultimately should determine this?  should this be defined by the chemistry?
+     */
+    pub number_of_registers: usize,
+}
+
+impl GeneticManifestData {
+    // pub fn to_compiled(
+    //     &self,
+    //     action_library: ActionLibrary,
+    //     custom_sensor_library: CustomSensorLibrary,
+    //     operator_library: OperatorLibrary,
+    // ) -> GeneticManifest {
+    //     GeneticManifest {
+    //         chemistry_manifest: Rc::new(
+    //             self.chemistry_manifest.to_compiled(action_library.clone()),
+    //         ),
+    //         sensor_manifest: Rc::new(
+    //             self.sensor_manifest
+    //                 .to_compiled_sensor_manifest(custom_sensor_library),
+    //         ),
+    //         operator_manifest: Rc::new(self.operator_manifest.to_compiled(operator_library)),
+    //         number_of_registers: self.number_of_registers,
+    //     }
+    // }
+}

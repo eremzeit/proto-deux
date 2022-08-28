@@ -1,6 +1,6 @@
 use crate::genome::framed::samples;
 use crate::simulation::common::builder::ChemistryBuilder;
-use crate::simulation::common::GeneticManifest;
+use crate::simulation::common::{GeneticManifest, GeneticManifestData};
 use crate::{
     biology::experiments::{
         alterations::{self, CompiledAlterationSet},
@@ -34,10 +34,11 @@ pub fn alterations() -> CompiledAlterationSet {
         "crossover".to_string(),
     ])
 }
+
 pub fn simple_experiment(runner_args: ExperimentRunnerArgs) -> SimpleExperiment {
     let chemistry_builder = ChemistryBuilder::with_key("cheese");
     let chemistry = chemistry_builder.build();
-    let gm = GeneticManifest::defaults(chemistry.get_manifest()).wrap_rc();
+    let gm = GeneticManifest::from_chemistry(&chemistry).wrap_rc();
 
     let settings = SimpleExperimentSettings {
         cull_strategy: CullStrategy::WorstFirst,

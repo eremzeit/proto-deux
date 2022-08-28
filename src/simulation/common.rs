@@ -17,7 +17,7 @@ pub use crate::biology::unit_behavior::{
     BoxedUnitBehavior, NullBehavior, UnitBehavior, UnitBehaviorResult,
 };
 
-pub use crate::biology::genetic_manifest::GeneticManifest;
+pub use crate::biology::genetic_manifest::{GeneticManifest, GeneticManifestData};
 
 pub use crate::chemistry::actions::*;
 pub use crate::chemistry::properties::{

@@ -1,21 +1,29 @@
-use serde::Deserialize;
-use serde::Serialize;
+pub mod serialize;
+
 
 use self::properties::*;
 use self::reactions::*;
 use crate::biology::genetic_manifest::predicates::OperatorParam;
-use crate::chemistry::actions::{default_actions, ActionDefinition, ActionParam, ActionSet};
+use crate::chemistry::actions::{default_actions, ActionParam};
 use crate::simulation::common::*;
 use crate::simulation::unit_entry::UnitEntryAttributeIndex;
 use crate::util::Coord;
 
 use super::init_chemistry_action_params;
 
+/**
+ *
+ *  question: would it be possible for a simulation to have more than one distinct chemistry manifests?
+ *      -   yes, eg, if one unit had different reactions available to it or if theey required different configurations.
+ *      -   so maybe we should split off the reactions into something like UnitReactionsManifest, which would be unique per
+ *          unit entry
+ *
+ */
 #[derive(Clone)]
 pub struct ChemistryManifest {
-    pub reactions: Vec<ReactionDefinition>,
-    pub action_set: ActionSet,
-
+    pub chemistry_key: String,
+    pub reactions: Vec<CompiledReactionDefinition>,
+    pub action_manifest: ActionManifest,
     pub all_properties: Vec<Property>,
 
     pub unit_resources: Vec<UnitResourceDefinition>,
@@ -210,33 +218,6 @@ impl ChemistryManifest {
             }
         })
     }
-    //pub fn lookup_raw_property_id(
-    //    &self,
-    //    prop_id: RawPropertyId,
-    //    pos: &Position,
-    //    tick: u64,
-    //) -> PropertyValue {
-    //    Self::lookup_property_id(self.normalize_raw_property_id(prop_id), pos, tick)
-    //}
-    // pub fn lookup_property_id(
-    //     prop_id: PropertyId,
-    //     pos: &Position,
-    //     sim_attr: &SimulationAttributes,
-    //     tick: u64,
-    // ) -> PropertyValue {
-    //     match &prop_id {
-    //         PropertyId::PositionAttributeId(id) =>
-    //             PropertyValue::PositionAttribute(pos.get_attribute(*id)),
-    //         PropertyId::PositionResourceId(id) =>
-    //             PropertyValue::PositionResource(pos.get_resource(*id, tick)),
-    //         PropertyId::UnitAttributeId(id) =>
-    //             PropertyValue::UnitAttribute(pos.get_unit_attribute(*id)),
-    //         PropertyId::UnitResourceId(id) =>
-    //             PropertyValue::UnitResource(pos.get_unit_resource(*id)),
-    //         PropertyId::SimulationAttributeId(id) =>
-    //             PropertyValue::SimulationAttribute(pos.get_unit_resource(*id)),
-    //     }
-    // }
     pub fn gather_properties(&self) -> Vec<Property> {
         let mut all_props: Vec<Property> = vec![];
 
@@ -428,12 +409,9 @@ impl ChemistryManifest {
     }
 
     pub fn normalize_manifest(&mut self, config: &ChemistryConfiguration) {
-        self.action_set.normalize();
-
         self.normalize_properties(config);
 
         init_chemistry_action_params(self, config);
-
         let mut reactions: Vec<ReactionDefinition> = self.reactions.clone();
         // normalize reaction definitions
         //
@@ -443,7 +421,9 @@ impl ChemistryManifest {
             // println!("processing reaction key: {}", &reaction.key);
             for (j, reagent) in reaction.reagents.iter().enumerate() {
                 let action_key = &reaction.reagents[j].action_key;
-                reactions[i].reagents[j].action_index = self.action_set.by_key(action_key).index;
+
+                reactions[i].reagents[j].action_index =
+                    self.action_manifest.by_key(action_key).index;
 
                 // println!("\tfor reagent: {}", &reagent.action_key);
                 for (param_idx, param_value) in reagent.params.iter().enumerate() {
@@ -536,8 +516,8 @@ pub mod tests {
 
     #[test]
     pub fn manifest() {
-        let mut manifest = CheeseChemistry::construct_manifest(&ChemistryConfiguration::new());
-        let gm = GeneticManifest::defaults(&manifest);
+        let gm = GeneticManifest::from_default_chemistry_config::<CheeseChemistry>();
+        let manifest = &gm.chemistry_manifest;
 
         assert_eq!(manifest.unit_resources[0].id, 0);
         assert_eq!(manifest.unit_resources[1].id, 1);

@@ -4,7 +4,9 @@ use crate::runners::SimulationRunnerArgs;
 use crate::chemistry::builder::*;
 use crate::scenarios::simulations::lever::get_unit_entries_for_lever;
 use crate::simulation::common::helpers::place_units::PlaceUnitsMethod;
-use crate::simulation::common::{ChemistryInstance, CoordIterator, GeneticManifest, UnitManifest};
+use crate::simulation::common::{
+    ChemistryInstance, CoordIterator, GeneticManifestData, UnitManifest,
+};
 use crate::simulation::config::SimulationBuilder;
 use crate::simulation::Simulation;
 use crate::unit_entry::builder::UnitEntryBuilder;

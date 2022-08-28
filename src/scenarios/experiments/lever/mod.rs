@@ -10,7 +10,7 @@ use crate::{
     runners::ExperimentRunnerArgs,
     simulation::common::{
         builder::ChemistryBuilder, helpers::place_units::PlaceUnitsMethod, ChemistryConfiguration,
-        GeneticManifest, SensorManifest,
+        GeneticManifest, GeneticManifestData, SensorManifest,
     },
 };
 
@@ -25,7 +25,7 @@ pub fn alterations() -> CompiledAlterationSet {
 pub fn simple_experiment(runner_args: ExperimentRunnerArgs) -> SimpleExperiment {
     let chemistry_builder = ChemistryBuilder::with_key("lever");
     let chemistry = chemistry_builder.build();
-    let gm = GeneticManifest::defaults(chemistry.get_manifest()).wrap_rc();
+    let gm = GeneticManifest::from_chemistry(&chemistry).wrap_rc();
 
     let settings = SimpleExperimentSettings {
         cull_strategy: CullStrategy::WorstFirst,

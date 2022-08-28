@@ -18,7 +18,7 @@ use std::rc::Rc;
 pub fn test_fitness(key: &str) {
     let exp_key = key.to_string();
     let chemistry_builder = ChemistryBuilder::with_key("cheese");
-    let gm = GeneticManifest::defaults(&chemistry_builder.manifest()).wrap_rc();
+    let gm = GeneticManifest::from_chemistry(&chemistry_builder.build()).wrap_rc();
 
     let settings = SimpleExperimentSettings {
         cull_strategy: CullStrategy::WorstFirst,

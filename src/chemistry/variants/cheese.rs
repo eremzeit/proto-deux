@@ -1,4 +1,4 @@
-use crate::chemistry::actions::ActionSet;
+use crate::biology::genetic_manifest::predicates::default_operators;
 use crate::chemistry::actions::*;
 use crate::chemistry::properties::*;
 use crate::chemistry::reactions::*;
@@ -135,73 +135,11 @@ impl CheeseChemistry {
 
         [(x, y), (x + x_size, y + y_size)]
     }
-
-    pub fn custom_actions() -> ActionSet {
-        ActionSet::from(vec![ActionDefinition::new(
-            &"gobble_cheese",
-            vec![],
-            // execute action
-            Rc::new(
-                |sim_cell: &mut SimCell, context: &ActionExecutionContext| -> bool {
-                    let unit_resources = defs::UnitResourcesLookup::new();
-                    let pos_resources = defs::PositionResourcesLookup::new();
-                    let sim_attributes = defs::SimulationAttributesLookup::new();
-                    let unit_entry_attributes = defs::UnitEntryAttributesLookup::new();
-
-                    let max_gobble_amount = constants::MAX_GOBBLE_AMOUNT;
-                    let pos = sim_cell.world.get_position_at(context.coord).unwrap();
-                    let entry_id = &pos.unit.as_ref().unwrap().entry_id.clone();
-                    let pos_cheese_amount =
-                        pos.get_resource(pos_resources.cheese, sim_cell.world.tick);
-
-                    let diff = pos_cheese_amount - constants::MAX_GOBBLE_AMOUNT;
-
-                    let amount = if pos_cheese_amount >= constants::MAX_GOBBLE_AMOUNT {
-                        constants::MAX_GOBBLE_AMOUNT
-                    } else {
-                        pos_cheese_amount
-                    };
-
-                    let new_pos_cheese = pos_cheese_amount - amount;
-                    sim_cell.world.set_pos_resource_at(
-                        context.coord,
-                        pos_resources.cheese,
-                        new_pos_cheese,
-                    );
-                    sim_cell.world.add_unit_resource_at(
-                        context.coord,
-                        unit_resources.cheese,
-                        amount,
-                    );
-
-                    let next_val = sim_cell.unit_entry_attributes[*entry_id]
-                        [unit_entry_attributes.total_cheese_consumed]
-                        .unwrap_integer()
-                        + amount;
-
-                    sim_cell.unit_entry_attributes[*entry_id]
-                        [unit_entry_attributes.total_cheese_consumed] =
-                        UnitEntryAttributeValue::Integer(next_val);
-
-                    let next_val = sim_cell.attributes[sim_attributes.total_cheese_consumed]
-                        .unwrap_integer()
-                        + amount;
-                    sim_cell.attributes[sim_attributes.total_cheese_consumed] =
-                        SimulationAttributeValue::Integer(next_val);
-
-                    true
-                },
-            ),
-        )])
-    }
 }
-
 impl Chemistry for CheeseChemistry {
-    fn get_key(&self) -> String {
-        "cheese".to_string()
-    }
-
     fn construct(config: ChemistryConfiguration) -> Box<CheeseChemistry> {
+        let config = Self::fill_with_defaults(config);
+
         let mut chemistry = CheeseChemistry {
             manifest: CheeseChemistry::construct_manifest(&config),
             configuration: config,
@@ -210,12 +148,17 @@ impl Chemistry for CheeseChemistry {
         wrap_chemistry!(chemistry)
     }
 
+    fn get_key() -> String {
+        "cheese".to_string()
+    }
+
     fn construct_manifest(config: &ChemistryConfiguration) -> ChemistryManifest {
         let mut manifest = ChemistryManifest {
+            chemistry_key: Self::get_key(),
             all_properties: vec![],
             simulation_attributes: defs::SimulationAttributesLookup::make_defs(),
             unit_entry_attributes: defs::UnitEntryAttributesLookup::make_defs(),
-            action_set: default_actions().add(Self::custom_actions().actions.clone()),
+            action_manifest: ActionManifest::new(CheeseChemistry::construct_action_library()),
             unit_resources: defs::UnitResourcesLookup::make_defs(),
             unit_attributes: defs::UnitAttributesLookup::make_defs(),
             position_attributes: defs::PositionAttributesLookup::make_defs(),
@@ -223,9 +166,17 @@ impl Chemistry for CheeseChemistry {
             reactions: defs::get_reactions(),
         };
 
-        manifest.normalize_manifest(config); // TODO make this accect a config.
+        let config = Self::fill_with_defaults(config.clone());
+        manifest.normalize_manifest(&config);
 
         manifest
+    }
+
+    fn custom_action_definitions() -> Vec<ActionDefinition>
+    where
+        Self: Sized,
+    {
+        custom_action_definitions()
     }
 
     fn default_manifest() -> ChemistryManifest {
@@ -391,6 +342,62 @@ impl Chemistry for CheeseChemistry {
     }
 }
 
+fn custom_action_definitions() -> Vec<ActionDefinition> {
+    vec![ActionDefinition::new(
+        &"gobble_cheese",
+        vec![],
+        // execute action
+        Rc::new(
+            |sim_cell: &mut SimCell, context: &ActionExecutionContext| -> bool {
+                let unit_resources = defs::UnitResourcesLookup::new();
+                let pos_resources = defs::PositionResourcesLookup::new();
+                let sim_attributes = defs::SimulationAttributesLookup::new();
+                let unit_entry_attributes = defs::UnitEntryAttributesLookup::new();
+
+                let max_gobble_amount = constants::MAX_GOBBLE_AMOUNT;
+                let pos = sim_cell.world.get_position_at(context.coord).unwrap();
+                let entry_id = &pos.unit.as_ref().unwrap().entry_id.clone();
+                let pos_cheese_amount = pos.get_resource(pos_resources.cheese, sim_cell.world.tick);
+
+                let diff = pos_cheese_amount - constants::MAX_GOBBLE_AMOUNT;
+
+                let amount = if pos_cheese_amount >= constants::MAX_GOBBLE_AMOUNT {
+                    constants::MAX_GOBBLE_AMOUNT
+                } else {
+                    pos_cheese_amount
+                };
+
+                let new_pos_cheese = pos_cheese_amount - amount;
+                sim_cell.world.set_pos_resource_at(
+                    context.coord,
+                    pos_resources.cheese,
+                    new_pos_cheese,
+                );
+                sim_cell
+                    .world
+                    .add_unit_resource_at(context.coord, unit_resources.cheese, amount);
+
+                let next_val = sim_cell.unit_entry_attributes[*entry_id]
+                    [unit_entry_attributes.total_cheese_consumed]
+                    .unwrap_integer()
+                    + amount;
+
+                sim_cell.unit_entry_attributes[*entry_id]
+                    [unit_entry_attributes.total_cheese_consumed] =
+                    UnitEntryAttributeValue::Integer(next_val);
+
+                let next_val = sim_cell.attributes[sim_attributes.total_cheese_consumed]
+                    .unwrap_integer()
+                    + amount;
+                sim_cell.attributes[sim_attributes.total_cheese_consumed] =
+                    SimulationAttributeValue::Integer(next_val);
+
+                true
+            },
+        ),
+    )]
+}
+
 pub fn place_units_static_region(
     world: &mut World,
     chemistry: &CheeseChemistry,
@@ -455,7 +462,7 @@ mod tests {
     mod gobble_cheese {
         use super::*;
         use crate::chemistry::actions::tests::execute_action;
-        use crate::tests::fixtures;
+        use crate::fixtures;
 
         #[test]
         fn do_action() {
@@ -465,8 +472,11 @@ mod tests {
             let position_resources = defs::PositionResourcesLookup::new();
             let unit_resources = defs::UnitResourcesLookup::new();
 
-            let actions = CheeseChemistry::custom_actions();
-            let action = actions.by_key("gobble_cheese");
+            let action_library = CheeseChemistry::construct_action_library();
+            let action = action_library
+                .iter()
+                .find(|action_def| action_def.key == "gobble_cheese")
+                .unwrap();
 
             let src_coord = (2, 0);
 

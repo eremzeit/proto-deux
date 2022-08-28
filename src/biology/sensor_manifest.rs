@@ -1,5 +1,8 @@
+use serde::{Deserialize, Serialize};
+
 use crate::simulation::common::{
-    ChemistryManifest, Coord, CoordOffset, PropertyId, SimulationAttributes, World,
+    Chemistry, ChemistryManifest, Coord, CoordOffset, Property, PropertyId, SimulationAttributes,
+    World,
 };
 use crate::util::coord_by_coord_offset;
 use std::rc::Rc;
@@ -24,18 +27,31 @@ impl<'a> SensorContext<'a> {
     }
 }
 
+pub type CustomSensorLibrary = Vec<CustomSensorImplementation>;
+
+pub struct CustomSensorImplementation {
+    pub sensor_fn: CustomSensorFunction,
+    pub key: String,
+}
+
 pub type CustomSensorFunction =
     Rc<dyn Fn(&World, &SimulationAttributes, &SensorContext) -> SensorValue>;
 use std;
 
-#[derive(Clone)]
+pub type CustomSensorId = u16;
+pub type CustomSensorKey = u16;
+
+#[derive(Clone, Serialize, Deserialize)]
 pub enum SensorType {
     // ie. UnitResource, UnitAttribute, PositionResource, PositionAttribute
     LocalChemicalProperty(PropertyId, SensorCoordOffset),
     SimulationProperty(PropertyId),
     Constant(SensorValue),
     Random(std::ops::Range<usize>),
-    Custom(CustomSensorFunction),
+    CustomSensor(CustomSensorKey),
+
+    #[serde(skip_serializing, skip_deserializing)]
+    CustomSensorFn(CustomSensorFunction, CustomSensorKey), // TODO: this should hold an ID to a preset list of custom sensor functions
 }
 
 pub type SensorId = usize;
@@ -46,7 +62,7 @@ pub type SensorId = usize;
  * definitions need to be generated dynamically at the time that a unit_entry is initialized.
  *
  */
-#[derive(Clone)]
+#[derive(Clone, Serialize, Deserialize)]
 pub struct SensorDefinition {
     pub id: SensorId,
     pub key: String,
@@ -78,7 +94,12 @@ impl SensorDefinition {
                 use std::convert::TryInto;
                 rng.gen_range(range.clone()).try_into().unwrap()
             }
-            SensorType::Custom(func) => 0,
+            SensorType::CustomSensorFn(func, custom_sensor_key) => {
+                panic!("not implemented")
+            }
+            SensorType::CustomSensor(custom_sensor_key) => {
+                panic!("not implemented")
+            }
         };
 
         0
@@ -159,23 +180,46 @@ pub fn calc_local_chemical_property(
     // SimulationAttributeId(SimulationAttributeIndex)
 }
 
+pub type SensorManifestData = SensorManifest;
+
 /**
  * A sensor manifest is a list of sensors that are available to a specific unit_entry.  Over the course of the lifetime of
  * a genome, the sensor manifest cannot change.  This would mean that if we added/removed/changed any sensors to the manifest
  * then the genome would become invalid.  This means that tweaking the available sensors would invalidate any genomes that are currently stored.
  */
-#[derive(Clone)]
+#[derive(Clone, Serialize, Deserialize)]
 pub struct SensorManifest {
     pub sensors: Vec<SensorDefinition>,
 }
 
 impl SensorManifest {
-    pub fn with_default_sensors(chemistry_manifest: &ChemistryManifest) -> Self {
-        Self::new(Self::default_sensors(chemistry_manifest))
-    }
+    // pub fn to_compiled_sensor_manifest(
+    //     &self,
+    //     custom_sensor_library: Vec<CustomSensorImplementation>,
+    // ) -> CompiledSensorManifest {
+    //     // replace each custom sensor defininition with the compiled implementation
+    //     todo!();
+    //     self.clone()
+    // }
 
-    pub fn new(sensors: Vec<SensorDefinition>) -> Self {
-        SensorManifest { sensors }
+    // pub fn with_default_sensors(chemistry_manifest: &ChemistryManifest) -> Self {
+    //     SensorManifest {
+    //         sensors: Self::default_sensors(chemistry_manifest),
+    //     }
+    // }
+
+    pub fn new(
+        chemistry_manifest: &ChemistryManifest,
+        local_properties: &LocalPropertySensorManifest,
+    ) -> Self {
+        let mut sensors =
+            Self::construct_local_property_sensors(local_properties, chemistry_manifest);
+
+        sensors.append(&mut Self::standard_sensors(chemistry_manifest));
+
+        SensorManifest {
+            sensors: Self::normalize_sensors(sensors),
+        }
     }
 
     pub fn normalize_sensors(_sensors: Vec<SensorDefinition>) -> Vec<SensorDefinition> {
@@ -190,6 +234,53 @@ impl SensorManifest {
             .collect::<Vec<_>>()
     }
 
+    // pub construct_sensors() -> Vec<SensorDefinition> {
+
+    // }
+
+    pub fn construct_local_property_sensors(
+        local_prop_manifest: &LocalPropertySensorManifest,
+        chemistry_manifest: &ChemistryManifest,
+    ) -> Vec<SensorDefinition> {
+        let mut defs = vec![];
+
+        for local_prop_entry in &local_prop_manifest.entries {
+            let property = &chemistry_manifest.all_properties[local_prop_entry.property_offset_idx];
+
+            let offsets = sensor_local_offsets(local_prop_entry.distance.into());
+
+            let mut _defs = offsets
+                .iter()
+                .map(|offset| SensorDefinition {
+                    key: format!("{}{:?}", &property.long_key, &offset),
+                    prop_key: property.long_key.clone(),
+                    id: 0,
+                    sensor_type: SensorType::LocalChemicalProperty(
+                        property.property_id.clone(),
+                        offset.clone(),
+                    ),
+                })
+                .collect::<Vec<_>>();
+
+            defs.append(&mut _defs);
+        }
+
+        defs
+        // chemistry_manifest
+        //     .all_properties
+        //     .iter()
+        //     .map(|prop| SensorDefinition {
+        //         key: format!("{}{:?}", &prop.long_key, &offset),
+        //         prop_key: prop.long_key.clone(),
+        //         id: 0,
+        //         sensor_type: SensorType::LocalChemicalProperty(
+        //             prop.property_id.clone(),
+        //             offset.clone(),
+        //         ),
+        //     })
+        //     .collect::<Vec<_>>();
+    }
+
     /**
      *  Construct a list of sensors available from the chemistry manifest.
      *  Note, this assumes that *all* chemical properties are visible to the genome.
@@ -198,30 +289,16 @@ impl SensorManifest {
      * chemical properties.  This would require passing a list of property keys that are to be
      * included/excluded.  Each unit_entry would have it's own unique sensor manifest.  
      *
-     *
+     * DEPRECATED
      *
      */
     pub fn default_sensors(chemistry_manifest: &ChemistryManifest) -> Vec<SensorDefinition> {
-        let offsets = sensor_local_offsets(1);
+        panic!("aoeu");
+        vec![]
+    }
+
+    pub fn standard_sensors(chemistry_manifest: &ChemistryManifest) -> Vec<SensorDefinition> {
         let mut sensors = vec![];
-
-        for (i, offset) in offsets.iter().enumerate() {
-            let mut _sensors: Vec<SensorDefinition> = chemistry_manifest
-                .all_properties
-                .iter()
-                .map(|prop| SensorDefinition {
-                    key: format!("{}{:?}", &prop.long_key, &offset),
-                    prop_key: prop.long_key.clone(),
-                    id: 0,
-                    sensor_type: SensorType::LocalChemicalProperty(
-                        prop.property_id.clone(),
-                        offset.clone(),
-                    ),
-                })
-                .collect::<Vec<_>>();
-
-            sensors.append(&mut _sensors);
-        }
 
         sensors.push(SensorDefinition {
             id: 0,
@@ -244,7 +321,7 @@ impl SensorManifest {
             prop_key: "random_bool".to_string(),
         });
 
-        Self::normalize_sensors(sensors)
+        sensors
     }
 
     pub fn sensor_id_from_key<T: AsRef<str>>(&self, _key: T) -> SensorId {
@@ -313,6 +390,63 @@ pub fn sensor_local_offsets(distance: i32) -> Vec<SensorCoordOffset> {
         new_coords.append(&mut coords);
         return new_coords;
     }
+}
+pub struct LocalPropertySensorManifest {
+    entries: Vec<LocalPropertySensorEntry>,
+}
+
+impl LocalPropertySensorManifest {
+    pub fn from_all_props(all_properties: &[Property]) -> Self {
+        Self {
+            entries: all_properties
+                .iter()
+                .enumerate()
+                .map(|(i, prop)| LocalPropertySensorEntry {
+                    long_key: prop.long_key.clone(),
+                    property_id: prop.property_id.clone(),
+                    property_offset_idx: prop.id,
+                    distance: 1,
+                })
+                .collect::<Vec<_>>(),
+        }
+    }
+    pub fn from_blacklist(blacklisted_prop_keys: &[String], all_properties: &[Property]) -> Self {
+        Self {
+            entries: all_properties
+                .iter()
+                .enumerate()
+                .filter(|(i, prop)| !blacklisted_prop_keys.contains(&prop.long_key))
+                .map(|(i, prop)| LocalPropertySensorEntry {
+                    long_key: prop.long_key.clone(),
+                    property_id: prop.property_id.clone(),
+                    property_offset_idx: prop.id,
+                    distance: 1,
+                })
+                .collect::<Vec<_>>(),
+        }
+    }
+    pub fn from_whitelist(whitelisted_prop_keys: &[String], all_properties: &[Property]) -> Self {
+        Self {
+            entries: all_properties
+                .iter()
+                .enumerate()
+                .filter(|(i, prop)| whitelisted_prop_keys.contains(&prop.long_key))
+                .map(|(i, prop)| LocalPropertySensorEntry {
+                    long_key: prop.long_key.clone(),
+                    property_id: prop.property_id.clone(),
+                    property_offset_idx: prop.id,
+                    distance: 1,
+                })
+                .collect::<Vec<_>>(),
+        }
+    }
+}
+
+pub struct LocalPropertySensorEntry {
+    pub long_key: String,
+    pub property_id: PropertyId,
+    pub property_offset_idx: usize,
+    pub distance: u8,
 }
 
 pub mod tests {

@@ -233,6 +233,11 @@ impl Simulation {
      * Returns true if finished
      */
     pub fn tick(&mut self) -> bool {
+        if self.world.tick == 0 {
+            // 0 means pre-initialized
+            panic!("Must call self.init() before running");
+        }
+
         // if self.world.tick % 1000 == 0 {
         //     println!("tick: {}", self.world.tick);
         // }
@@ -320,7 +325,7 @@ impl Simulation {
                 .map(|unit_entry: &UnitEntry| -> UnitEntryData { unit_entry.info.clone() })
                 .collect::<Vec<UnitEntryData>>(),
             iterations: self.iterations,
-            chemistry_key: self.chemistry.get_key(),
+            chemistry_key: self.chemistry.get_manifest().chemistry_key.clone(),
         }
     }
 

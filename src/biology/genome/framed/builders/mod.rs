@@ -263,7 +263,7 @@ macro_rules! conditional {
             use std::convert::TryInto;
             let v: Vec<BooleanVariable> = vec![];
             let op_key = stringify!($op_key).to_string();
-            let op = gm.operator_set.by_key(&op_key);
+            let op = gm.operator_manifest.by_key(&op_key);
 
             let mut params_meta: [FramedGenomeValue; 3] = [0; 3];
             let mut params: [OperatorParam; 3] = [0; 3];
@@ -459,9 +459,7 @@ pub mod parsing_v2 {
 
     #[test]
     fn conditional() {
-        let gm = GeneticManifest::defaults(&CheeseChemistry::construct_manifest(
-            &ChemistryConfiguration::new(),
-        ));
+        let gm = GeneticManifest::from_default_chemistry_config::<CheeseChemistry>();
 
         let raw_conditional = conditional!(is_truthy, pos_attr::is_cheese_source(0, 0)).build(&gm);
 
@@ -481,9 +479,7 @@ pub mod parsing_v2 {
     }
     #[test]
     fn if_any_test() {
-        let gm = GeneticManifest::defaults(&CheeseChemistry::construct_manifest(
-            &ChemistryConfiguration::new(),
-        ));
+        let gm = GeneticManifest::from_default_chemistry_config::<CheeseChemistry>();
 
         let op_id = gm.operator_id_for_key("is_truthy") as FramedGenomeValue;
         let is_negated = 0 as FramedGenomeValue;
@@ -523,8 +519,7 @@ pub mod parsing_v2 {
 
     #[test]
     fn test_then_do__register_param() {
-        let cm = CheeseChemistry::construct_manifest(&ChemistryConfiguration::new());
-        let gm = GeneticManifest::defaults(&cm);
+        let gm = GeneticManifest::from_default_chemistry_config::<CheeseChemistry>();
 
         let operation_type = 0;
         let reaction_id = gm
@@ -550,9 +545,7 @@ pub mod parsing_v2 {
     // }
     #[test]
     fn test_gene() {
-        let gm = GeneticManifest::defaults(&CheeseChemistry::construct_manifest(
-            &ChemistryConfiguration::new(),
-        ));
+        let gm = GeneticManifest::from_default_chemistry_config::<CheeseChemistry>();
         let gene_values = gene(
             if_any(vec![if_not_all(vec![conditional!(
                 is_truthy,
@@ -612,7 +605,7 @@ pub mod parsing_v2 {
 
     #[test]
     fn full_parsing__basic_genome() {
-        let gm = GeneticManifest::defaults(&CheeseChemistry::default_manifest());
+        let gm = GeneticManifest::from_default_chemistry_config::<CheeseChemistry>();
 
         let framed_vals = frame_from_single_channel(vec![gene(
             if_any(vec![if_all(vec![conditional!(
@@ -645,7 +638,7 @@ CALL gobble_cheese() IF FALSE\n\n";
     }
     #[test]
     fn full_parsing__complex_genome() {
-        let gm = GeneticManifest::defaults(&CheeseChemistry::default_manifest());
+        let gm = GeneticManifest::from_default_chemistry_config::<CheeseChemistry>();
 
         println!("BEFORE COMPILING");
         let framed_vals = frame_from_single_channel(vec![

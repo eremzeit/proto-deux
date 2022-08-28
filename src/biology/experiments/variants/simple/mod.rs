@@ -41,6 +41,7 @@ pub struct SimpleExperiment {
     pub genome_entries: Vec<GenomeExperimentEntry>,
     pub is_headless: bool,
     pub current_tick: u64,
+
     pub settings: SimpleExperimentSettings,
     pub _last_entry_id: usize,
 
@@ -246,9 +247,9 @@ impl SimpleExperiment {
         &self,
         uids: &[ExperimentGenomeUid],
         cm: &ChemistryManifest,
+        // chemistry: &ChemistryInstance,
     ) -> Vec<UnitEntry> {
         let mut unit_entries = vec![];
-
         let mut count = 0;
         for uid in uids {
             perf_timer_start!("building_unit_entries");
@@ -257,14 +258,21 @@ impl SimpleExperiment {
 
             let genome = self.genome_entries[idx].compile(&self.settings.gm);
 
+            let libraries =
+                construct_chemistry_libraries(&self.settings.chemistry_options.chemistry_key);
+
+            let gm = self.settings.gm.clone();
+            // let gm = Rc::new(self.settings.gm.to_compiled(
+            //     libraries.action_library,
+            //     libraries.custom_sensor_library,
+            //     libraries.operator_library,
+            // ));
             let unit_entry = UnitEntryBuilder::default()
                 .species_name(format!("species: {}", count))
-                .behavior(
-                    FramedGenomeUnitBehavior::new(genome, self.settings.gm.clone()).construct(),
-                )
+                .behavior(FramedGenomeUnitBehavior::new(genome, gm.clone()).construct())
                 .default_resources(self.settings.sim_settings.default_unit_resources.clone())
                 .default_attributes(self.settings.sim_settings.default_unit_attr.clone())
-                .build(&cm);
+                .build(cm);
             perf_timer_stop!("building_unit_entries");
 
             unit_entries.push(unit_entry);
@@ -278,16 +286,18 @@ impl SimpleExperiment {
         &mut self,
         genome_uids: &Vec<ExperimentGenomeUid>,
     ) -> Vec<TrialResultItem> {
+        let chemistry = self.settings.chemistry_options.build();
+
         perf_timer_start!("get_unit_entries");
         let unit_entries = self._get_unit_entries_for_uids(
             genome_uids.as_slice(),
             &self.settings.gm.chemistry_manifest,
+            // &chemistry,
         );
+
         perf_timer_stop!("get_unit_entries");
 
         explog!("EVAL fitness for genomes: {:?}", genome_uids);
-
-        let chemistry = self.settings.chemistry_options.build();
 
         perf_timer_start!("sim_build");
         let mut sim = SimulationBuilder::default()
@@ -707,12 +717,15 @@ pub fn random_genome_of_length(length: usize) -> Vec<FramedGenomeWord> {
 }
 
 pub mod tests {
+    use variants::CheeseChemistry;
+
     use self::utils::SimpleExperimentSettingsBuilder;
     use super::*;
     use crate::biology::experiments::variants::simple::logger::LoggingSettings;
     use crate::biology::experiments::variants::simple::utils::{
         CullStrategy, ExperimentSimSettings,
     };
+    use crate::biology::genetic_manifest::GeneticManifest;
     use crate::biology::genome::framed::common::*;
     use crate::biology::unit_behavior::framed::common::*;
     use crate::simulation::common::builder::ChemistryBuilder;
@@ -722,7 +735,10 @@ pub mod tests {
     pub fn experiment_settings() -> SimpleExperimentSettingsBuilder {
         let chemistry_builder = ChemistryBuilder::with_key("cheese");
         let chemistry = chemistry_builder.build();
-        let gm = GeneticManifest::defaults(chemistry.get_manifest()).wrap_rc();
+
+        // let gm = GeneticManifest::from_chemistry_with_defaults::<CheeseChemistry>().wrap_rc();
+        let gm =
+            GeneticManifest::construct::<CheeseChemistry>(&chemistry.get_configuration()).wrap_rc();
 
         SimpleExperimentSettingsBuilder::default()
             .alteration_set(alterations::default_alteration_set())
@@ -781,7 +797,7 @@ pub mod tests {
     #[test]
     fn test_random_genome_generation() {
         let chemistry = ChemistryBuilder::with_key("cheese").build();
-        let gm = GeneticManifest::defaults(chemistry.get_manifest());
+        let gm = GeneticManifest::from_default_chemistry_config::<CheeseChemistry>().wrap_rc();
 
         let vals1 = random_genome_of_length(100);
 
