@@ -65,7 +65,7 @@ pub struct SimpleExperimentSettings {
     pub fitness_calculation_key: String, // needed?  should this be a trait object?  how will fitness calculation change?
     pub cull_strategy: CullStrategy,
     pub chemistry_options: ChemistryBuilder,
-    pub gm: Rc<GeneticManifest>, // note: eventually this might be defined on a per-genome basis
+    // pub gm: Rc<GeneticManifest>, // note: eventually this might be defined on a per-genome basis
 }
 
 // pub mod builder {

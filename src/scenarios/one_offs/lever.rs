@@ -66,7 +66,6 @@ pub fn test_fitness(key: &str) {
             allow_overwrite: true,
             checkpoint_interval: 1,
         }),
-        gm,
         chemistry_options: chemistry_builder,
     };
 

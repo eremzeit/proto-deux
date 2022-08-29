@@ -39,12 +39,12 @@ pub struct SimpleExperiment {
     pub is_paused: bool,
     pub is_initialized: bool,
     pub genome_entries: Vec<GenomeExperimentEntry>,
-    pub is_headless: bool,
     pub current_tick: u64,
 
     pub settings: SimpleExperimentSettings,
     pub _last_entry_id: usize,
 
+    _gm: Rc<GeneticManifest>, // a cached copy.  note that this might eventually change depending on the genome.
     _logger: Option<SimpleExperimentLogger>,
     _seed_genomes: Option<Vec<RawFramedGenome>>,
 }
@@ -58,15 +58,17 @@ impl SimpleExperiment {
                 settings: settings.clone(),
             });
 
+        let chemistry = settings.chemistry_options.build();
+        let gm = GeneticManifest::from_chemistry(&chemistry).wrap_rc();
         SimpleExperiment {
             current_tick: 0,
             is_paused: true,
             is_initialized: false,
             genome_entries: vec![],
-            is_headless: true,
             settings,
             _last_entry_id: 0,
 
+            _gm: gm,
             _logger: logger,
             _seed_genomes: None,
         }
@@ -150,7 +152,7 @@ impl SimpleExperiment {
             logger._log_status(
                 self.current_tick as usize,
                 &self.genome_entries,
-                &self.settings.gm,
+                &self._gm,
             );
         }
 
@@ -238,7 +240,7 @@ impl SimpleExperiment {
         self.genome_entries.iter().map(|entry| {
             let genome_vals = entry.genome.clone();
             let genome = FramedGenomeCompiler::compile(genome_vals, gm);
-            s = format!("{}\n{}", s, genome.display(&self.settings.gm));
+            s = format!("{}\n{}", s, genome.display(&self._gm));
         });
         s
     }
@@ -256,17 +258,12 @@ impl SimpleExperiment {
             let maybe_idx = self._find_by_uid(*uid);
             let idx = maybe_idx.unwrap();
 
-            let genome = self.genome_entries[idx].compile(&self.settings.gm);
+            let genome = self.genome_entries[idx].compile(&self._gm);
 
-            let libraries =
-                construct_chemistry_libraries(&self.settings.chemistry_options.chemistry_key);
+            // let libraries =
+            //     construct_chemistry_libraries(&self.settings.chemistry_options.chemistry_key);
 
-            let gm = self.settings.gm.clone();
-            // let gm = Rc::new(self.settings.gm.to_compiled(
-            //     libraries.action_library,
-            //     libraries.custom_sensor_library,
-            //     libraries.operator_library,
-            // ));
+            let gm = self._gm.clone();
             let unit_entry = UnitEntryBuilder::default()
                 .species_name(format!("species: {}", count))
                 .behavior(FramedGenomeUnitBehavior::new(genome, gm.clone()).construct())
@@ -291,7 +288,7 @@ impl SimpleExperiment {
         perf_timer_start!("get_unit_entries");
         let unit_entries = self._get_unit_entries_for_uids(
             genome_uids.as_slice(),
-            &self.settings.gm.chemistry_manifest,
+            &self._gm.chemistry_manifest,
             // &chemistry,
         );
 
@@ -665,7 +662,7 @@ impl SimpleExperiment {
                 || _tick >= self.settings.iterations as u64
                 || self.current_tick == 1;
             if should_log_checkpoint {
-                logger._log_status(_tick as usize, &self.genome_entries, &self.settings.gm)
+                logger._log_status(_tick as usize, &self.genome_entries, &self._gm)
             }
             perf_timer_stop!("experiment_logging");
         }
@@ -757,7 +754,6 @@ pub mod tests {
             .iterations(1)
             .logging_settings(None)
             .chemistry_options(chemistry_builder)
-            .gm(gm)
     }
 
     #[test]

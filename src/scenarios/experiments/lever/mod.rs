@@ -49,7 +49,6 @@ pub fn simple_experiment(runner_args: ExperimentRunnerArgs) -> SimpleExperiment 
             checkpoint_interval: 1000,
         }),
         chemistry_options: chemistry_builder,
-        gm: gm,
     };
 
     let mut exp = SimpleExperiment::new(settings);

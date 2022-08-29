@@ -38,7 +38,6 @@ pub fn test_fitness(key: &str) {
         experiment_key: exp_key.clone(),
         logging_settings: None,
         chemistry_options: chemistry_builder,
-        gm,
     };
 
     let mut exp = SimpleExperiment::new(settings);

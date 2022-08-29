@@ -63,7 +63,6 @@ pub fn simple_experiment(runner_args: ExperimentRunnerArgs) -> SimpleExperiment 
         }),
 
         chemistry_options: chemistry_builder,
-        gm: gm.clone(),
     };
 
     let mut exp = SimpleExperiment::new(settings);
