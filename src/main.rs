@@ -35,6 +35,7 @@ extern crate image as im;
 extern crate once_cell;
 extern crate opengl_graphics;
 extern crate piston_window;
+extern crate ron;
 
 #[macro_use]
 pub mod perf;
@@ -76,6 +77,9 @@ fn main() {
     perf_timer_start!("main");
     let args = util::cli::parse_cli_args();
     match args {
+        RunMode::ExperimentSimReplayGui(exp_args, sim_ui_args) => {
+            runners::start_exp_replay_with_ui(exp_args, sim_ui_args);
+        }
         RunMode::HeadlessExperiment(args) => {
             runners::start_headless_experiment(args);
         }

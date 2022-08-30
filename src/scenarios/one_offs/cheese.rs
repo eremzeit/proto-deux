@@ -31,13 +31,13 @@ pub fn test_fitness(key: &str) {
             default_unit_resources: vec![],
             default_unit_attr: vec![],
             place_units_method: PlaceUnitsMethod::SimpleDrop { attributes: None },
+            chemistry_options: chemistry_builder,
         },
 
         iterations: 1,
         alteration_set: alterations::default_alteration_set(),
         experiment_key: exp_key.clone(),
         logging_settings: None,
-        chemistry_options: chemistry_builder,
     };
 
     let mut exp = SimpleExperiment::new(settings);

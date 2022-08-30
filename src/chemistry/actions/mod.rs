@@ -533,6 +533,7 @@ pub fn default_actions() -> Vec<ActionDefinition> {
 
                     let current_amount = unit.resources[resource_idx];
                     let new_amount = (current_amount + offset_amount) as UnitResourceAmount;
+                    // println!("current: {}, new: {}", current_amount, new_amount);
 
                     let allow_negative = context.params[2].to_bool();
 

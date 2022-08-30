@@ -102,4 +102,5 @@ pub struct SimulationConfigData {
     pub unit_manifest: Vec<UnitEntryData>,
     pub iterations: u64,
     pub chemistry_key: String,
+    pub chemistry_config: ChemistryConfiguration,
 }

@@ -5,6 +5,7 @@ use crate::{
     biology::genome::framed::common::*, simulation::common::helpers::place_units::PlaceUnitsMethod,
 };
 use rand::Rng;
+use ron;
 use serde::{Deserialize, Serialize};
 use std::fmt::{Debug, Formatter, Result};
 use std::fs;
@@ -12,7 +13,9 @@ use std::fs::OpenOptions;
 use std::io::Write;
 use std::path::{Path, PathBuf};
 
-use super::utils::{get_data_dir, GenomeExperimentEntry};
+use super::utils::{
+    get_data_dir, ExperimentSimSettings, GenomeExperimentEntry, SimpleExperimentSettings,
+};
 
 const DATA_DIR_NAME: &str = "data";
 
@@ -76,22 +79,79 @@ impl SimpleExperimentLogger {
         }
 
         fs::create_dir(log_path.as_path()).expect("failed to create experiment log path");
+
+        let mut genome_path = self.get_log_dir();
+        genome_path.push("genomes");
+        if !genome_path.exists() {
+            fs::create_dir(genome_path.as_path()).expect("failed to create genome log path");
+        }
     }
 
-    pub fn after_tick(
+    pub fn log_settings(&self, settings: &SimpleExperimentSettings) {
+        let mut path = self.get_log_dir();
+        path.push("settings.ron");
+
+        let settings_str = ron::to_string(&settings.sim_settings).unwrap();
+        self._write_to_file(path, settings_str.as_bytes(), false);
+    }
+
+    pub fn log_best_genomes(
         &self,
         tick: usize,
         genome_entries: &Vec<GenomeExperimentEntry>,
-        sensor_manifest: &SensorManifest,
-        chemistry_manifest: &ChemistryManifest,
-        genetic_manifest: &GeneticManifest,
+        num_genomes: usize,
     ) {
-        if tick != 0 && tick % self.settings.checkpoint_interval == 0 {
-            self._log_status(tick, genome_entries, genetic_manifest);
+        let mut entries = genome_entries.clone();
+
+        entries.sort_by_key(|entry| entry.max_fitness_metric.unwrap_or(0));
+        entries.reverse();
+
+        if entries.len() == 0 {
+            print!("RETURNING EARLY");
+            return;
         }
 
-        self._log_fitness_percentiles(tick, genome_entries);
+        let entries = entries.iter().take(num_genomes);
+
+        let mut path = self.get_log_dir();
+        path.push("genomes");
+        path.push(format!("{}.csv", tick));
+
+        let mut s = String::new();
+
+        for entry in entries {
+            let genome = &entry.genome;
+            for i in 0..genome.len() {
+                if i == genome.len() - 1 {
+                    s.push_str(&format!("{}", &genome[i]));
+                } else {
+                    s.push_str(&format!("{},", &genome[i]));
+                }
+            }
+
+            s.push_str("\n");
+        }
+
+        // s.push_str(&format!("raw_genome: {:?}\n\n", entry.genome.clone()));
+        self._write_to_file(path, s.as_bytes(), false);
     }
+
+    // pub fn after_tick(
+    //     &self,
+    //     tick: usize,
+    //     sim_settings: &ExperimentSimSettings,
+    //     genome_entries: &Vec<GenomeExperimentEntry>,
+    //     sensor_manifest: &SensorManifest,
+    //     chemistry_manifest: &ChemistryManifest,
+    //     genetic_manifest: &GeneticManifest,
+    // ) {
+    //     if tick != 0 && tick % self.settings.checkpoint_interval == 0 {
+    //         self._log_status(tick, genome_entries, genetic_manifest);
+    //         self.log_best_genomes(tick, genome_entries, sim_settings.num_genomes_per_sim);
+    //     }
+
+    //     self._log_fitness_percentiles(tick, genome_entries);
+    // }
 
     fn _write_to_file(&self, file_path: PathBuf, buf: &[u8], append: bool) {
         // println!("append: {}", append);
@@ -160,7 +220,8 @@ impl SimpleExperimentLogger {
                 .display(genetic_manifest);
 
             s.push_str(&format!(
-                "{}------------------",
+                "{}------------------ (f: {})",
+                entry.uid,
                 entry.max_fitness_metric.unwrap()
             ));
             s.push_str(&genome_str);

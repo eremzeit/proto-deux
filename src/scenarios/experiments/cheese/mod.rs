@@ -32,6 +32,7 @@ pub fn alterations() -> CompiledAlterationSet {
         "point_mutation".to_string(),
         "deletion".to_string(),
         "crossover".to_string(),
+        "random_region_insert".to_string(),
     ])
 }
 
@@ -45,24 +46,25 @@ pub fn simple_experiment(runner_args: ExperimentRunnerArgs) -> SimpleExperiment 
         fitness_calculation_key: "total_cheese_consumed".to_string(),
         num_genomes: 30,
         sim_settings: ExperimentSimSettings {
-            num_simulation_ticks: 50,
+            num_simulation_ticks: 70,
+            // num_simulation_ticks: 2,
             grid_size: (20, 20),
             num_genomes_per_sim: 10,
-            default_unit_resources: vec![("cheese".to_owned(), 2000)],
+            default_unit_resources: vec![("cheese".to_owned(), 100)],
             default_unit_attr: vec![],
             place_units_method: PlaceUnitsMethod::Default,
+            chemistry_options: chemistry_builder,
         },
 
+        // iterations: 200,
         iterations: 100000000,
         alteration_set: alterations(),
         experiment_key: runner_args.experiment_name_key.to_string(),
         logging_settings: Some(LoggingSettings {
             experiment_key: runner_args.experiment_name_key.to_string(),
             allow_overwrite: true,
-            checkpoint_interval: 1000,
+            checkpoint_interval: 2000,
         }),
-
-        chemistry_options: chemistry_builder,
     };
 
     let mut exp = SimpleExperiment::new(settings);

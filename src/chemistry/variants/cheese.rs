@@ -35,7 +35,7 @@ pub mod constants {
     #[macro_export]
     macro_rules! MAX_GOBBLE_AMOUNT_ {
         () => {
-            5
+            50
         };
     }
     #[macro_export]
@@ -53,7 +53,7 @@ pub mod constants {
     }
     pub const MOVE_COST: i32 = MOVE_COST_!();
     pub const NEW_UNIT_COST: i32 = NEW_UNIT_COST_!();
-    pub const MAX_GOBBLE_AMOUNT: i32 = 30;
+    pub const MAX_GOBBLE_AMOUNT: i32 = 50;
 }
 
 pub struct CheeseChemistry {
@@ -104,7 +104,7 @@ pub mod defs {
         reaction!("move_unit",
             reagent!("offset_unit_resource",
                 param_value!(UnitResourceKey, "cheese"),
-                param_value!(UnitResourceAmount, -constants::MOVE_COST),
+                chemistry_arg!(UnitResourceAmount, move_cost),
                 param_value!(Boolean, false),
             ),
             reagent!("move_unit",
@@ -115,7 +115,7 @@ pub mod defs {
         reaction!("new_unit",
             reagent!("offset_unit_resource",
                 param_value!(UnitResourceKey, "cheese"),
-                param_value!(UnitResourceAmount, -constants::NEW_UNIT_COST),
+                chemistry_arg!(UnitResourceAmount, new_unit_cost),
                 param_value!(Boolean, false),
             ),
             reagent!("new_unit",
@@ -127,8 +127,16 @@ pub mod defs {
 }
 impl CheeseChemistry {
     pub fn unit_drop_area(&self, world: &World) -> [Coord; 2] {
-        let x_size = if world.size.0 > 10 { 5 } else { world.size.0 };
-        let y_size = if world.size.1 > 10 { 5 } else { world.size.1 };
+        let x_size = if world.size.0 > 10 {
+            (world.size.0 as f64 * 0.75) as usize
+        } else {
+            world.size.0
+        };
+        let y_size = if world.size.1 > 10 {
+            (world.size.1 as f64 * 0.75) as usize
+        } else {
+            world.size.1
+        };
 
         let x = (world.size.0 - x_size) / 2;
         let y = (world.size.1 - y_size) / 2;
@@ -184,7 +192,10 @@ impl Chemistry for CheeseChemistry {
     }
 
     fn default_config() -> ChemistryConfiguration {
-        ChemistryConfiguration::new()
+        ChemistryConfigBuilder::new()
+            .set_resource_amount("move_cost", -10)
+            .set_resource_amount("new_unit_cost", -200)
+            .build()
     }
 
     fn get_configuration(&self) -> ChemistryConfiguration {
@@ -198,6 +209,18 @@ impl Chemistry for CheeseChemistry {
 
     fn get_default_place_units_method(&self) -> PlaceUnitsMethod {
         PlaceUnitsMethod::Chemistry
+    }
+
+    fn default_local_property_sensor_manifest(&self) -> LocalPropertySensorManifest {
+        LocalPropertySensorManifest::from_whitelist(
+            vec![
+                ("unit_res::cheese".to_string(), 0),
+                ("pos_res::cheese".to_string(), 1),
+                ("pos_attr::is_cheese_source".to_string(), 1),
+            ]
+            .as_slice(),
+            self.get_manifest().all_properties.as_slice(),
+        )
     }
 
     fn allocate_unit_resources(&self, coord: &Coord, sim: &mut SimCell) {
@@ -237,7 +260,7 @@ impl Chemistry for CheeseChemistry {
         }
 
         if is_cheese_source {
-            let amount = 50;
+            let amount = 2;
             resources[unit_resources.cheese] += amount;
 
             sim.unit_entry_attributes[unit.entry_id]
@@ -258,7 +281,7 @@ impl Chemistry for CheeseChemistry {
         self.init_world_custom(&mut sim.world);
     }
 
-    fn on_simulation_tick(&self, sim: &mut SimCell) {
+    fn on_simulation_tick(&self, sim: &mut SimCell) -> bool {
         allocate_stored_resources(
             sim,
             sim.unit_manifest,
@@ -267,10 +290,12 @@ impl Chemistry for CheeseChemistry {
 
         behavior_execution(sim);
 
+        let mut total_units = 0;
         let unit_resources = defs::UnitResourcesLookup::new();
         for coord in CoordIterator::new(sim.world.size) {
             let pos = sim.world.get_position_at(&coord).unwrap();
             if let Some(unit) = sim.world.get_unit_at(&coord) {
+                total_units += 1;
                 let val = unit.get_resource(unit_resources.cheese);
                 if val <= 50 {
                     // println!("destroying unit");
@@ -278,6 +303,8 @@ impl Chemistry for CheeseChemistry {
                 }
             }
         }
+
+        total_units != 0
 
         // let pos_resources = defs::UnitResourcesLookup::new();
         // let cheese = sim.world.get_pos_resource_at(&(0, 0), pos_resources.cheese);
@@ -311,7 +338,8 @@ impl Chemistry for CheeseChemistry {
                 && coord.1 < unit_drop_area[1].1;
 
             // if !is_unit_drop_area && rng.gen_range(0..(coord.0 + coord.1) % 5 + 5) == 0 {
-            if rng.gen_range(0..(coord.0 + coord.1) % 5 + 5) == 0 {
+            let odds = 5;
+            if is_unit_drop_area && rng.gen_range(0..odds) == 0 {
                 world.set_pos_attribute_at(
                     &coord,
                     self.get_manifest()
@@ -321,10 +349,22 @@ impl Chemistry for CheeseChemistry {
                 );
             }
 
-            // if !is_unit_drop_area && rng.gen_range(0..(coord.0 + coord.1) % 5 + 1) == 0 {
-            if rng.gen_range(0..(coord.0 + coord.1) % 5 + 1) == 0 {
+            let odds = 5;
+            if is_unit_drop_area || rng.gen_range(0..odds) == 0 {
                 let position_resources = defs::PositionResourcesLookup::new();
-                world.set_pos_resource_tab_offset(&coord, position_resources.cheese, 2, Some(60));
+                world.set_pos_resource_at(&coord, position_resources.cheese, 20);
+
+                let amount = if is_unit_drop_area {
+                    rng.gen_range(0..3)
+                } else {
+                    20
+                };
+                world.set_pos_resource_tab_offset(
+                    &coord,
+                    position_resources.cheese,
+                    amount,
+                    Some(100),
+                );
             }
         }
     }

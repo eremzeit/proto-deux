@@ -37,6 +37,7 @@ macro_rules! _make_builder_type {
 
 _make_builder_type!(GenomeBuilder, FramedGenomeWord);
 // _make_builder_type!(FramesBuilder, Vec<FramedGenomeWord>);
+
 _make_builder_type!(FrameBuilder, FramedGenomeWord);
 _make_builder_type!(GeneBuilder, FramedGenomeValue);
 _make_builder_type!(PredicateBuilder, FramedGenomeValue);
@@ -143,8 +144,49 @@ pub fn _frame_from_channels(channels: Vec<Vec<GeneBuilder>>) -> FrameBuilder {
         },
     ))
 }
+
 /**
- * Given a single list of genes, create a frame with the given genes in the first channel
+ * DEPRECATED.  used for migrating. assumes a single channel.
+ */
+pub fn genome_from_genes(first_channel_genes: Vec<GeneBuilder>) -> FrameBuilder {
+    FrameBuilder::new(Rc::new(
+        move |gm: &GeneticManifest| -> Vec<FramedGenomeWord> {
+            let mut raw_genes = first_channel_genes
+                .iter()
+                .map(|gene| gene.build(gm))
+                .collect::<Vec<Vec<FramedGenomeValue>>>();
+
+            let mut frames = vec![];
+
+            let mut current_frame = vec![];
+            for gene in raw_genes.iter() {
+                if current_frame.len() + gene.len() > MAX_FRAME_LENGTH as usize {
+                    frames.push(current_frame);
+                    current_frame = vec![];
+                }
+
+                let mut _gene = gene
+                    .iter()
+                    .map(|v| *v as FramedGenomeWord)
+                    .collect::<Vec<_>>();
+                current_frame.append(&mut _gene);
+            }
+
+            frames.push(current_frame);
+
+            for frame in frames.iter_mut() {
+                let frame_size = frame.len();
+                frame.insert(0, frame_size as u64);
+                frame.insert(1, 0); // default channel
+            }
+
+            frames.concat()
+        },
+    ))
+}
+
+/**
+ * Given a single list of genes, create a single frame genome with the given genes in the first channel
  */
 pub fn frame_from_single_channel(first_channel_genes: Vec<GeneBuilder>) -> FrameBuilder {
     FrameBuilder::new(Rc::new(
@@ -155,8 +197,12 @@ pub fn frame_from_single_channel(first_channel_genes: Vec<GeneBuilder>) -> Frame
                 .collect::<Vec<Vec<FramedGenomeValue>>>()
                 .concat();
 
-            // v.insert(0, 0 as FramedGenomeValue);
+            if v.len() > MAX_FRAME_LENGTH as usize {
+                panic!("Cant build.  Genes are too large");
+            }
 
+            // v.insert(0, 0 as FramedGenomeValue);
+            // MAX_FRAME_LENGTH
             let mut _frame_vals = v.iter().map(|x| *x as FramedGenomeWord).collect::<Vec<_>>();
             // insert frame size
             // frame_vals.insert(0, frame_vals.len() as FramedGenomeWord);

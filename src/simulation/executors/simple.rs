@@ -22,7 +22,7 @@ impl SimpleSimulationExecutor {
     pub fn start(&mut self) {
         self.is_paused = false;
         let mut target_delay = Duration::new(7, 0);
-        while self.simulation.world.tick <= self.simulation.iterations {
+        while !self.simulation.is_finished() {
             self.simulation.tick();
             let sample_duration = Instant::now().duration_since(self.sample_update_instant);
             let should_update_console = sample_duration > target_delay;

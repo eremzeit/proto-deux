@@ -77,12 +77,21 @@ pub enum ChemistryConfigValueType {
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub enum ChemistryConfigValue {
+    ResourceAmount(ResourceAmount),
     Integer(u64),
     Boolean(bool),
     Direction(GridDirection),
 }
 
 impl ChemistryConfigValue {
+    pub fn unwrap_resource_amount(&self) -> ResourceAmount {
+        match self {
+            Self::ResourceAmount(x) => *x,
+            _ => {
+                panic!("Expected a resource amount but found a {:?}", self);
+            }
+        }
+    }
     pub fn unwrap_bool(&self) -> bool {
         match self {
             Self::Boolean(x) => *x,
@@ -122,7 +131,7 @@ pub fn convert_configurable_to_action_param(
         }
         ActionParamType::Direction => ActionParam::Direction(value.unwrap_direction()),
         ActionParamType::UnitResourceAmount => {
-            ActionParam::UnitResourceAmount(value.unwrap_integer().try_into().unwrap())
+            ActionParam::UnitResourceAmount(value.unwrap_resource_amount().try_into().unwrap())
         }
 
         _ => {

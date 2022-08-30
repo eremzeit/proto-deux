@@ -1,3 +1,5 @@
+use std::rc::Rc;
+
 use crate::{
     biology::{
         genome::framed::{
@@ -13,7 +15,10 @@ use crate::{
     },
 };
 
-pub fn make_sim(chemistry: ChemistryInstance, genome: CompiledFramedGenome) -> SimulationBuilder {
+pub fn make_sim(
+    chemistry: ChemistryInstance,
+    genome: Rc<CompiledFramedGenome>,
+) -> SimulationBuilder {
     let gm = GeneticManifest::from_chemistry(&chemistry).wrap_rc();
     SimulationBuilder::default()
         .chemistry(chemistry)

@@ -4,6 +4,7 @@ use crate::simulation::common::Coord;
 use crate::simulation::position::Position;
 use crate::simulation::simulation_data::{SimulationData, ThreadedSimulationReference};
 use crate::ui::colors::to_color;
+use chemistry::ChemistryConfiguration;
 use opengl_graphics::GlGraphics;
 use piston_window::clear;
 use piston_window::ellipse;
@@ -12,10 +13,31 @@ use piston_window::types::Color;
 use piston_window::Context;
 use piston_window::Transformed;
 use piston_window::Viewport;
+use rand::Rng;
 
 use crate::chemistry::variants::cheese;
 
-pub struct CheeseCellRenderer {}
+pub struct CheeseCellRenderer {
+    unit_colors: Vec<[f32; 4]>,
+}
+
+fn random_color() -> [f32; 4] {
+    let mut rng = rand::thread_rng();
+    [
+        rng.gen_range(0..255) as f32 / 255.0,
+        rng.gen_range(0..255) as f32 / 255.0,
+        rng.gen_range(0..255) as f32 / 255.0,
+        rng.gen_range(0..255) as f32 / 255.0,
+    ]
+}
+
+impl CheeseCellRenderer {
+    pub fn new() -> Self {
+        Self {
+            unit_colors: (0..15).map(|i| random_color()).collect::<Vec<_>>(),
+        }
+    }
+}
 
 pub fn get_cheese_pct(pos: &Position, current_tick: u64) -> f64 {
     let res_defs = cheese::defs::PositionResourcesLookup::new();
@@ -24,11 +46,17 @@ pub fn get_cheese_pct(pos: &Position, current_tick: u64) -> f64 {
     (cheese as f64 / 1000.0).min(1.0)
 }
 
-pub fn get_unit_cheese_size_ratio(pos: &Position) -> f64 {
+pub fn get_unit_cheese_size_ratio(pos: &Position, config: &ChemistryConfiguration) -> f64 {
     let res_defs = cheese::defs::UnitResourcesLookup::new();
     let cheese = pos.get_unit_resource(res_defs.cheese);
+
+    let new_unit_cost = config
+        .get("new_unit_cost")
+        .unwrap()
+        .unwrap_resource_amount()
+        .abs() as f64;
     // println!("unit cheese: {}", cheese);
-    (cheese as f64 / 100.0).min(1.0).max(0.2)
+    (cheese as f64 / new_unit_cost).min(1.0).max(0.2)
 }
 
 pub fn calc_resource_rect(full_rect: [f64; 4], pct: f64, coord: &Coord) -> [f64; 4] {
@@ -84,7 +112,7 @@ impl CellRenderer for CheeseCellRenderer {
 
         // cell bg
         let bg_color = if is_cheese_source {
-            [0.0, 200.0, 0.0, 100.0]
+            [0.0, 100.0, 0.0, 100.0]
         } else {
             [0.0, 0.0, 0.0, 255.0]
         };
@@ -104,14 +132,15 @@ impl CellRenderer for CheeseCellRenderer {
         }
 
         if pos.has_unit() {
-            let cheese_pct = get_unit_cheese_size_ratio(pos);
+            let cheese_pct = get_unit_cheese_size_ratio(pos, &sim.config.chemistry_config);
             let cell_width = cell_rect[3];
             let width = cell_width * cheese_pct;
             let offset = (cell_width - width) / 2.0;
             let rect = [cell_rect[0] + offset, cell_rect[1] + offset, width, width];
 
+            let color_id = pos.unit.as_ref().unwrap().entry_id % self.unit_colors.len();
             ellipse(
-                [255.0, 0.0, 0.0, 255.0],
+                self.unit_colors[color_id].clone(),
                 rect,
                 c.transform.trans(0.0, 0.0),
                 g,

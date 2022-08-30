@@ -64,7 +64,7 @@ impl ThreadedSimulationExecutor {
     pub fn run_loop(&mut self) {
         let mut should_break = false;
 
-        while !(self.is_paused || self.is_finished || should_break) {
+        'outer_loop: while !(self.is_paused || self.is_finished || should_break) {
             let mut counter = RateCounter::new();
 
             std::thread::sleep(Duration::new(0, 200_000_000));
@@ -111,11 +111,16 @@ impl ThreadedSimulationExecutor {
                     self.last_view_update = Instant::now();
                 }
 
+                // println!(
+                //     "iterations: {}, {}",
+                //     self.simulation.iterations, self.simulation.world.tick
+                // );
                 should_break = self.simulation.world.tick >= self.simulation.iterations
                     || self.is_finished
                     || self.is_paused;
                 if should_break {
-                    break;
+                    self.is_finished = true;
+                    break 'outer_loop;
                 }
 
                 self.handle_control_events();
@@ -136,7 +141,7 @@ impl ThreadedSimulationExecutor {
             locked.replace(Some(self.simulation.to_data()));
         }
 
-        loop {
+        while !self.is_finished {
             self.wait_loop();
             self.run_loop();
             std::thread::sleep(Duration::new(0, 2_000_000));

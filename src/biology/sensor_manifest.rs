@@ -425,20 +425,29 @@ impl LocalPropertySensorManifest {
                 .collect::<Vec<_>>(),
         }
     }
-    pub fn from_whitelist(whitelisted_prop_keys: &[String], all_properties: &[Property]) -> Self {
-        Self {
-            entries: all_properties
-                .iter()
-                .enumerate()
-                .filter(|(i, prop)| whitelisted_prop_keys.contains(&prop.long_key))
-                .map(|(i, prop)| LocalPropertySensorEntry {
+    pub fn from_whitelist(
+        whitelisted_prop_keys: &[(String, usize)], //(key, distance)
+        all_properties: &[Property],
+    ) -> Self {
+        let entries = whitelisted_prop_keys
+            .iter()
+            .map(|pair| {
+                let prop = all_properties
+                    .iter()
+                    .find(|prop| prop.long_key == pair.0)
+                    .unwrap();
+                let distance = pair.1;
+
+                LocalPropertySensorEntry {
                     long_key: prop.long_key.clone(),
                     property_id: prop.property_id.clone(),
                     property_offset_idx: prop.id,
-                    distance: 1,
-                })
-                .collect::<Vec<_>>(),
-        }
+                    distance: pair.1 as u8,
+                }
+            })
+            .collect::<Vec<_>>();
+
+        Self { entries }
     }
 }
 

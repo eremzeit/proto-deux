@@ -57,6 +57,8 @@ pub struct Simulation {
     pub iterations: u64,
 
     pub place_units_method: PlaceUnitsMethod,
+
+    _early_terminate: bool,
     // pub control_events: Option<SimulationControlEventReceiver>,
 }
 
@@ -132,6 +134,7 @@ impl Simulation {
             attributes,
             unit_entry_attributes,
             place_units_method,
+            _early_terminate: false,
         };
 
         simulation.init();
@@ -229,6 +232,10 @@ impl Simulation {
         });
     }
 
+    pub fn is_finished(&self) -> bool {
+        self._early_terminate || self.world.tick >= self.iterations
+    }
+
     /**
      * Returns true if finished
      */
@@ -245,7 +252,7 @@ impl Simulation {
         // println!("TICK");
 
         perf_timer_start!("sim_tick");
-        self.chemistry.on_simulation_tick(&mut SimCell {
+        let is_finished = !self.chemistry.on_simulation_tick(&mut SimCell {
             attributes: &mut self.attributes,
             world: &mut self.world,
             unit_entry_attributes: &mut self.unit_entry_attributes,
@@ -253,6 +260,10 @@ impl Simulation {
             chemistry: &self.chemistry,
         });
         perf_timer_stop!("sim_tick");
+
+        // if is_finished {
+        //     self._early_terminate = true;
+        // }
 
         self.world.tick = self.world.tick + 1;
 
@@ -300,7 +311,7 @@ impl Simulation {
 
         // note: the zeroith tick means pre-initialized.  Our first real tick starts at 1
         // so our ending conditional is plus one (ie. >= the iteration count)
-        if self.world.tick >= self.iterations {
+        if self._early_terminate || self.world.tick >= self.iterations {
             self.finish();
             true
         } else {
@@ -326,6 +337,7 @@ impl Simulation {
                 .collect::<Vec<UnitEntryData>>(),
             iterations: self.iterations,
             chemistry_key: self.chemistry.get_manifest().chemistry_key.clone(),
+            chemistry_config: self.chemistry.get_configuration(),
         }
     }
 

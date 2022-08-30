@@ -77,8 +77,7 @@ pub fn execute_reaction(
 
         // let action_def = &action_set.actions[reagent.action_index];
         //println!("action_def: {}", action_def.key);
-        let then = Instant::now();
-        execute_reagent(
+        let result = execute_reagent(
             sim_cell,
             coord,
             reagent,
@@ -86,6 +85,10 @@ pub fn execute_reaction(
             &action_params[i],
             unit_manifest,
         );
+
+        if !result {
+            break;
+        }
     }
 }
 

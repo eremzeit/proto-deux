@@ -4,7 +4,7 @@ use crate::simulation::common::*;
 
 use crate::biology::genome::framed::builders::*;
 
-pub fn genome1(gm: &GeneticManifest) -> CompiledFramedGenome {
+pub fn genome1(gm: &GeneticManifest) -> Rc<CompiledFramedGenome> {
     let framed_vals = frame_from_single_channel(vec![
         gene(
             if_any(vec![if_all(vec![
@@ -27,27 +27,11 @@ pub fn genome1(gm: &GeneticManifest) -> CompiledFramedGenome {
     FramedGenomeCompiler::compile(framed_vals, &gm)
 }
 
+// TODO: this doesnt work now that we limit the frame size
 pub fn get_genome1_raw(gm: &GeneticManifest) -> Vec<u64> {
-    frame_from_single_channel(vec![
+    genome_from_genes(vec![
         gene(
-            if_any!(if_all!(
-                conditional!(is_truthy, pos_attr::is_cheese_source(0, 0)),
-                conditional!(gt, unit_res::cheese, 1000)
-            )),
-            then_do!(move_unit, right),
-        ),
-        gene(
-            if_any!(if_all!(
-                conditional!(is_truthy, pos_attr::is_cheese_source(0, 0)),
-                conditional!(gt, unit_res::cheese, 300)
-            )),
-            then_do!(gobble_cheese),
-        ),
-        gene(
-            if_any!(if_all!(
-                conditional!(lt, unit_res::cheese, 60),
-                conditional!(gt, pos_res::cheese, 20)
-            )),
+            if_any!(if_all!(conditional!(gt, pos_res::cheese, 10))),
             then_do!(gobble_cheese),
         ),
         gene(
@@ -56,62 +40,29 @@ pub fn get_genome1_raw(gm: &GeneticManifest) -> Vec<u64> {
         ),
         gene(
             if_any!(if_all!(conditional!(gt, unit_res::cheese, 600))),
-            then_do!(new_unit, up),
+            then_do!(new_unit, random(4)),
         ),
         gene(
-            if_any!(if_all!(
-                conditional!(is_truthy, pos_attr::is_cheese_source),
-                conditional!(lt, unit_res::cheese, 1000)
-            )),
-            then_do!(gobble_cheese),
-        ),
-        gene(
-            if_any!(if_all!(
-                conditional!(is_falsy, pos_attr::is_cheese_source),
-                conditional!(is_truthy, pos_attr::is_cheese_source(0, 1))
-            )),
+            if_any!(if_all!(conditional!(gt, pos_res::cheese(0, 1)))),
             then_do!(move_unit, up),
         ),
         gene(
-            if_any!(if_all!(
-                conditional!(is_falsy, pos_attr::is_cheese_source),
-                conditional!(is_truthy, pos_attr::is_cheese_source(0, 1))
-            )),
-            then_do!(move_unit, up),
+            if_any!(if_all!(conditional!(gt, pos_res::cheese(0, -1)))),
+            then_do!(move_unit, down),
         ),
         gene(
-            if_any!(if_all!(
-                conditional!(is_falsy, pos_attr::is_cheese_source),
-                conditional!(is_truthy, pos_attr::is_cheese_source(0, 1))
-            )),
-            then_do!(move_unit, up),
-        ),
-        gene(
-            if_any!(if_all!(
-                conditional!(is_falsy, pos_attr::is_cheese_source),
-                conditional!(is_truthy, pos_attr::is_cheese_source(1, 0))
-            )),
+            if_any!(if_all!(conditional!(gt, pos_res::cheese(1, 0)))),
             then_do!(move_unit, right),
         ),
         gene(
-            if_any!(if_all!(
-                conditional!(is_falsy, pos_attr::is_cheese_source),
-                conditional!(is_truthy, pos_attr::is_cheese_source(-1, 0))
-            )),
+            if_any!(if_all!(conditional!(gt, pos_res::cheese(-1, 0)))),
             then_do!(move_unit, left),
-        ),
-        gene(
-            if_any!(if_all!(
-                conditional!(is_falsy, pos_attr::is_cheese_source),
-                conditional!(is_truthy, pos_attr::is_cheese_source(0, -1))
-            )),
-            then_do!(move_unit, down),
         ),
     ])
     .build(&gm)
 }
 
-pub fn get_genome1(gm: &GeneticManifest) -> CompiledFramedGenome {
+pub fn get_genome1(gm: &GeneticManifest) -> Rc<CompiledFramedGenome> {
     FramedGenomeCompiler::compile(get_genome1_raw(gm), &gm.clone())
 }
 

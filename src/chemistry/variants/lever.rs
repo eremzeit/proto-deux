@@ -133,7 +133,7 @@ impl Chemistry for LeverChemistry {
         self.get_manifest().unit_attributes_of(vec![])
     }
 
-    fn on_simulation_tick(&self, sim: &mut SimCell) {
+    fn on_simulation_tick(&self, sim: &mut SimCell) -> bool {
         perf_timer_start!("allocate_stored_resources");
         allocate_stored_resources(
             sim,
@@ -145,6 +145,8 @@ impl Chemistry for LeverChemistry {
         perf_timer_start!("unit_behavior_execution");
         behavior_execution(sim);
         perf_timer_stop!("unit_behavior_execution");
+
+        true
     }
 
     fn on_simulation_finish(&self, sim: &mut SimCell) {}

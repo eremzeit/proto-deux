@@ -59,6 +59,11 @@ impl ChemistryConfigBuilder {
             .insert(key.to_string(), ChemistryConfigValue::Integer(val));
         self
     }
+    pub fn set_resource_amount(mut self, key: &str, val: i32) -> Self {
+        self.config
+            .insert(key.to_string(), ChemistryConfigValue::ResourceAmount(val));
+        self
+    }
     pub fn build(self) -> ChemistryConfiguration {
         self.config
     }
@@ -192,6 +197,15 @@ pub trait Chemistry {
         LocalPropertySensorManifest::from_all_props(self.get_manifest().all_properties.as_slice())
     }
 
+    fn get_default_local_property_sensor_manifest(
+        all_properties: &[Property],
+    ) -> LocalPropertySensorManifest
+    where
+        Self: Sized,
+    {
+        LocalPropertySensorManifest::from_all_props(all_properties)
+    }
+
     // fn init_manifest(&mut self) {
     //     let config = &self.get_configuration();
     //     let mut manifest = self.get_manifest_mut();
@@ -322,7 +336,7 @@ pub trait Chemistry {
         // self.init_units(sim);
     }
 
-    fn on_simulation_tick(&self, sim: &mut SimCell);
+    fn on_simulation_tick(&self, sim: &mut SimCell) -> bool;
     fn on_simulation_finish(&self, sim: &mut SimCell);
 
     fn init_world_custom(&self, world: &mut World) {}

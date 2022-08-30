@@ -75,13 +75,15 @@ impl Chemistry for NanobotsChemistry {
         self.get_manifest().empty_unit_entry_attributes()
     }
 
-    fn on_simulation_tick(&self, sim: &mut SimCell) {
+    fn on_simulation_tick(&self, sim: &mut SimCell) -> bool {
         allocate_stored_resources(
             sim,
             sim.unit_manifest,
             &StoredResourceAllocationMethod::Every,
         );
         behavior_execution(sim);
+
+        true
     }
 
     fn on_simulation_finish(&self, sim: &mut SimCell) {}

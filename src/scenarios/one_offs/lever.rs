@@ -56,6 +56,7 @@ pub fn test_fitness(key: &str) {
             default_unit_resources: vec![],
             default_unit_attr: vec![],
             place_units_method: PlaceUnitsMethod::SimpleDrop { attributes: None },
+            chemistry_options: chemistry_builder,
         },
 
         iterations: 1,
@@ -66,7 +67,6 @@ pub fn test_fitness(key: &str) {
             allow_overwrite: true,
             checkpoint_interval: 1,
         }),
-        chemistry_options: chemistry_builder,
     };
 
     let mut exp = SimpleExperiment::new(settings);

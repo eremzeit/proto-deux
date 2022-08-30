@@ -44,7 +44,7 @@ pub fn draw_world(
 
 pub fn get_cell_renderer(chemistry_key: &str) -> Box<dyn CellRenderer> {
     match chemistry_key {
-        "cheese" => Box::new(CheeseCellRenderer {}),
+        "cheese" => Box::new(CheeseCellRenderer::new()),
         _ => unreachable!(),
     }
 }

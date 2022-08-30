@@ -84,9 +84,6 @@ pub mod defs {
     }
 }
 
-/**
- * TODO: rename to FooChemistry.
- */
 pub struct FooChemistry {
     pub manifest: ChemistryManifest,
     pub configuration: ChemistryConfiguration,
@@ -196,13 +193,15 @@ impl Chemistry for FooChemistry {
         }
     }
 
-    fn on_simulation_tick(&self, sim: &mut SimCell) {
+    fn on_simulation_tick(&self, sim: &mut SimCell) -> bool {
         allocate_stored_resources(
             sim,
             sim.unit_manifest,
             &StoredResourceAllocationMethod::Every,
         );
         behavior_execution(sim);
+
+        true
     }
 
     fn on_simulation_finish(&self, sim: &mut SimCell) {}

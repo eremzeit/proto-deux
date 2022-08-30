@@ -131,6 +131,45 @@ pub fn default_alterations() -> Vec<GenomeAlterationImplementation> {
             ),
         },
         GenomeAlterationImplementation {
+            key: "random_region_insert".to_string(),
+            index: 0,
+            genomes_required: 1,
+            execute: Rc::new(
+                |genomes: &[Vec<FramedGenomeWord>],
+                 params: &[FramedGenomeWord]|
+                 -> Vec<FramedGenomeWord> {
+                    let mut params = params.iter().map(|x| *x).collect::<Vec<_>>();
+                    let dest_start = params.remove(0);
+                    let dest_end = params.remove(0);
+                    let mut region = params;
+
+                    // // println!("sectionto splice in {:?}", section);
+                    // println!("{}, {}", dest_start, dest_end);
+
+                    let mut new = genomes[0].clone();
+                    new.splice(dest_start as usize..dest_end as usize, region.into_iter());
+                    new
+                },
+            ),
+            prepare: Rc::new(
+                |genomes: &[Vec<FramedGenomeWord>]| -> Vec<FramedGenomeWord> {
+                    let mut rng = rand::thread_rng();
+
+                    let dest_start = rng.gen_range(0..genomes[0].len());
+                    let mut dest_end = rng.gen_range(dest_start..genomes[0].len());
+
+                    let region_size = rng.gen_range(0..10);
+                    let mut params = (0..region_size)
+                        .map(|i| get_random_genome_word())
+                        .collect::<Vec<_>>();
+
+                    params.insert(0, dest_start as FramedGenomeWord);
+                    params.insert(1, dest_end as FramedGenomeWord);
+                    params
+                },
+            ),
+        },
+        GenomeAlterationImplementation {
             key: "crossover".to_string(),
             index: 0,
             genomes_required: 2,
@@ -166,7 +205,7 @@ pub fn default_alterations() -> Vec<GenomeAlterationImplementation> {
 
                     let src_start = rng.gen_range(0..genomes[0].len());
                     let mut src_end = rng.gen_range(src_start..genomes[0].len());
-                    src_end = src_end.min(src_start + 10); // TEMP: limit the size of cutout regions as a hack to contain genome sizes
+                    src_end = src_end.min(src_start + 50); // TEMP: limit the size of cutout regions as a hack to contain genome sizes
 
                     let dest_start = rng.gen_range(0..genomes[1].len());
                     let dest_end = rng.gen_range(dest_start..genomes[1].len());

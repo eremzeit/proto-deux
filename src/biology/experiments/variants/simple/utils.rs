@@ -8,6 +8,7 @@ use crate::{
 };
 use rand::Rng;
 use serde::{Deserialize, Serialize};
+use std::borrow::Cow;
 use std::fmt::{Debug, Formatter, Result};
 use std::path::PathBuf;
 
@@ -33,11 +34,16 @@ pub struct GenomeExperimentEntry {
     pub genome: RawFramedGenome,
     pub uid: ExperimentGenomeUid,
     pub current_rank_score: usize,
+    pub compiled_genome: Option<Rc<CompiledFramedGenome>>,
 }
 
 impl GenomeExperimentEntry {
-    pub fn compile(&self, gm: &GeneticManifest) -> CompiledFramedGenome {
-        FramedGenomeCompiler::compile(self.genome.clone(), gm)
+    pub fn compile(&mut self, gm: &GeneticManifest) -> Rc<CompiledFramedGenome> {
+        if self.compiled_genome.is_none() {
+            self.compiled_genome = Some(FramedGenomeCompiler::compile(self.genome.clone(), gm));
+        }
+
+        self.compiled_genome.clone().unwrap()
     }
 }
 
@@ -49,6 +55,7 @@ pub struct ExperimentSimSettings {
     pub default_unit_resources: Vec<(String, UnitResourceAmount)>,
     pub default_unit_attr: Vec<(String, UnitAttributeValue)>,
     pub place_units_method: PlaceUnitsMethod,
+    pub chemistry_options: ChemistryBuilder,
 }
 
 pub type MaybeLoggingSettings = Option<LoggingSettings>;
@@ -64,7 +71,6 @@ pub struct SimpleExperimentSettings {
     pub alteration_set: alterations::CompiledAlterationSet,
     pub fitness_calculation_key: String, // needed?  should this be a trait object?  how will fitness calculation change?
     pub cull_strategy: CullStrategy,
-    pub chemistry_options: ChemistryBuilder,
     // pub gm: Rc<GeneticManifest>, // note: eventually this might be defined on a per-genome basis
 }
 
@@ -92,4 +98,18 @@ pub fn get_data_dir() -> PathBuf {
         .for_folder(DATA_DIR_NAME)
         .expect("cant find data dir")
         .to_path_buf()
+}
+
+pub fn get_experiments_dir() -> PathBuf {
+    let mut dir = get_data_dir();
+    dir.push("experiments");
+    dir
+}
+
+pub fn get_exp_genomes_dir(exp_key: &str) -> PathBuf {
+    let mut dir = get_data_dir();
+    dir.push("experiments");
+    dir.push(exp_key);
+    dir.push("genomes");
+    dir
 }

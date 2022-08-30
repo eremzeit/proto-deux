@@ -138,6 +138,7 @@ pub fn render_gene_operation(
     call: &ParamedGeneOperationCall,
     genetic_manifest: &GeneticManifest,
 ) -> String {
+    let sm = &genetic_manifest.sensor_manifest;
     match &call {
         ParamedGeneOperationCall::Reaction((reaction_id, p1, p2, p3)) => {
             let reaction = &genetic_manifest.chemistry_manifest.reactions[*reaction_id as usize];
@@ -148,15 +149,26 @@ pub fn render_gene_operation(
             if required_count == 0 {
                 format!("{}()", reaction.key)
             } else if required_count == 1 {
-                format!("{}({:?})", reaction.key, p1)
+                format!("{}({})", reaction.key, render_param(p1, sm))
             } else if required_count == 2 {
-                format!("{}({:?}, {:?})", reaction.key, p1, p2)
+                format!(
+                    "{}({}, {})",
+                    reaction.key,
+                    render_param(p1, sm),
+                    render_param(p2, sm)
+                )
             } else {
-                format!("{}({:?}, {:?}, {:?})", reaction.key, p1, p2, p3)
+                format!(
+                    "{}({}, {}, {})",
+                    reaction.key,
+                    render_param(p1, sm),
+                    render_param(p2, sm),
+                    render_param(p3, sm)
+                )
             }
         }
         ParamedGeneOperationCall::MetaReaction(meta_reaction) => {
-            format!("{:?}", meta_reaction)
+            format!("{}", meta_reaction.display(genetic_manifest))
         }
         ParamedGeneOperationCall::Nil => {
             format!("NilGeneOperationCall")

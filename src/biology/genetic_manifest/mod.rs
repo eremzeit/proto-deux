@@ -21,6 +21,8 @@ use super::unit_behavior::framed::PhenotypeRegisterValue;
 
 /**
  * Used when actually executing genomes
+ *
+ * This might be broken up into multiple objects... ie. those that change when the ChemistryConfig changes and those that dont
  */
 #[derive(Clone)]
 pub struct GeneticManifest {
@@ -41,7 +43,7 @@ impl GeneticManifest {
         let cm = chemistry.get_manifest();
         Self::new(
             cm.clone(),
-            LocalPropertySensorManifest::from_all_props(cm.all_properties.as_slice()),
+            chemistry.default_local_property_sensor_manifest(),
         )
     }
 
@@ -52,8 +54,10 @@ impl GeneticManifest {
 
     pub fn construct<C: Chemistry>(chemistry_config: &ChemistryConfiguration) -> Self {
         let cm = C::construct_manifest(&chemistry_config);
+
         let local_property_sensor_manifest =
-            LocalPropertySensorManifest::from_all_props(&cm.all_properties);
+            C::get_default_local_property_sensor_manifest(&cm.all_properties);
+        // LocalPropertySensorManifest::from_all_props(&cm.all_properties);
 
         Self::new(cm, local_property_sensor_manifest)
     }

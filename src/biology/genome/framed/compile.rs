@@ -27,6 +27,7 @@ use crate::simulation::common::*;
 use crate::simulation::world::World;
 use crate::util::Coord;
 use std::fmt::{Debug, Formatter, Result};
+use std::rc::Rc;
 
 pub use crate::biology::sensor_manifest::{SensorContext, SensorManifest, SensorType, SensorValue};
 
@@ -48,7 +49,7 @@ impl<'a> FramedGenomeCompiler<'a> {
     pub fn compile(
         raw_genome: Vec<FramedGenomeWord>,
         genetic_manifest: &'a GeneticManifest,
-    ) -> CompiledFramedGenome {
+    ) -> Rc<CompiledFramedGenome> {
         flog!("\n\nCompiling genome of size {}", raw_genome.len());
         // flog!("raw genome values: {:?}", &raw_genome);
 
@@ -57,7 +58,7 @@ impl<'a> FramedGenomeCompiler<'a> {
         let frames = s.compile_frames();
         perf_timer_stop!("genome_compiling");
         flog!("FINISHED COMPILING FRAMES");
-        CompiledFramedGenome { frames }
+        Rc::new(CompiledFramedGenome { frames })
     }
 
     pub fn new(values: Vec<FramedGenomeWord>, genetic_manifest: &'a GeneticManifest) -> Self {

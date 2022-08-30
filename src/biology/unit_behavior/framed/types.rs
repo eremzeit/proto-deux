@@ -3,6 +3,7 @@ use crate::biology::genetic_manifest::predicates::{
     OperatorImplementation, OperatorManifest, OperatorParamDefinition, OperatorParamType,
 };
 use crate::biology::genetic_manifest::GeneticManifestData;
+use crate::biology::genome::framed::render::render_param;
 use crate::biology::genome::framed::types::NUM_META_REACTIONS;
 use crate::biology::sensor_manifest::SensorId;
 use crate::biology::unit_behavior::UnitBehavior;
@@ -105,6 +106,32 @@ pub enum ParamedMetaReactionCall {
     Nil,
 }
 
+impl ParamedMetaReactionCall {
+    pub fn display(&self, gm: &GeneticManifest) -> String {
+        let s = String::new();
+
+        let sm = &gm.sensor_manifest;
+        match self {
+            ParamedMetaReactionCall::JumpAheadFrames(param) => {
+                format!("JumpAheadFrames({})", render_param(param, sm))
+            }
+            ParamedMetaReactionCall::SetRegister(id, val) => {
+                format!(
+                    "SetRegister({}, {})",
+                    render_param(id, sm),
+                    render_param(val, sm)
+                )
+            }
+            ParamedMetaReactionCall::SetChannel(channel) => {
+                format!("SetChannel({})", render_param(channel, sm))
+            }
+            ParamedMetaReactionCall::Nil => {
+                format!("DoNothing")
+            }
+        }
+    }
+}
+
 impl Debug for ParamedMetaReactionCall {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result {
         match self {
@@ -112,7 +139,7 @@ impl Debug for ParamedMetaReactionCall {
                 write!(f, "SetChannel({:?})", n)
             }
             ParamedMetaReactionCall::JumpAheadFrames(n) => {
-                write!(f, "JumpAhead({:?})", n)
+                write!(f, "JumpAheadFrames({:?})", n)
             }
             // MetaReactionCall::JumpBehindFrames(n) => {
             //     write!(f, "JumpBehind({})", *n)
@@ -122,7 +149,7 @@ impl Debug for ParamedMetaReactionCall {
             }
 
             ParamedMetaReactionCall::Nil => {
-                write!(f, "NilReaction")
+                write!(f, "DoNothing")
             }
         }
     }

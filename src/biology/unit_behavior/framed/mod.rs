@@ -28,7 +28,7 @@ pub mod common {
 }
 
 pub struct FramedGenomeUnitBehavior {
-    pub genome: CompiledFramedGenome,
+    pub genome: Rc<CompiledFramedGenome>,
     pub genetic_manifest: Rc<GeneticManifest>,
 }
 
@@ -103,7 +103,7 @@ impl UnitBehavior for FramedGenomeUnitBehavior {
 // }
 
 impl FramedGenomeUnitBehavior {
-    pub fn new(genome: CompiledFramedGenome, genetic_manifest: Rc<GeneticManifest>) -> Self {
+    pub fn new(genome: Rc<CompiledFramedGenome>, genetic_manifest: Rc<GeneticManifest>) -> Self {
         Self {
             genome,
             genetic_manifest,
