@@ -1,5 +1,5 @@
 use super::types::*;
-use super::types::{BooleanVariable, ConjunctiveClause};
+use super::types::{BooleanVariable, Conjunction};
 use crate::biology::genetic_manifest::predicates::{
     OperatorId, OperatorImplementation, OperatorManifest, OperatorParam, OperatorParamDefinition,
     OperatorParamType,
@@ -75,12 +75,9 @@ pub fn render_gene(gene: &Gene, genetic_manifest: &GeneticManifest) -> String {
     format!("CALL {} IF {}", gene_op_str, clause_str)
 }
 
-pub fn render_conjunction(
-    clause: &ConjunctiveClause,
-    genetic_manifest: &GeneticManifest,
-) -> String {
-    let _items = clause.1.iter();
-    let is_negated = clause.0;
+pub fn render_conjunction(clause: &Conjunction, genetic_manifest: &GeneticManifest) -> String {
+    let _items = clause.boolean_variables.iter();
+    let is_negated = clause.is_negated;
 
     if _items.len() == 0 {
         return if is_negated {
@@ -107,9 +104,9 @@ pub fn render_conjunction(
     format!("{}{}", is_negated_str, result)
 }
 
-pub fn render_disjunction(dis: &DisjunctiveClause, genetic_manifest: &GeneticManifest) -> String {
-    let _items = dis.1.iter();
-    let is_negated = dis.0;
+pub fn render_disjunction(dis: &Disjunction, genetic_manifest: &GeneticManifest) -> String {
+    let _items = dis.conjunctive_clauses.iter();
+    let is_negated = dis.is_negated;
 
     if _items.len() == 0 {
         return if is_negated {
@@ -119,16 +116,13 @@ pub fn render_disjunction(dis: &DisjunctiveClause, genetic_manifest: &GeneticMan
         };
     }
 
-    let result = _items.fold(
-        "".to_string(),
-        |acc: String, x: &ConjunctiveClause| -> String {
-            if acc.len() == 0 {
-                format!("{}", render_conjunction(x, genetic_manifest))
-            } else {
-                format!("( {} || {} )", acc, render_conjunction(x, genetic_manifest))
-            }
-        },
-    );
+    let result = _items.fold("".to_string(), |acc: String, x: &Conjunction| -> String {
+        if acc.len() == 0 {
+            format!("{}", render_conjunction(x, genetic_manifest))
+        } else {
+            format!("( {} || {} )", acc, render_conjunction(x, genetic_manifest))
+        }
+    });
 
     let is_negated_str = if is_negated { "NOT " } else { "" }.to_string();
     format!("{}{}", is_negated_str, result)
@@ -187,7 +181,7 @@ pub mod tests {
 
     #[test]
     pub fn conjunctive_to_str__simple() {
-        let clause = (
+        let clause = Conjunction::new(
             false,
             vec![
                 BooleanVariable::Literal(true),
@@ -208,7 +202,7 @@ pub mod tests {
 
     #[test]
     pub fn conjunctive_to_str__conditional1() {
-        let clause = (
+        let clause = Conjunction::new(
             false,
             vec![
                 BooleanVariable::Conditional(
@@ -234,7 +228,7 @@ pub mod tests {
 
     #[test]
     pub fn conjunctive_to_str__conditional2() {
-        let clause = (
+        let clause = Conjunction::new(
             false,
             vec![
                 BooleanVariable::Conditional(
@@ -260,7 +254,13 @@ pub mod tests {
 
     #[test]
     pub fn disjunctive_to_str__simple() {
-        let clause = (false, vec![(false, vec![BooleanVariable::Literal(true)])]);
+        let clause = Disjunction::new(
+            false,
+            vec![Conjunction::new(
+                false,
+                vec![BooleanVariable::Literal(true)],
+            )],
+        );
 
         let gm = GeneticManifest::from_default_chemistry_config::<CheeseChemistry>();
 
@@ -270,7 +270,13 @@ pub mod tests {
     }
     #[test]
     pub fn disjunctive_to_str__negated() {
-        let clause = (true, vec![(false, vec![BooleanVariable::Literal(true)])]);
+        let clause = Disjunction::new(
+            true,
+            vec![Conjunction::new(
+                false,
+                vec![BooleanVariable::Literal(true)],
+            )],
+        );
 
         let gm = GeneticManifest::from_default_chemistry_config::<CheeseChemistry>();
         let cm = CheeseChemistry::default_manifest();
@@ -282,11 +288,11 @@ pub mod tests {
 
     #[test]
     pub fn disjunctive_to_str__complex1() {
-        let clause = (
+        let clause = Disjunction::new(
             true,
             vec![
-                (false, vec![BooleanVariable::Literal(true)]),
-                (
+                Conjunction::new(false, vec![BooleanVariable::Literal(true)]),
+                Conjunction::new(
                     true,
                     vec![
                         BooleanVariable::Literal(true),
@@ -307,22 +313,27 @@ pub mod tests {
 
     #[test]
     pub fn render_gene__simple() {
+        let disjunction = Disjunction {
+            is_negated: false,
+            conjunctive_clauses: vec![
+                Conjunction::new(false, vec![BooleanVariable::Literal(true)]),
+                Conjunction::new(
+                    false,
+                    vec![
+                        BooleanVariable::Literal(true),
+                        BooleanVariable::Literal(false),
+                    ],
+                ),
+            ],
+
+            address_range: (0, 0),
+        };
         let gene = Gene {
-            conditional: (
-                false,
-                vec![
-                    (false, vec![BooleanVariable::Literal(true)]),
-                    (
-                        false,
-                        vec![
-                            BooleanVariable::Literal(true),
-                            BooleanVariable::Literal(false),
-                        ],
-                    ),
-                ],
-            ),
+            conditional: disjunction,
 
             operation: ParamedGeneOperationCall::Nil,
+
+            address_range: (0, 0),
         };
 
         let gm = GeneticManifest::from_default_chemistry_config::<CheeseChemistry>();
@@ -339,38 +350,36 @@ pub mod tests {
     #[test]
     pub fn render_genes__simple() {
         let genes: Vec<Gene> = vec![
-            Gene {
-                conditional: (
+            Gene::new(
+                Disjunction::new(
                     false,
                     vec![
-                        (false, vec![BooleanVariable::Literal(false)]),
-                        (false, vec![BooleanVariable::Literal(true)]),
+                        Conjunction::new(false, vec![BooleanVariable::Literal(false)]),
+                        Conjunction::new(false, vec![BooleanVariable::Literal(true)]),
                     ],
                 ),
-
-                operation: ParamedGeneOperationCall::Reaction((
+                ParamedGeneOperationCall::Reaction((
                     0,
                     ParsedGenomeParam::Constant(0),
                     ParsedGenomeParam::Constant(0),
                     ParsedGenomeParam::Constant(0),
                 )),
-            },
-            Gene {
-                conditional: (
+            ),
+            Gene::new(
+                Disjunction::new(
                     false,
                     vec![
-                        (false, vec![BooleanVariable::Literal(true)]),
-                        (false, vec![BooleanVariable::Literal(false)]),
+                        Conjunction::new(false, vec![BooleanVariable::Literal(true)]),
+                        Conjunction::new(false, vec![BooleanVariable::Literal(false)]),
                     ],
                 ),
-
-                operation: ParamedGeneOperationCall::Reaction((
+                ParamedGeneOperationCall::Reaction((
                     1,
                     ParsedGenomeParam::Constant(0),
                     ParsedGenomeParam::Constant(0),
                     ParsedGenomeParam::Constant(0),
                 )),
-            },
+            ),
         ];
 
         let gm = GeneticManifest::from_default_chemistry_config::<CheeseChemistry>();
@@ -386,37 +395,36 @@ CALL move_unit(Constant(0)) IF ( Value(true) || Value(false) )\n";
     #[test]
     pub fn render_genes__multi_channel() {
         let genes: Vec<Gene> = vec![
-            Gene {
-                conditional: (
+            Gene::new(
+                Disjunction::new(
                     false,
                     vec![
-                        (false, vec![BooleanVariable::Literal(true)]),
-                        (false, vec![BooleanVariable::Literal(true)]),
+                        Conjunction::new(false, vec![BooleanVariable::Literal(true)]),
+                        Conjunction::new(false, vec![BooleanVariable::Literal(true)]),
                     ],
                 ),
-
-                operation: ParamedGeneOperationCall::Reaction((
+                ParamedGeneOperationCall::Reaction((
                     0,
                     ParsedGenomeParam::Constant(0),
                     ParsedGenomeParam::Constant(0),
                     ParsedGenomeParam::Constant(0),
                 )),
-            },
-            Gene {
-                conditional: (
+            ),
+            Gene::new(
+                Disjunction::new(
                     true,
                     vec![
-                        (false, vec![BooleanVariable::Literal(true)]),
-                        (false, vec![BooleanVariable::Literal(true)]),
+                        Conjunction::new(false, vec![BooleanVariable::Literal(true)]),
+                        Conjunction::new(false, vec![BooleanVariable::Literal(true)]),
                     ],
                 ),
-                operation: ParamedGeneOperationCall::Reaction((
+                ParamedGeneOperationCall::Reaction((
                     1,
                     ParsedGenomeParam::Constant(0),
                     ParsedGenomeParam::Constant(0),
                     ParsedGenomeParam::Constant(0),
                 )),
-            },
+            ),
         ];
 
         let gm = GeneticManifest::from_default_chemistry_config::<CheeseChemistry>();

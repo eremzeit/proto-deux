@@ -146,10 +146,10 @@ pub fn _frame_from_channels(channels: Vec<Vec<GeneBuilder>>) -> FrameBuilder {
 }
 
 /**
- * DEPRECATED.  used for migrating. assumes a single channel.
+ * Given a list of genes, build a genome with potentially multiple frames that expresses that genome.
  */
-pub fn genome_from_genes(first_channel_genes: Vec<GeneBuilder>) -> FrameBuilder {
-    FrameBuilder::new(Rc::new(
+pub fn genome_from_genes(first_channel_genes: Vec<GeneBuilder>) -> GenomeBuilder {
+    GenomeBuilder::new(Rc::new(
         move |gm: &GeneticManifest| -> Vec<FramedGenomeWord> {
             let mut raw_genes = first_channel_genes
                 .iter()

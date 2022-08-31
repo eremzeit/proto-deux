@@ -3,9 +3,9 @@ use crate::biology::genetic_manifest::predicates::{
     OperatorParamType,
 };
 use crate::biology::genome::framed::common::{
-    BooleanVariable, CompiledFramedGenome, ConjunctiveClause, DisjunctiveClause, Frame,
-    FramedGenomeValue, FramedGenomeWord, Gene, CHANNEL_ZERO, FIXED_NUM_CONDITIONAL_PARAMS,
-    FRAME_META_DATA_SIZE, NUM_CHANNELS, NUM_META_REACTIONS,
+    BooleanVariable, CompiledFramedGenome, Conjunction, Disjunction, Frame, FramedGenomeValue,
+    FramedGenomeWord, Gene, CHANNEL_ZERO, FIXED_NUM_CONDITIONAL_PARAMS, FRAME_META_DATA_SIZE,
+    NUM_CHANNELS, NUM_META_REACTIONS,
 };
 use crate::biology::genome::framed::convert::{RawFrame, RawFrameParser};
 use crate::biology::unit_behavior::framed::common::*;
@@ -39,7 +39,10 @@ pub struct FramedGenomeCompiler<'a> {
 
     // state variables for parsing
     current_frame: usize,
+
+    // is the index within the current frame
     idx: usize,
+
     current_channel: usize,
 }
 
@@ -53,17 +56,23 @@ impl<'a> FramedGenomeCompiler<'a> {
         flog!("\n\nCompiling genome of size {}", raw_genome.len());
         // flog!("raw genome values: {:?}", &raw_genome);
 
+        let raw_size = raw_genome.len();
         perf_timer_start!("genome_compiling");
         let mut s = Self::new(raw_genome, genetic_manifest);
         let frames = s.compile_frames();
         perf_timer_stop!("genome_compiling");
         flog!("FINISHED COMPILING FRAMES");
-        Rc::new(CompiledFramedGenome { frames })
+
+        Rc::new(CompiledFramedGenome { frames, raw_size })
+    }
+
+    pub fn get_global_val_index(&self, frame_idx: usize, index_in_frame: usize) -> usize {
+        self.raw_frames[frame_idx].address_range.0 + FRAME_META_DATA_SIZE + index_in_frame
     }
 
     pub fn new(values: Vec<FramedGenomeWord>, genetic_manifest: &'a GeneticManifest) -> Self {
         let raw_frames = RawFrameParser::parse(values);
-        // flog!("raw frames: {:?}", &raw_frames);
+        println!("raw frames: {:?}", &raw_frames);
 
         Self {
             genetic_manifest,
@@ -92,6 +101,7 @@ impl<'a> FramedGenomeCompiler<'a> {
             return None;
         }
     }
+
     pub fn pop_in_frame(&mut self) -> Option<FramedGenomeValue> {
         let frame = &self.raw_frames[self.current_frame];
         let channel_vals = &frame.channel_values[self.current_channel];
@@ -156,6 +166,7 @@ impl<'a> FramedGenomeCompiler<'a> {
         let frame = Frame {
             channels: channels,
             default_channel: default_channel,
+            address_range: self.raw_frames[self.current_frame].address_range.clone(),
         };
 
         Some(frame)
@@ -186,11 +197,11 @@ impl<'a> FramedGenomeCompiler<'a> {
     }
 
     pub fn compile_gene(&mut self) -> Option<Gene> {
-        flog!(
+        let gene_start_address = self.get_global_val_index(self.current_frame, self.idx);
+
+        println!(
             "COMPILING GENE... (index: {:?}, frame: {}, channel: {})",
-            &self.idx,
-            &self.current_frame,
-            &self.current_channel,
+            &self.idx, &self.current_frame, &self.current_channel,
         );
         let predicate = self.compile_disjunctive_predicate();
         let operation = self.compile_operation();
@@ -211,16 +222,19 @@ impl<'a> FramedGenomeCompiler<'a> {
             //     &render_gene_operation(&_operation, &self.genetic_manifest)
             // );
 
+            let gene_end_address = self.get_global_val_index(self.current_frame, self.idx);
             Some(Gene {
                 conditional: pred,
                 operation: _operation,
+                address_range: (gene_start_address, gene_end_address),
             })
         } else {
             None
         };
     }
 
-    pub fn compile_disjunctive_predicate(&mut self) -> Option<DisjunctiveClause> {
+    pub fn compile_disjunctive_predicate(&mut self) -> Option<Disjunction> {
+        let start_address = self.get_global_val_index(self.current_frame, self.idx);
         let n_clauses = match self.pop_in_frame() {
             Some(v) => convert::val_to_n_or_clauses(v),
             None => {
@@ -236,7 +250,7 @@ impl<'a> FramedGenomeCompiler<'a> {
 
         // flog!("num OR clauses: {}", n_clauses);
 
-        let mut clauses: Vec<ConjunctiveClause> = vec![];
+        let mut clauses: Vec<Conjunction> = vec![];
 
         for i in (0..n_clauses) {
             let pred = self.compile_conjunctive_predicate();
@@ -248,14 +262,21 @@ impl<'a> FramedGenomeCompiler<'a> {
         }
 
         if clauses.len() == n_clauses {
-            Some((is_negated, clauses))
+            let end_address = self.get_global_val_index(self.current_frame, self.idx);
+            Some(Disjunction {
+                conjunctive_clauses: clauses,
+                is_negated,
+                address_range: (start_address, end_address),
+            })
         } else {
             flog!("clauses {}", clauses.len());
             None
         }
     }
 
-    pub fn compile_conjunctive_predicate(&mut self) -> Option<ConjunctiveClause> {
+    pub fn compile_conjunctive_predicate(&mut self) -> Option<Conjunction> {
+        let start_address = self.get_global_val_index(self.current_frame, self.idx);
+
         let n_conditionals = match self.pop_in_frame() {
             Some(v) => convert::val_to_n_and_clauses(v),
             None => {
@@ -270,6 +291,8 @@ impl<'a> FramedGenomeCompiler<'a> {
         };
         // flog!("num AND clauses: {}", n_conditionals);
 
+        // let gene_start_address = self.get_global_val_index(self.current_frame, start_idx);
+
         let mut vars: Vec<BooleanVariable> = vec![];
         for i in (0..n_conditionals) {
             let bool_var = self.compile_boolean_variable();
@@ -277,8 +300,14 @@ impl<'a> FramedGenomeCompiler<'a> {
                 vars.push(bool_var.unwrap());
             }
         }
+
         if vars.len() == n_conditionals {
-            Some((is_negated, vars))
+            let end_address = self.get_global_val_index(self.current_frame, self.idx);
+            Some(Conjunction {
+                is_negated,
+                boolean_variables: vars,
+                address_range: (start_address, end_address),
+            })
         } else {
             None
         }
@@ -454,13 +483,35 @@ pub mod tests {
         .build(&gm);
 
         let mut genome_words = vec![];
-        genome_words.append(&mut frame1);
-        genome_words.append(&mut frame2);
+        genome_words.append(&mut frame1.clone());
+        genome_words.append(&mut frame2.clone());
 
-        let compiled = FramedGenomeCompiler::compile(genome_words, &gm);
+        let compiled = FramedGenomeCompiler::compile(genome_words.clone(), &gm);
 
         println!("genome:\n{}", compiled.display(&gm));
         assert_eq!(compiled.frames.len(), 2);
+
+        assert_eq!(compiled.frames[0].address_range, (0, frame1.len()));
+        assert_eq!(
+            compiled.frames[1].address_range,
+            (frame1.len(), frame1.len() + frame2.len())
+        );
+
+        let gene_address_range = compiled.frames[0].channels[0][0].address_range;
+        println!("genome_vals: {:?}", &genome_words);
+        println!(
+            "frame1_address_range: {:?}",
+            &compiled.frames[0].address_range
+        );
+        println!(
+            "gene_vals: {:?}",
+            &get_from_range(&genome_words, gene_address_range)
+        );
+
+        let first_disjunction_addr = &compiled.frames[0].channels[0][0].conditional.address_range;
+
+        let num_clauses = genome_words[first_disjunction_addr.0];
+        assert_eq!(num_clauses, 1);
     }
 
     //use crate::biology::genome::framed::tests::{full_test_framed_genome_one};
@@ -483,4 +534,14 @@ pub mod tests {
 
     //     println!("RESULT: {}", s);
     // }
+}
+
+pub fn get_from_range<T: Copy>(vec: &Vec<T>, range: (usize, usize)) -> Vec<T> {
+    let mut res = vec![];
+
+    for i in range.0..range.1 {
+        res.push(vec[i]);
+    }
+
+    res
 }

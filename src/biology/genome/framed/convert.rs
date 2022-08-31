@@ -1,4 +1,4 @@
-use super::types::{BooleanVariable, ConjunctiveClause};
+use super::types::{BooleanVariable, Conjunction};
 use super::types::{
     FramedGenomeValue, FramedGenomeWord, CHANNEL_ZERO, FIXED_NUM_CONDITIONAL_PARAMS,
     FIXED_NUM_OPERATION_PARAMS, FRAME_META_DATA_SIZE, MIN_FRAME_SIZE, NUM_CHANNELS,
@@ -263,6 +263,9 @@ pub fn merge_channels_into_frame(
 pub struct RawFrame {
     pub default_channel: u8,
     pub channel_values: [Vec<FramedGenomeValue>; NUM_CHANNELS],
+
+    // this address range includes the metadata.
+    pub address_range: (usize, usize),
 }
 
 /**
@@ -298,9 +301,6 @@ impl RawFrameParser {
         let mut result = vec![];
 
         while (self.idx as i64) < (self.values.len() as i64 - FRAME_META_DATA_SIZE as i64) {
-            // let idx_frame_start = self.idx;
-
-            // let frame_size = self.values[self.idx] as usize;
             let frame_size = Self::frame_val_to_frame_size(self.values[self.idx]) as usize;
 
             let mut default_channel = self.values[self.idx + 1] as u8;
@@ -318,6 +318,7 @@ impl RawFrameParser {
             result.push(RawFrame {
                 channel_values,
                 default_channel,
+                address_range: self.current_frame.clone(),
             })
         }
         result

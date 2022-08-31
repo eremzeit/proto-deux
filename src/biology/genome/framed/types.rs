@@ -11,6 +11,7 @@ use crate::chemistry;
 use crate::chemistry::{ChemistryInstance, ReactionId};
 use crate::simulation::common::*;
 use crate::simulation::world::World;
+use std::cell::Cell;
 use std::fmt::{Debug, Formatter, Result};
 use std::rc::Rc;
 
@@ -51,9 +52,15 @@ pub struct FramedGenome {
 //     }
 // }
 
+// #[derive(Clone)]
+// pub struct CompiledFramedGenomeWithStats {
+//     pub frames: Vec<Frame>,
+// }
+
 #[derive(Clone)]
 pub struct CompiledFramedGenome {
     pub frames: Vec<Frame>,
+    pub raw_size: usize,
 }
 
 impl CompiledFramedGenome {
@@ -61,8 +68,8 @@ impl CompiledFramedGenome {
         render_frames(&self.frames, gm)
     }
 
-    pub fn new(frames: Vec<Frame>) -> Self {
-        CompiledFramedGenome { frames }
+    pub fn new(frames: Vec<Frame>, raw_size: usize) -> Self {
+        CompiledFramedGenome { frames, raw_size }
     }
 }
 
@@ -70,25 +77,70 @@ impl CompiledFramedGenome {
 pub struct Frame {
     pub channels: [Vec<Gene>; NUM_CHANNELS],
     pub default_channel: u8,
+
+    pub address_range: (usize, usize),
 }
 
 #[derive(Debug, Clone)]
 pub struct Gene {
-    pub conditional: DisjunctiveClause,
+    pub conditional: Disjunction,
     pub operation: ParamedGeneOperationCall,
+    pub address_range: (usize, usize),
 }
 
-// impl Gene {
-//     pub fn display(&self) -> String {
-//         let mut s
-//     }
-// }
+impl Gene {
+    pub fn new(conditional: Disjunction, operation: ParamedGeneOperationCall) -> Self {
+        Self {
+            conditional,
+            operation,
+            address_range: (0, 0),
+        }
+    }
+}
 
-pub type DisjunctiveClause = (IsNegatedBool, Vec<ConjunctiveClause>);
-pub type ConjunctiveClause = (IsNegatedBool, Vec<BooleanVariable>);
+#[derive(Debug, Clone)]
+pub struct Disjunction {
+    pub is_negated: IsNegatedBool,
+    pub conjunctive_clauses: Vec<Conjunction>,
+    pub address_range: (usize, usize),
+}
+
+impl Disjunction {
+    /**
+     * Meant to be used only in situations when you don't need the address_range (ie. testing, debugging)
+     */
+    pub fn new(is_negated: bool, clauses: Vec<Conjunction>) -> Self {
+        Self {
+            is_negated,
+            conjunctive_clauses: clauses,
+            address_range: (0, 0),
+        }
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct Conjunction {
+    pub is_negated: IsNegatedBool,
+    pub boolean_variables: Vec<BooleanVariable>,
+    pub address_range: (usize, usize),
+}
+
+impl Conjunction {
+    /**
+     * Meant to be used only in situations when you don't need the address_range (ie. testing, debugging)
+     */
+    pub fn new(is_negated: bool, boolean_variables: Vec<BooleanVariable>) -> Self {
+        Self {
+            is_negated,
+            boolean_variables,
+            address_range: (0, 0),
+        }
+    }
+}
 
 pub type IsNegatedBool = bool;
 
+// TODO: maybe rename this to BooleanPredicate?
 #[derive(Clone, PartialEq)]
 pub enum BooleanVariable {
     Literal(bool),

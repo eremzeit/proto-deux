@@ -177,14 +177,14 @@ impl<'a> GenomeExecutionContext<'a> {
         }
     }
 
-    pub fn execute_conditional(&mut self, conditional: &DisjunctiveClause) -> bool {
+    pub fn execute_conditional(&mut self, conditional: &Disjunction) -> bool {
         let mut or_result = false;
-        let is_negated = conditional.0;
+        let is_negated = conditional.is_negated;
 
-        for disjunctive in &conditional.1 {
-            let is_negated = disjunctive.0;
+        for disjunctive in &conditional.conjunctive_clauses {
+            let is_negated = disjunctive.is_negated;
             let mut and_result = true;
-            for bool_expr in &disjunctive.1 {
+            for bool_expr in &disjunctive.boolean_variables {
                 if !self.execute_boolean(bool_expr) {
                     and_result = false
                 }

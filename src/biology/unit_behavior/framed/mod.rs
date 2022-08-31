@@ -9,7 +9,7 @@ use crate::biology::genetic_manifest::predicates::{
 use crate::biology::genetic_manifest::GeneticManifest;
 pub use crate::biology::genome::framed::execution::GenomeExecutionContext;
 use crate::biology::genome::framed::types::{
-    BooleanVariable, CompiledFramedGenome, DisjunctiveClause, Frame, FramedGenomeWord,
+    BooleanVariable, CompiledFramedGenome, Disjunction, Frame, FramedGenomeWord,
 };
 use crate::biology::sensor_manifest::SensorId;
 pub use crate::biology::unit_behavior::framed::types::*;

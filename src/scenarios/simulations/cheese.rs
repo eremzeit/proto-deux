@@ -39,16 +39,6 @@ pub fn with_genome(sim_args: &SimulationRunnerArgs) -> SimulationBuilder {
     let chemistry = chemistry_builder.build();
     let gm = GeneticManifest::from_chemistry(&chemistry).wrap_rc();
 
-    // let specs = SimulationSpecs {
-    //     chemistry_key: "cheese".to_string(),
-    //     place_units_method: PlaceUnitsMethod::SimpleDrop { attributes: None },
-    //     ..Default::default()
-    // };
-
-    // let (cm, sm, gm) = specs.context();
-
-    // how do i say, find an open square adjacent to me, and use that as a parameter?  is that what a register could be used for? ephemeral data?
-
     use crate::biology::genome::framed::samples::cheese::get_genome1;
     let frames1 = get_genome1(&gm);
 

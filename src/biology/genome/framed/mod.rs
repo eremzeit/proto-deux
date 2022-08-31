@@ -1,3 +1,4 @@
+pub mod annotated;
 #[macro_use]
 pub mod util;
 

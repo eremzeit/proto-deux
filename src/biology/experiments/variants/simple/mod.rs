@@ -6,7 +6,7 @@ use crate::biology::experiments::alterations;
 use crate::biology::experiments::variants::simple::utils::{
     ExperimentGenomeUid, GenomeExperimentEntry,
 };
-use crate::biology::genome::framed::samples::cheese::{genome1, get_genome1_raw};
+use crate::biology::genome::framed::samples::cheese::get_genome2_raw;
 use crate::biology::unit_behavior::framed::common::*;
 use crate::perf::{perf_timer_start, perf_timer_stop};
 use crate::simulation::common::*;
@@ -758,7 +758,7 @@ impl SimpleExperiment {
 
     fn inject_special_genome(&mut self) {
         self._last_entry_id += 1;
-        let genome = get_genome1_raw(&self._gm);
+        let genome = get_genome2_raw(&self._gm);
 
         println!(
             "INJECTING: {}",
