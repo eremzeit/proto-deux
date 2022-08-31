@@ -150,7 +150,7 @@ pub mod tests {
         let mut config = ChemistryConfiguration::new();
         config.insert(
             "new_unit_cost".to_string(),
-            ChemistryConfigValue::Integer(1337),
+            ChemistryConfigValue::ResourceAmount(1337),
         );
 
         println!("UNPROCESSED raw reactions: {:?}\n\n", defs::get_reactions());

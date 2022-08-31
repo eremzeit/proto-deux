@@ -35,7 +35,7 @@ pub mod constants {
     #[macro_export]
     macro_rules! MAX_GOBBLE_AMOUNT_ {
         () => {
-            50
+            100
         };
     }
     #[macro_export]
@@ -193,7 +193,7 @@ impl Chemistry for CheeseChemistry {
 
     fn default_config() -> ChemistryConfiguration {
         ChemistryConfigBuilder::new()
-            .set_resource_amount("move_cost", -10)
+            .set_resource_amount("move_cost", -1)
             .set_resource_amount("new_unit_cost", -200)
             .build()
     }

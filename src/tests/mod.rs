@@ -43,7 +43,7 @@ pub fn default_chemistry_configuration() {
         .get_configuration()
         .get("magic_foo_unit_resource_amount")
         .unwrap()
-        .unwrap_integer();
+        .unwrap_resource_amount();
 
     assert_eq!(val, 10);
 
@@ -67,7 +67,7 @@ pub fn default_chemistry_configuration() {
             .get_configuration()
             .get("magic_foo_unit_resource_amount")
             .unwrap()
-            .unwrap_integer(),
+            .unwrap_resource_amount(),
         10
     );
 }

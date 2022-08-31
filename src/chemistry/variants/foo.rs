@@ -130,12 +130,12 @@ impl Chemistry for FooChemistry {
         let mut config = ChemistryConfiguration::new();
         config.insert(
             "new_unit_cost".to_owned(),
-            ChemistryConfigValue::Integer(10),
+            ChemistryConfigValue::ResourceAmount(10),
         );
 
         config.insert(
             "magic_foo_unit_resource_amount".to_owned(),
-            ChemistryConfigValue::Integer(10),
+            ChemistryConfigValue::ResourceAmount(10),
         );
         config
     }
