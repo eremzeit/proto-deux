@@ -6,6 +6,7 @@ pub mod macros;
 
 use serde::{Deserialize, Serialize};
 use std::cmp::{max, min};
+use std::ops::Index;
 use std::time::{Duration, Instant};
 
 pub type Coord = (usize, usize);
@@ -151,4 +152,14 @@ pub fn proportional_resize(
     } else {
         (rect_width as u32, rect_height as u32)
     };
+}
+
+pub fn get_from_range<T: Copy>(vec: &Vec<T>, range: (usize, usize)) -> Vec<T> {
+    let mut res = vec![];
+
+    for i in range.0..range.1 {
+        res.push(vec[i]);
+    }
+
+    res
 }

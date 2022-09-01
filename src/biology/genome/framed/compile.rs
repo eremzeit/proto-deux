@@ -52,7 +52,7 @@ impl<'a> FramedGenomeCompiler<'a> {
     pub fn compile(
         raw_genome: Vec<FramedGenomeWord>,
         genetic_manifest: &'a GeneticManifest,
-    ) -> Rc<CompiledFramedGenome> {
+    ) -> CompiledFramedGenome {
         flog!("\n\nCompiling genome of size {}", raw_genome.len());
         // flog!("raw genome values: {:?}", &raw_genome);
 
@@ -63,11 +63,11 @@ impl<'a> FramedGenomeCompiler<'a> {
         perf_timer_stop!("genome_compiling");
         flog!("FINISHED COMPILING FRAMES");
 
-        Rc::new(CompiledFramedGenome {
+        CompiledFramedGenome {
             frames,
             raw_size,
             raw_values: raw_genome,
-        })
+        }
     }
 
     pub fn get_global_val_index(&self, frame_idx: usize, index_in_frame: usize) -> usize {
@@ -458,6 +458,8 @@ impl<'a> FramedGenomeCompiler<'a> {
 pub mod tests {
     use variants::CheeseChemistry;
 
+    use crate::util::get_from_range;
+
     use super::super::common::*;
     use super::super::render::render_genes;
     use super::*;
@@ -538,14 +540,4 @@ pub mod tests {
 
     //     println!("RESULT: {}", s);
     // }
-}
-
-pub fn get_from_range<T: Copy>(vec: &Vec<T>, range: (usize, usize)) -> Vec<T> {
-    let mut res = vec![];
-
-    for i in range.0..range.1 {
-        res.push(vec[i]);
-    }
-
-    res
 }

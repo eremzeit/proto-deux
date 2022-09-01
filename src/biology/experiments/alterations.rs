@@ -1,6 +1,7 @@
 use crate::biology::genome::framed::common::*;
 use crate::biology::unit_behavior::framed::common::*;
 use crate::simulation::common::*;
+use crate::util::get_from_range;
 
 use rand::Rng;
 use std::convert::TryInto;
@@ -292,6 +293,49 @@ pub fn default_alterations() -> Vec<GenomeAlterationImplementation> {
             },
         ),
     });
+
+    alterations.push(GenomeAlterationImplementation {
+        key: "swap_frames".to_string(),
+        index: 0,
+        genomes_required: 1,
+        execute: Rc::new(
+            |genomes: &[&CompiledFramedGenome],
+             params: &[FramedGenomeWord]|
+             -> Vec<FramedGenomeWord> {
+                let frame1_addr = genomes[0].frames[params[0] as usize].address_range;
+                let frame2_addr = genomes[0].frames[params[1] as usize].address_range;
+
+                let (earlier_frame, later_frame) = if frame1_addr.0 < frame2_addr.0 {
+                    (frame1_addr, frame2_addr)
+                } else {
+                    (frame2_addr, frame1_addr)
+                };
+
+                let mut genome = genomes[0].raw_values.clone();
+
+                let earlier_vals = get_from_range(&genome, earlier_frame);
+                let later_vals = get_from_range(&genome, later_frame);
+
+                genome.splice((later_frame.0..later_frame.1), earlier_vals);
+                genome.splice((earlier_frame.0..earlier_frame.1), later_vals);
+
+                genome
+            },
+        ),
+        prepare: Rc::new(
+            |genomes: &[&CompiledFramedGenome]| -> Vec<FramedGenomeWord> {
+                let mut rng = rand::thread_rng();
+                vec![
+                    rng.gen_range(0..genomes[0].frames.len())
+                        .try_into()
+                        .unwrap(),
+                    rng.gen_range(0..genomes[0].frames.len())
+                        .try_into()
+                        .unwrap(),
+                ]
+            },
+        ),
+    });
     alterations
     // GenomeAlterationDefinition {
     // 	key: "swap_frames".to_string(),
@@ -336,7 +380,15 @@ pub fn default_alterations() -> Vec<GenomeAlterationImplementation> {
 // 	FramesCrossover(usize, usize, usize, usize),
 // }
 pub mod tests {
-    use crate::biology::genome::framed::common::{CompiledFramedGenome, FramedGenomeWord};
+    use crate::biology::genome::framed::builders::*;
+    use crate::biology::genome::framed::common::FramedGenome;
+    use crate::biology::genome::framed::{
+        builders::{frame, framed_genome},
+        common::{CompiledFramedGenome, FramedGenomeWord},
+    };
+    use crate::biology::genome::framed_v2::FramedGenomeWithContext;
+    use crate::simulation::common::properties::CheeseChemistry;
+    use crate::simulation::common::GeneticManifest;
 
     use super::{default_alterations, CompiledAlterationSet};
 
@@ -394,6 +446,74 @@ pub mod tests {
         println!("result: {:?}", result);
         assert_eq!(result.to_vec(), vec![9, 1, 2, 3, 4, 5, 8, 7]);
     }
+
+    #[test]
+    pub fn test_swap_frames() {
+        let gm = GeneticManifest::from_default_chemistry_config::<CheeseChemistry>();
+
+        let alteration = get_alterations().alteration_for_key("swap_frames");
+
+        let genome = framed_genome(vec![
+            frame(
+                vec![gene(
+                    if_any(vec![if_all(vec![conditional!(is_truthy, random_hundred)])]),
+                    then_do!(move_unit, up),
+                )],
+                vec![],
+                vec![],
+                vec![],
+            ),
+            frame(
+                vec![gene(
+                    if_none(vec![if_not_all(vec![conditional!(
+                        lt,
+                        pos_res::cheese(0, 0),
+                        100
+                    )])]),
+                    then_do!(gobble_cheese, register(3), 69, 69),
+                )],
+                vec![],
+                vec![],
+                vec![],
+            ),
+            frame(
+                vec![gene(
+                    if_none(vec![if_not_all(vec![conditional!(lt, random(1337), 100)])]),
+                    then_do!(new_unit, register(3), 69, 69),
+                )],
+                vec![],
+                vec![],
+                vec![],
+            ),
+        ])
+        .build(&gm);
+
+        let genome = FramedGenomeCompiler::compile(genome, &gm);
+
+        let genomes = vec![&genome];
+        let params = vec![0, 2];
+        let result = (alteration.execute)(&genomes, &params);
+
+        let new_genome = FramedGenomeCompiler::compile(result, &gm);
+
+        let reaction_id = &new_genome.frames[0].channels[0][0]
+            .operation
+            .clone()
+            .as_reaction_call()
+            .0;
+        let f0_g1_reaction_key = &gm.chemistry_manifest.reactions[*reaction_id as usize].key;
+
+        let reaction_id = &new_genome.frames[2].channels[0][0]
+            .operation
+            .clone()
+            .as_reaction_call()
+            .0;
+        let f2_g1_reaction_key = &gm.chemistry_manifest.reactions[*reaction_id as usize].key;
+
+        assert_eq!(f0_g1_reaction_key, "new_unit");
+        assert_eq!(f2_g1_reaction_key, "move_unit");
+    }
+
     pub fn test_point_mutation_in_channel() {
         let alteration = get_alterations().alteration_for_key("point_mutation_in_channel");
         let genome1 = fake_compiled(vec![1, 2, 0x123, 4, 5]);

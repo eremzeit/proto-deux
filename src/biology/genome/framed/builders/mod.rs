@@ -303,6 +303,7 @@ macro_rules! conditional {
 
     ($op_key:ident, $param1:expr, $param2:expr, $param3:expr) => {{
         use crate::biology::genome::framed::types::{BooleanVariable, FramedGenomeValue};
+        use std::rc::Rc;
 
         ConditionalBuilder::new(Rc::new(|gm: &GeneticManifest| -> Vec<FramedGenomeValue> {
             use crate::biology::genetic_manifest::predicates::OperatorParam;

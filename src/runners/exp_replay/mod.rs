@@ -109,7 +109,7 @@ pub fn load_genome_csv(path: PathBuf, chemistry_key: &str) -> Vec<Rc<CompiledFra
                 .map(|v| v.trim().parse::<FramedGenomeWord>().unwrap())
                 .collect::<Vec<_>>();
 
-            FramedGenomeCompiler::compile(genome_vals, &gm)
+            FramedGenomeCompiler::compile(genome_vals, &gm).wrap_rc()
         })
         .collect::<Vec<_>>();
 

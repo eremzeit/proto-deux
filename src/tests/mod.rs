@@ -57,7 +57,7 @@ pub fn default_chemistry_configuration() {
     .build(&gm);
 
     let framed_vals = simple_convert_into_frames(genome_values);
-    let frames = FramedGenomeCompiler::compile(framed_vals, &gm);
+    let frames = FramedGenomeCompiler::compile(framed_vals, &gm).wrap_rc();
 
     let mut sim = make_sim(chemistry, frames).to_simulation();
 
@@ -105,7 +105,7 @@ pub fn default_override_chemistry_configuration() {
     .build(&gm);
 
     let framed_vals = simple_convert_into_frames(genome_values);
-    let frames = FramedGenomeCompiler::compile(framed_vals, &gm);
+    let frames = FramedGenomeCompiler::compile(framed_vals, &gm).wrap_rc();
 
     let mut sim = make_sim(chemistry, frames).to_simulation();
 

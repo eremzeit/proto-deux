@@ -77,6 +77,10 @@ impl CompiledFramedGenome {
             raw_size,
         }
     }
+
+    pub fn wrap_rc(self) -> Rc<Self> {
+        Rc::new(self)
+    }
 }
 
 #[derive(Debug, Clone)]

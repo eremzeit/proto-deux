@@ -151,7 +151,7 @@ pub mod test {
         .build(&gm);
 
         let framed_vals = simple_convert_into_frames(genome_values);
-        let frames = FramedGenomeCompiler::compile(framed_vals, &gm);
+        let frames = FramedGenomeCompiler::compile(framed_vals, &gm).wrap_rc();
 
         println!("genome: \n{}", frames.display(&gm));
 

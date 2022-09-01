@@ -11,5 +11,5 @@ pub fn genome1(gm: &GeneticManifest) -> Rc<CompiledFramedGenome> {
     )])
     .build(&gm);
 
-    FramedGenomeCompiler::compile(framed_vals, &gm)
+    FramedGenomeCompiler::compile(framed_vals, &gm).wrap_rc()
 }

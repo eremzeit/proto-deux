@@ -43,9 +43,11 @@ pub fn with_genome(sim_args: &SimulationRunnerArgs) -> SimulationBuilder {
     let frames1 = get_genome1(&gm);
 
     let genome_values2 = legacy::get_genome2().build(&gm);
-    let frames2 = FramedGenomeCompiler::compile(simple_convert_into_frames(genome_values2), &gm);
+    let frames2 =
+        FramedGenomeCompiler::compile(simple_convert_into_frames(genome_values2), &gm).wrap_rc();
     let genome_values3 = legacy::get_genome3().build(&gm);
-    let frames3 = FramedGenomeCompiler::compile(simple_convert_into_frames(genome_values3), &gm);
+    let frames3 =
+        FramedGenomeCompiler::compile(simple_convert_into_frames(genome_values3), &gm).wrap_rc();
 
     let entry1 = UnitEntryBuilder::default()
         .species_name("species1".to_string())
