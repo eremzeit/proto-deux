@@ -31,21 +31,21 @@ pub struct GenomeExperimentEntry {
     pub last_fitness_metrics: Vec<FitnessScore>,
     pub max_fitness_metric: Option<FitnessScore>,
     pub num_evaluations: usize,
-    pub genome: RawFramedGenome,
+    pub raw_genome: RawFramedGenome,
     pub uid: ExperimentGenomeUid,
     pub current_rank_score: usize,
-    pub compiled_genome: Option<Rc<CompiledFramedGenome>>,
+    pub compiled_genome: Rc<CompiledFramedGenome>,
 }
 
-impl GenomeExperimentEntry {
-    pub fn compile(&mut self, gm: &GeneticManifest) -> Rc<CompiledFramedGenome> {
-        if self.compiled_genome.is_none() {
-            self.compiled_genome = Some(FramedGenomeCompiler::compile(self.genome.clone(), gm));
-        }
+// impl GenomeExperimentEntry {
+//     pub fn compile(&mut self, gm: &GeneticManifest) -> Rc<CompiledFramedGenome> {
+//         if self.compiled_genome.is_none() {
+//             self.compiled_genome = Some(FramedGenomeCompiler::compile(self.raw_genome.clone(), gm));
+//         }
 
-        self.compiled_genome.clone().unwrap()
-    }
-}
+//         self.compiled_genome.clone().unwrap()
+//     }
+// }
 
 #[derive(Serialize, Deserialize)]
 pub struct ExperimentSimSettings {

@@ -58,12 +58,16 @@ impl<'a> FramedGenomeCompiler<'a> {
 
         let raw_size = raw_genome.len();
         perf_timer_start!("genome_compiling");
-        let mut s = Self::new(raw_genome, genetic_manifest);
+        let mut s = Self::new(raw_genome.clone(), genetic_manifest);
         let frames = s.compile_frames();
         perf_timer_stop!("genome_compiling");
         flog!("FINISHED COMPILING FRAMES");
 
-        Rc::new(CompiledFramedGenome { frames, raw_size })
+        Rc::new(CompiledFramedGenome {
+            frames,
+            raw_size,
+            raw_values: raw_genome,
+        })
     }
 
     pub fn get_global_val_index(&self, frame_idx: usize, index_in_frame: usize) -> usize {

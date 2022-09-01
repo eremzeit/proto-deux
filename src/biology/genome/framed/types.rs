@@ -61,6 +61,7 @@ pub struct FramedGenome {
 pub struct CompiledFramedGenome {
     pub frames: Vec<Frame>,
     pub raw_size: usize,
+    pub raw_values: Vec<FramedGenomeWord>,
 }
 
 impl CompiledFramedGenome {
@@ -68,8 +69,13 @@ impl CompiledFramedGenome {
         render_frames(&self.frames, gm)
     }
 
-    pub fn new(frames: Vec<Frame>, raw_size: usize) -> Self {
-        CompiledFramedGenome { frames, raw_size }
+    pub fn new(frames: Vec<Frame>, raw_values: Vec<FramedGenomeWord>) -> Self {
+        let raw_size = raw_values.len();
+        CompiledFramedGenome {
+            frames,
+            raw_values,
+            raw_size,
+        }
     }
 }
 

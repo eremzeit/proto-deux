@@ -129,10 +129,10 @@ impl SimpleExperiment {
             last_fitness_metrics: vec![],
             max_fitness_metric: None,
             num_evaluations: 0,
-            genome: genome,
+            compiled_genome: FramedGenomeCompiler::compile(genome.clone(), &self._gm),
+            raw_genome: genome,
             uid: next_genome_id as ExperimentGenomeUid,
             current_rank_score: 0,
-            compiled_genome: None,
         };
 
         self._last_entry_id = genome_entry.uid;
@@ -259,10 +259,7 @@ impl SimpleExperiment {
             let maybe_idx = self._find_by_uid(*uid);
             let idx = maybe_idx.unwrap();
 
-            let genome = self.genome_entries[idx].compile(&self._gm);
-
-            // let libraries =
-            //     construct_chemistry_libraries(&self.settings.chemistry_options.chemistry_key);
+            let genome = self.genome_entries[idx].compiled_genome.clone();
 
             let gm = self._gm.clone();
             let unit_entry = UnitEntryBuilder::default()
@@ -348,7 +345,7 @@ impl SimpleExperiment {
                 &mut executor.simulation.editable(),
             );
 
-            let penalty_pct = if genome_entry.genome.len() > 5000 {
+            let penalty_pct = if genome_entry.raw_genome.len() > 5000 {
                 // (genome_entry.genome.len() as f64 / 4.0) as f64
                 0.10
             } else {
@@ -554,7 +551,8 @@ impl SimpleExperiment {
         for i in (0..alteration.genomes_required) {
             let uid = self._select_random_top_genome();
             let index = self._find_by_uid(uid).unwrap();
-            genomes.push(self.genome_entries[index].genome.clone());
+
+            genomes.push(self.genome_entries[index].compiled_genome.as_ref());
         }
 
         let params = (alteration.prepare)(&genomes.as_slice());
@@ -760,18 +758,18 @@ impl SimpleExperiment {
         self._last_entry_id += 1;
         let genome = get_genome2_raw(&self._gm);
 
-        println!(
-            "INJECTING: {}",
-            FramedGenomeCompiler::compile(genome.clone(), &self._gm).display(&self._gm)
-        );
+        // println!(
+        //     "INJECTING: {}",
+        //     FramedGenomeCompiler::compile(genome.clone(), &self._gm).display(&self._gm)
+        // );
         let genome = GenomeExperimentEntry {
             last_fitness_metrics: vec![],
             max_fitness_metric: None,
             num_evaluations: 0,
-            genome,
+            compiled_genome: FramedGenomeCompiler::compile(genome.clone(), &self._gm),
+            raw_genome: genome,
             uid: usize::MAX,
             current_rank_score: 10,
-            compiled_genome: None,
         };
 
         self.genome_entries[0] = genome.clone();
@@ -967,7 +965,7 @@ pub mod tests {
         exp.initialize();
 
         assert_eq!(exp.genome_entries.len(), num_genomes);
-        assert_eq!(exp.genome_entries[0].genome, sample_genome.clone());
+        assert_eq!(exp.genome_entries[0].raw_genome, sample_genome.clone());
     }
 
     fn collect_ranks(exp: &SimpleExperiment) -> Vec<usize> {

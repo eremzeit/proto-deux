@@ -72,10 +72,10 @@ pub fn test_fitness(key: &str) {
     let mut exp = SimpleExperiment::new(settings);
     exp.initialize();
 
-    exp.genome_entries[0].genome = genome_vals1.clone();
-    exp.genome_entries[1].genome = genome_vals2.clone();
-    exp.genome_entries[2].genome = genome_vals3.clone();
-    exp.genome_entries[3].genome = genome_vals4.clone();
+    exp.genome_entries[0].raw_genome = genome_vals1.clone();
+    exp.genome_entries[1].raw_genome = genome_vals2.clone();
+    exp.genome_entries[2].raw_genome = genome_vals3.clone();
+    exp.genome_entries[3].raw_genome = genome_vals4.clone();
 
     exp.resume();
 }

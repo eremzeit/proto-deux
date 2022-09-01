@@ -6,8 +6,8 @@ use rand::Rng;
 use std::convert::TryInto;
 
 pub type GenomeAlterationTypeKey = String;
-pub type ExecuteGenomeAlterationFn<A> = dyn Fn(&[Vec<A>], &[A]) -> Vec<A>;
-pub type PrepareAlterationParamsFn<A> = dyn Fn(&[Vec<A>]) -> Vec<A>;
+pub type ExecuteGenomeAlterationFn<A> = dyn Fn(&[&CompiledFramedGenome], &[A]) -> Vec<A>;
+pub type PrepareAlterationParamsFn<A> = dyn Fn(&[&CompiledFramedGenome]) -> Vec<A>;
 
 #[derive(Clone)]
 pub struct GenomeAlterationImplementation {
@@ -86,213 +86,233 @@ pub fn default_alteration_set() -> CompiledAlterationSet {
 }
 
 pub fn default_alterations() -> Vec<GenomeAlterationImplementation> {
-    vec![
-        GenomeAlterationImplementation {
-            key: "insertion".to_string(),
-            index: 0,
-            genomes_required: 1,
-            execute: Rc::new(
-                |genomes: &[Vec<FramedGenomeWord>],
-                 params: &[FramedGenomeWord]|
-                 -> Vec<FramedGenomeWord> {
-                    let mut _new = genomes[0].iter().map(|x| *x).collect::<Vec<_>>();
-                    _new[params[0] as usize] = params[1] as FramedGenomeWord;
-                    _new
-                },
-            ),
-            prepare: Rc::new(
-                |genomes: &[Vec<FramedGenomeWord>]| -> Vec<FramedGenomeWord> {
-                    let mut rng = rand::thread_rng();
-                    vec![
-                        rng.gen_range(0..genomes[0].len()).try_into().unwrap(),
-                        get_random_genome_word(),
-                    ]
-                },
-            ),
-        },
-        GenomeAlterationImplementation {
-            key: "deletion".to_string(),
-            index: 0,
-            genomes_required: 1,
-            execute: Rc::new(
-                |genomes: &[Vec<FramedGenomeWord>],
-                 params: &[FramedGenomeWord]|
-                 -> Vec<FramedGenomeWord> {
-                    let mut _new = genomes[0].iter().map(|x| *x).collect::<Vec<_>>();
-                    _new.remove(params[0] as usize);
-                    _new
-                },
-            ),
-            prepare: Rc::new(
-                |genomes: &[Vec<FramedGenomeWord>]| -> Vec<FramedGenomeWord> {
-                    let mut rng = rand::thread_rng();
-                    vec![rng.gen_range(0..genomes[0].len()).try_into().unwrap()]
-                },
-            ),
-        },
-        GenomeAlterationImplementation {
-            key: "random_region_insert".to_string(),
-            index: 0,
-            genomes_required: 1,
-            execute: Rc::new(
-                |genomes: &[Vec<FramedGenomeWord>],
-                 params: &[FramedGenomeWord]|
-                 -> Vec<FramedGenomeWord> {
-                    let mut params = params.iter().map(|x| *x).collect::<Vec<_>>();
-                    let dest_start = params.remove(0);
-                    let dest_end = params.remove(0);
-                    let mut region = params;
+    let mut alterations = vec![];
 
-                    // // println!("sectionto splice in {:?}", section);
-                    // println!("{}, {}", dest_start, dest_end);
+    alterations.push(GenomeAlterationImplementation {
+        key: "insertion".to_string(),
+        index: 0,
+        genomes_required: 1,
+        execute: Rc::new(
+            |genomes: &[&CompiledFramedGenome],
+             params: &[FramedGenomeWord]|
+             -> Vec<FramedGenomeWord> {
+                let mut _new = genomes[0].raw_values.iter().map(|x| *x).collect::<Vec<_>>();
+                _new.insert(params[0] as usize, params[1] as FramedGenomeWord);
+                _new
+            },
+        ),
+        prepare: Rc::new(
+            |genomes: &[&CompiledFramedGenome]| -> Vec<FramedGenomeWord> {
+                let mut rng = rand::thread_rng();
+                vec![
+                    rng.gen_range(0..genomes[0].raw_values.len())
+                        .try_into()
+                        .unwrap(),
+                    get_random_genome_word(),
+                ]
+            },
+        ),
+    });
 
-                    let mut new = genomes[0].clone();
-                    new.splice(dest_start as usize..dest_end as usize, region.into_iter());
-                    new
-                },
-            ),
-            prepare: Rc::new(
-                |genomes: &[Vec<FramedGenomeWord>]| -> Vec<FramedGenomeWord> {
-                    let mut rng = rand::thread_rng();
+    alterations.push(GenomeAlterationImplementation {
+        key: "deletion".to_string(),
+        index: 0,
+        genomes_required: 1,
+        execute: Rc::new(
+            |genomes: &[&CompiledFramedGenome],
+             params: &[FramedGenomeWord]|
+             -> Vec<FramedGenomeWord> {
+                let mut _new = genomes[0].raw_values.iter().map(|x| *x).collect::<Vec<_>>();
+                _new.remove(params[0] as usize);
+                _new
+            },
+        ),
+        prepare: Rc::new(
+            |genomes: &[&CompiledFramedGenome]| -> Vec<FramedGenomeWord> {
+                let mut rng = rand::thread_rng();
+                vec![rng
+                    .gen_range(0..genomes[0].raw_values.len())
+                    .try_into()
+                    .unwrap()]
+            },
+        ),
+    });
 
-                    let dest_start = rng.gen_range(0..genomes[0].len());
-                    let mut dest_end = rng.gen_range(dest_start..genomes[0].len());
+    alterations.push(GenomeAlterationImplementation {
+        key: "random_region_insert".to_string(),
+        index: 0,
+        genomes_required: 1,
+        execute: Rc::new(
+            |genomes: &[&CompiledFramedGenome],
+             params: &[FramedGenomeWord]|
+             -> Vec<FramedGenomeWord> {
+                let mut params = params.iter().map(|x| *x).collect::<Vec<_>>();
+                let dest_start = params.remove(0);
+                let dest_end = params.remove(0);
+                let mut region = params;
+                // // println!("sectionto splice in {:?}", section);
+                // println!("{}, {}", dest_start, dest_end);
 
-                    let region_size = rng.gen_range(0..10);
-                    let mut params = (0..region_size)
-                        .map(|i| get_random_genome_word())
-                        .collect::<Vec<_>>();
+                let mut new = genomes[0].clone().raw_values;
+                new.splice(dest_start as usize..dest_end as usize, region.into_iter());
+                new
+            },
+        ),
+        prepare: Rc::new(
+            |genomes: &[&CompiledFramedGenome]| -> Vec<FramedGenomeWord> {
+                let mut rng = rand::thread_rng();
 
-                    params.insert(0, dest_start as FramedGenomeWord);
-                    params.insert(1, dest_end as FramedGenomeWord);
-                    params
-                },
-            ),
-        },
-        GenomeAlterationImplementation {
-            key: "crossover".to_string(),
-            index: 0,
-            genomes_required: 2,
-            execute: Rc::new(
-                |genomes: &[Vec<FramedGenomeWord>],
-                 params: &[FramedGenomeWord]|
-                 -> Vec<FramedGenomeWord> {
-                    let src_start = params[0];
-                    let src_end = params[1]; // exclusive
-                    let dest_start = params[2];
-                    let dest_end = params[3]; // exclusive
+                let dest_start = rng.gen_range(0..genomes[0].raw_values.len());
+                let mut dest_end = rng.gen_range(dest_start..genomes[0].raw_values.len());
 
-                    let mut section: Vec<FramedGenomeWord> = vec![];
+                let region_size = rng.gen_range(0..10);
+                let mut params = (0..region_size)
+                    .map(|i| get_random_genome_word())
+                    .collect::<Vec<_>>();
 
-                    for i in src_start..src_end {
-                        section.push(genomes[0][i as usize]);
-                    }
+                params.insert(0, dest_start as FramedGenomeWord);
+                params.insert(1, dest_end as FramedGenomeWord);
+                params
+            },
+        ),
+    });
 
-                    // // println!("sectionto splice in {:?}", section);
-                    // println!("{}, {}", dest_start, dest_end);
+    alterations.push(GenomeAlterationImplementation {
+        key: "crossover".to_string(),
+        index: 0,
+        genomes_required: 2,
+        execute: Rc::new(
+            |genomes: &[&CompiledFramedGenome],
+             params: &[FramedGenomeWord]|
+             -> Vec<FramedGenomeWord> {
+                let src_start = params[0];
+                let src_end = params[1]; // exclusive
+                let dest_start = params[2];
+                let dest_end = params[3]; // exclusive
 
-                    let mut new = genomes[1].clone();
-                    new.splice(
-                        dest_start as usize..dest_end as usize,
-                        section.clone().into_iter(),
-                    );
-                    new
-                },
-            ),
-            prepare: Rc::new(
-                |genomes: &[Vec<FramedGenomeWord>]| -> Vec<FramedGenomeWord> {
-                    let mut rng = rand::thread_rng();
+                let mut section: Vec<FramedGenomeWord> = vec![];
 
-                    let src_start = rng.gen_range(0..genomes[0].len());
-                    let mut src_end = rng.gen_range(src_start..genomes[0].len());
-                    src_end = src_end.min(src_start + 50); // TEMP: limit the size of cutout regions as a hack to contain genome sizes
+                for i in src_start..src_end {
+                    section.push(genomes[0].raw_values[i as usize]);
+                }
 
-                    let dest_start = rng.gen_range(0..genomes[1].len());
-                    let dest_end = rng.gen_range(dest_start..genomes[1].len());
-                    vec![
-                        src_start as FramedGenomeWord,
-                        src_end as FramedGenomeWord,
-                        dest_start as FramedGenomeWord,
-                        dest_end as FramedGenomeWord,
-                    ]
-                },
-            ),
-        },
-        GenomeAlterationImplementation {
-            key: "point_mutation".to_string(),
-            index: 0,
-            genomes_required: 1,
-            execute: Rc::new(
-                |genomes: &[Vec<FramedGenomeWord>],
-                 params: &[FramedGenomeWord]|
-                 -> Vec<FramedGenomeWord> {
-                    let mut _new = genomes[0].iter().map(|x| *x).collect::<Vec<u64>>();
-                    _new[params[0] as usize] = params[1];
-                    _new
-                },
-            ),
-            prepare: Rc::new(
-                |genomes: &[Vec<FramedGenomeWord>]| -> Vec<FramedGenomeWord> {
-                    let mut rng = rand::thread_rng();
-                    vec![
-                        rng.gen_range(0..genomes[0].len()).try_into().unwrap(),
-                        get_random_genome_word(),
-                    ]
-                },
-            ),
-        },
-        GenomeAlterationImplementation {
-            key: "point_mutation_in_channel".to_string(),
-            index: 0,
-            genomes_required: 1,
-            execute: Rc::new(
-                |genomes: &[Vec<FramedGenomeWord>],
-                 params: &[FramedGenomeWord]|
-                 -> Vec<FramedGenomeWord> {
-                    let idx = params[0] as usize;
-                    let channel = params[1];
-                    let val = params[2];
+                // // println!("sectionto splice in {:?}", section);
+                // println!("{}, {}", dest_start, dest_end);
 
-                    let mut _new = genomes[0].clone();
+                let mut new = genomes[1].clone().raw_values;
+                new.splice(
+                    dest_start as usize..dest_end as usize,
+                    section.clone().into_iter(),
+                );
+                new
+            },
+        ),
+        prepare: Rc::new(
+            |genomes: &[&CompiledFramedGenome]| -> Vec<FramedGenomeWord> {
+                let mut rng = rand::thread_rng();
 
-                    _new[idx] =
-                        merge_value_into_word(_new[idx], val as FramedGenomeValue, channel as u8);
+                let src_start = rng.gen_range(0..genomes[0].raw_values.len());
+                let mut src_end = rng.gen_range(src_start..genomes[0].raw_values.len());
+                src_end = src_end.min(src_start + 50); // TEMP: limit the size of cutout regions as a hack to contain genome sizes
 
-                    _new
-                },
-            ),
-            prepare: Rc::new(
-                |genomes: &[Vec<FramedGenomeWord>]| -> Vec<FramedGenomeWord> {
-                    let mut rng = rand::thread_rng();
-                    vec![
-                        rng.gen_range(0..genomes[0].len()).try_into().unwrap(),
-                        rng.gen_range(0..NUM_CHANNELS).try_into().unwrap(),
-                        get_random_genome_value() as FramedGenomeWord,
-                    ]
-                },
-            ),
-        },
-        // GenomeAlterationDefinition {
-        // 	key: "swap_frames".to_string(),
-        // 	index: 0,
-        // 	genomes_required: 1,
-        // 	execute: Rc::new(
-        // 		|genomes: &[&[FramedGenomeWord]]| -> Vec<FramedGenomeWord> {
-        // 			genomes[0].iter().map(|x| *x).collect()
-        // 		},
-        // 	),
-        // },
-        // GenomeAlterationDefinition {
-        // 	key: "frames_crossover".to_string(),
-        // 	index: 0,
-        // 	genomes_required: 2,
-        // 	execute: Rc::new(
-        // 		|genomes: &[&[FramedGenomeWord]]| -> Vec<FramedGenomeWord> {
-        // 			genomes[0].iter().map(|x| *x).collect()
-        // 		},
-        // 	),
-        // },
-    ]
+                let dest_start = rng.gen_range(0..genomes[1].raw_values.len());
+                let dest_end = rng.gen_range(dest_start..genomes[1].raw_values.len());
+                vec![
+                    src_start as FramedGenomeWord,
+                    src_end as FramedGenomeWord,
+                    dest_start as FramedGenomeWord,
+                    dest_end as FramedGenomeWord,
+                ]
+            },
+        ),
+    });
+
+    alterations.push(GenomeAlterationImplementation {
+        key: "point_mutation".to_string(),
+        index: 0,
+        genomes_required: 1,
+        execute: Rc::new(
+            |genomes: &[&CompiledFramedGenome],
+             params: &[FramedGenomeWord]|
+             -> Vec<FramedGenomeWord> {
+                let mut _new = genomes[0]
+                    .raw_values
+                    .iter()
+                    .map(|x| *x)
+                    .collect::<Vec<u64>>();
+                _new[params[0] as usize] = params[1];
+                _new
+            },
+        ),
+        prepare: Rc::new(
+            |genomes: &[&CompiledFramedGenome]| -> Vec<FramedGenomeWord> {
+                let mut rng = rand::thread_rng();
+                vec![
+                    rng.gen_range(0..genomes[0].raw_values.len())
+                        .try_into()
+                        .unwrap(),
+                    get_random_genome_word(),
+                ]
+            },
+        ),
+    });
+    alterations.push(GenomeAlterationImplementation {
+        key: "point_mutation_in_channel".to_string(),
+        index: 0,
+        genomes_required: 1,
+        execute: Rc::new(
+            |genomes: &[&CompiledFramedGenome],
+             params: &[FramedGenomeWord]|
+             -> Vec<FramedGenomeWord> {
+                let idx = params[0] as usize;
+                let channel = params[1];
+                let val = params[2];
+
+                let mut _new = genomes[0].clone();
+
+                _new.raw_values[idx] = merge_value_into_word(
+                    _new.raw_values[idx],
+                    val as FramedGenomeValue,
+                    channel as u8,
+                );
+
+                _new.raw_values
+            },
+        ),
+        prepare: Rc::new(
+            |genomes: &[&CompiledFramedGenome]| -> Vec<FramedGenomeWord> {
+                let mut rng = rand::thread_rng();
+                vec![
+                    rng.gen_range(0..genomes[0].raw_values.len())
+                        .try_into()
+                        .unwrap(),
+                    rng.gen_range(0..NUM_CHANNELS).try_into().unwrap(),
+                    get_random_genome_value() as FramedGenomeWord,
+                ]
+            },
+        ),
+    });
+    alterations
+    // GenomeAlterationDefinition {
+    // 	key: "swap_frames".to_string(),
+    // 	index: 0,
+    // 	genomes_required: 1,
+    // 	execute: Rc::new(
+    // 		|genomes: &[&[FramedGenomeWord]]| -> Vec<FramedGenomeWord> {
+    // 			genomes[0].iter().map(|x| *x).collect()
+    // 		},
+    // 	),
+    // },
+    // GenomeAlterationDefinition {
+    // 	key: "frames_crossover".to_string(),
+    // 	index: 0,
+    // 	genomes_required: 2,
+    // 	execute: Rc::new(
+    // 		|genomes: &[&[FramedGenomeWord]]| -> Vec<FramedGenomeWord> {
+    // 			genomes[0].iter().map(|x| *x).collect()
+    // 		},
+    // 	),
+    // },
 }
 
 // const ALTERATION_TYPE_COUNT: usize = 7;
@@ -316,18 +336,53 @@ pub fn default_alterations() -> Vec<GenomeAlterationImplementation> {
 // 	FramesCrossover(usize, usize, usize, usize),
 // }
 pub mod tests {
+    use crate::biology::genome::framed::common::{CompiledFramedGenome, FramedGenomeWord};
+
     use super::{default_alterations, CompiledAlterationSet};
 
     pub fn get_alterations() -> CompiledAlterationSet {
         CompiledAlterationSet::new(default_alterations())
     }
+
+    fn fake_compiled(raw_values: Vec<FramedGenomeWord>) -> CompiledFramedGenome {
+        CompiledFramedGenome {
+            raw_size: raw_values.len(),
+            raw_values,
+            frames: vec![],
+        }
+    }
+
+    #[test]
+    pub fn test_insertion() {
+        let alteration = get_alterations().alteration_for_key("insertion");
+        let genome1 = fake_compiled(vec![1, 2, 3, 4, 5]);
+
+        let genomes = vec![&genome1];
+        let params = vec![3, 1337];
+        let result = (alteration.execute)(&genomes, &params);
+
+        assert_eq!(result.to_vec(), vec![1, 2, 3, 1337, 4, 5]);
+    }
+
+    #[test]
+    pub fn test_point_mutation() {
+        let alteration = get_alterations().alteration_for_key("point_mutation");
+        let genome1 = fake_compiled(vec![1, 2, 3, 4, 5]);
+
+        let genomes = vec![&genome1];
+        let params = vec![3, 1337];
+        let result = (alteration.execute)(&genomes, &params);
+
+        assert_eq!(result.to_vec(), vec![1, 2, 3, 1337, 5]);
+    }
+
     #[test]
     pub fn test_crossover() {
         let alteration = get_alterations().alteration_for_key("crossover");
-        let genome1 = vec![1, 2, 3, 4, 5];
-        let genome2 = vec![9, 8, 7];
+        let genome1 = fake_compiled(vec![1, 2, 3, 4, 5]);
+        let genome2 = fake_compiled(vec![9, 8, 7]);
 
-        let genomes = vec![genome1, genome2];
+        let genomes = vec![&genome1, &genome2];
         let params = vec![1, 3, 1, 2];
         let result = (alteration.execute)(&genomes, &params);
 
@@ -341,13 +396,11 @@ pub mod tests {
     }
     pub fn test_point_mutation_in_channel() {
         let alteration = get_alterations().alteration_for_key("point_mutation_in_channel");
-        let genome1 = vec![1, 2, 0x123, 4, 5];
-        let genomes = vec![genome1];
+        let genome1 = fake_compiled(vec![1, 2, 0x123, 4, 5]);
+        let genomes = vec![&genome1];
         let params = vec![3, 0, 100];
         let result = (alteration.execute)(&genomes, &params);
         assert_eq!(result.to_vec(), vec![1, 2, 3, 0x123, 5]);
-
-        //
 
         let params = vec![3, 1, 0xaaa];
 

@@ -120,7 +120,7 @@ impl SimpleExperimentLogger {
         let mut s = String::new();
 
         for entry in entries {
-            let genome = &entry.genome;
+            let genome = &entry.raw_genome;
             for i in 0..genome.len() {
                 if i == genome.len() - 1 {
                     s.push_str(&format!("{}", &genome[i]));
@@ -216,8 +216,9 @@ impl SimpleExperimentLogger {
         });
 
         for entry in sorted_entries.iter() {
-            let genome_str = FramedGenomeCompiler::compile(entry.genome.clone(), genetic_manifest)
-                .display(genetic_manifest);
+            let genome_str =
+                FramedGenomeCompiler::compile(entry.raw_genome.clone(), genetic_manifest)
+                    .display(genetic_manifest);
 
             s.push_str(&format!(
                 "{}------------------ (f: {})",
@@ -225,10 +226,10 @@ impl SimpleExperimentLogger {
                 entry.max_fitness_metric.unwrap()
             ));
             s.push_str(&genome_str);
-            s.push_str(&format!("raw_genome: {:?}\n\n", entry.genome.clone()));
+            s.push_str(&format!("raw_genome: {:?}\n\n", entry.raw_genome.clone()));
             s.push_str(&format!(
                 "raw_genome_length: {}\n",
-                entry.genome.clone().len()
+                entry.raw_genome.clone().len()
             ));
             s.push_str(&format!("\n\n\n\n"));
         }
