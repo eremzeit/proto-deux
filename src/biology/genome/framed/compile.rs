@@ -76,7 +76,7 @@ impl<'a> FramedGenomeCompiler<'a> {
 
     pub fn new(values: Vec<FramedGenomeWord>, genetic_manifest: &'a GeneticManifest) -> Self {
         let raw_frames = RawFrameParser::parse(values);
-        println!("raw frames: {:?}", &raw_frames);
+        // println!("raw frames: {:?}", &raw_frames);
 
         Self {
             genetic_manifest,
@@ -203,10 +203,10 @@ impl<'a> FramedGenomeCompiler<'a> {
     pub fn compile_gene(&mut self) -> Option<Gene> {
         let gene_start_address = self.get_global_val_index(self.current_frame, self.idx);
 
-        println!(
-            "COMPILING GENE... (index: {:?}, frame: {}, channel: {})",
-            &self.idx, &self.current_frame, &self.current_channel,
-        );
+        // println!(
+        //     "COMPILING GENE... (index: {:?}, frame: {}, channel: {})",
+        //     &self.idx, &self.current_frame, &self.current_channel,
+        // );
         let predicate = self.compile_disjunctive_predicate();
         let operation = self.compile_operation();
 

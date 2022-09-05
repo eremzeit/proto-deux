@@ -1,5 +1,6 @@
 pub mod predicates;
 use std::rc::Rc;
+use std::sync::Arc;
 
 use serde::{Deserialize, Serialize};
 
@@ -26,11 +27,11 @@ use super::unit_behavior::framed::PhenotypeRegisterValue;
  */
 #[derive(Clone)]
 pub struct GeneticManifest {
-    pub chemistry_manifest: Rc<ChemistryManifest>,
+    pub chemistry_manifest: Arc<ChemistryManifest>,
 
-    pub sensor_manifest: Rc<SensorManifest>,
+    pub sensor_manifest: Arc<SensorManifest>,
 
-    pub operator_manifest: Rc<OperatorManifest>,
+    pub operator_manifest: Arc<OperatorManifest>,
 
     /**
      * question: what ultimately should determine this?  should this be defined by the chemistry?
@@ -67,12 +68,12 @@ impl GeneticManifest {
         local_property_sensors: LocalPropertySensorManifest,
     ) -> Self {
         Self {
-            sensor_manifest: Rc::new(SensorManifest::new(
+            sensor_manifest: Arc::new(SensorManifest::new(
                 &chemistry_manifest,
                 &local_property_sensors,
             )),
-            chemistry_manifest: Rc::new(chemistry_manifest),
-            operator_manifest: Rc::new(OperatorManifest::default_operators()),
+            chemistry_manifest: Arc::new(chemistry_manifest),
+            operator_manifest: Arc::new(OperatorManifest::default_operators()),
             number_of_registers: 5,
         }
     }

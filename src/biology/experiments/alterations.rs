@@ -312,7 +312,7 @@ pub fn default_alterations() -> Vec<GenomeAlterationImplementation> {
                 };
 
                 let mut genome = genomes[0].raw_values.clone();
-
+                
                 let earlier_vals = get_from_range(&genome, earlier_frame);
                 let later_vals = get_from_range(&genome, later_frame);
 

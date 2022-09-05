@@ -1,4 +1,5 @@
 use crate::biology::experiments::alterations;
+use crate::biology::experiments::variants::utils::get_data_dir;
 use crate::biology::unit_behavior::framed::common::*;
 use crate::simulation::common::*;
 use crate::{
@@ -13,9 +14,7 @@ use std::fs::OpenOptions;
 use std::io::Write;
 use std::path::{Path, PathBuf};
 
-use super::utils::{
-    get_data_dir, ExperimentSimSettings, GenomeExperimentEntry, SimpleExperimentSettings,
-};
+use super::utils::{ExperimentSimSettings, GenomeExperimentEntry, SimpleExperimentSettings};
 
 const DATA_DIR_NAME: &str = "data";
 
@@ -247,6 +246,10 @@ where
 {
     let mut values = items.iter().map(|i| f(i)).collect::<Vec<_>>();
     values.sort();
+
+    if values.is_empty() {
+        return vec![];
+    }
 
     let mut result: Vec<R> = vec![];
     for p in percentiles.iter() {

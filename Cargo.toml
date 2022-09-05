@@ -30,3 +30,4 @@ piston2d-opengl_graphics = "0.81.0"
 
 ron = "0.8"
 serde = {version = "1.0.144", features = ["derive"]}
+threadpool = "1.8.1"

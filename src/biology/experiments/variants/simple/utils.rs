@@ -19,6 +19,10 @@ use super::logger::LoggingSettings;
  */
 pub type ExperimentGenomeUid = usize;
 
+/**
+ * Stores the current offset of this genome in the genome entries table.  That table
+ * changes so this is a value of ephemeral semantics.
+ */
 pub type GenomeEntryId = usize;
 
 #[derive(Serialize, Deserialize)]
@@ -47,7 +51,7 @@ pub struct GenomeExperimentEntry {
 //     }
 // }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Clone, Serialize, Deserialize)]
 pub struct ExperimentSimSettings {
     pub num_simulation_ticks: u64,
     pub grid_size: (usize, usize),
@@ -90,26 +94,3 @@ pub struct SimpleExperimentSettings {
 //         pub gm: GeneticManifest,
 //     }
 // }
-
-const DATA_DIR_NAME: &str = "data";
-
-pub fn get_data_dir() -> PathBuf {
-    find_folder::Search::Parents(1)
-        .for_folder(DATA_DIR_NAME)
-        .expect("cant find data dir")
-        .to_path_buf()
-}
-
-pub fn get_experiments_dir() -> PathBuf {
-    let mut dir = get_data_dir();
-    dir.push("experiments");
-    dir
-}
-
-pub fn get_exp_genomes_dir(exp_key: &str) -> PathBuf {
-    let mut dir = get_data_dir();
-    dir.push("experiments");
-    dir.push(exp_key);
-    dir.push("genomes");
-    dir
-}

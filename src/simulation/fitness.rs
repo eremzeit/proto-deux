@@ -38,14 +38,14 @@ pub fn default_fitness_calculators() -> Vec<FitnessCalculationDefinition> {
 
 pub fn calculate_fitness(
     // fitnessDef: &FitnessCalculationDefinition,
-    fitnessDefKey: &String,
+    fitness_def_key: &String,
     unit_entry_id: usize,
     sim: &SimCell,
 ) -> FitnessScore {
     let calculators = default_fitness_calculators();
     let fitnessDef = calculators
         .iter()
-        .find(|x| &x.key == fitnessDefKey)
+        .find(|x| &x.key == fitness_def_key)
         .unwrap();
     (fitnessDef.execute)(unit_entry_id, sim)
 }

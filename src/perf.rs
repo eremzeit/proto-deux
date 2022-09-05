@@ -44,7 +44,7 @@ pub static PERF_TIMER: Lazy<Mutex<TimerCache>> = Lazy::new(|| Mutex::new(TimerCa
 #[macro_export]
 macro_rules! perf_timer_start {
     ($x:expr) => {{
-        if cfg!(not(test)) {
+        if cfg!(all(perf_test, not(test))) {
             use crate::perf::perf_timer_start;
             perf_timer_start($x);
         }
@@ -54,7 +54,7 @@ macro_rules! perf_timer_start {
 #[macro_export]
 macro_rules! perf_timer_stop {
     ($x:expr) => {{
-        if cfg!(not(test)) {
+        if cfg!(all(perf_test, not(test))) {
             use crate::perf::perf_timer_stop;
             perf_timer_stop($x);
         }
@@ -64,7 +64,7 @@ macro_rules! perf_timer_stop {
 #[macro_export]
 macro_rules! perf_timers_print {
     () => {{
-        if cfg!(not(test)) {
+        if cfg!(all(perf_test, not(test))) {
             use crate::perf::perf_timer_print;
             perf_timer_print();
         }

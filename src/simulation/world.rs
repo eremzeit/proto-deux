@@ -132,7 +132,7 @@ impl World {
         let unit = Unit {
             resources,
             attributes,
-            entry_id: unit_entry.id,
+            entry_id: unit_entry.unit_entry_id,
             id: self.last_unit_id,
             coord: coord.clone(),
             last_update_tick: 0,

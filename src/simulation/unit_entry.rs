@@ -29,7 +29,7 @@ impl UnitManifest {
         let mut units: Vec<UnitEntry> = entries.clone();
 
         for i in (0..entries.len()) {
-            units[i].info.id = i as usize;
+            units[i].info.unit_entry_id = i as usize;
         }
 
         UnitManifest { units }
@@ -37,7 +37,7 @@ impl UnitManifest {
 
     pub fn init_manifest(&mut self) {
         for i in (0..self.units.len()) {
-            self.units[i].info.id = i;
+            self.units[i].info.unit_entry_id = i;
         }
     }
 }
@@ -61,7 +61,8 @@ impl UnitEntry {
                 default_unit_attributes: None,
                 default_resources: None,
                 default_entry_attributes: None,
-                id: 0,
+                unit_entry_id: 0,
+                external_id: 0,
             },
 
             behavior: unit_behavior,
@@ -115,7 +116,8 @@ pub struct UnitEntryData {
     pub default_entry_attributes: Option<UnitEntryAttributes>,
     pub default_unit_attributes: Option<UnitAttributes>,
     pub default_resources: Option<UnitResources>,
-    pub id: UnitEntryId,
+    pub unit_entry_id: UnitEntryId,
+    pub external_id: usize,
 }
 
 impl UnitEntryData {
@@ -124,8 +126,9 @@ impl UnitEntryData {
             species_name: species_name.to_string(),
             default_unit_attributes: None,
             default_resources: None,
-            id: 0,
+            unit_entry_id: 0,
             default_entry_attributes: None,
+            external_id: 0,
         }
     }
 }
@@ -144,6 +147,7 @@ pub mod builder {
         pub default_entry_attributes: Vec<(String, UnitEntryAttributeValue)>,
         pub place_units_method: Option<PlaceUnitsMethod>,
         pub id: UnitEntryId,
+        pub external_id: usize,
     }
 
     impl UnitEntryBuilder {
@@ -172,11 +176,12 @@ pub mod builder {
 
             unit_entry::UnitEntry {
                 info: UnitEntryData {
-                    id: 0,
+                    unit_entry_id: 0,
                     species_name: self.species_name.unwrap().clone(),
                     default_unit_attributes: compiled_attr,
                     default_resources: compiled_res,
                     default_entry_attributes: compiled_entry_attr,
+                    external_id: self.external_id.unwrap_or(0),
                 },
 
                 behavior: self.behavior.unwrap(),

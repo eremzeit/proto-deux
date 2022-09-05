@@ -33,6 +33,7 @@ pub fn alterations() -> CompiledAlterationSet {
         "deletion".to_string(),
         "crossover".to_string(),
         "random_region_insert".to_string(),
+        // "swap_frames".to_string(), // might have a bug
     ])
 }
 

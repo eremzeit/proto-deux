@@ -1,4 +1,5 @@
 pub mod logger;
+pub mod runner;
 pub mod serialize;
 pub mod utils;
 
@@ -16,10 +17,13 @@ use crate::{
 use rand::Rng;
 use std::fmt::{Debug, Formatter, Result};
 use std::ops::{Add, Div};
+use std::sync::mpsc;
 use std::time::Duration;
+use threadpool::ThreadPool;
 
 use self::logger::SimpleExperimentLogger;
-use self::utils::SimpleExperimentSettings;
+use self::runner::ExperimentSimRunner;
+use self::utils::{GenomeEntryId, SimpleExperimentSettings};
 use crate::biology::genome::framed::samples;
 
 macro_rules! is_experiment_logging_enabled {
@@ -29,7 +33,6 @@ macro_rules! is_experiment_logging_enabled {
     };
 }
 
-#[macro_export]
 macro_rules! explog {
     ($($arg:tt)*) => ({
         if is_experiment_logging_enabled!() {println!($($arg)*)} else {}
@@ -42,7 +45,7 @@ pub struct SimpleExperiment {
     pub genome_entries: Vec<GenomeExperimentEntry>,
     pub current_tick: u64,
 
-    pub settings: SimpleExperimentSettings,
+    pub settings: Rc<SimpleExperimentSettings>,
     pub _last_entry_id: usize,
 
     _gm: Rc<GeneticManifest>, // a cached copy.  note that this might eventually change depending on the genome.
@@ -60,16 +63,16 @@ impl SimpleExperiment {
             });
 
         let chemistry = settings.sim_settings.chemistry_options.build();
-        let gm = GeneticManifest::from_chemistry(&chemistry).wrap_rc();
+        let gm = GeneticManifest::from_chemistry(&chemistry);
         SimpleExperiment {
             current_tick: 0,
             is_paused: true,
             is_initialized: false,
             genome_entries: vec![],
-            settings,
+            settings: Rc::new(settings),
             _last_entry_id: 0,
 
-            _gm: gm,
+            _gm: Rc::new(gm),
             _logger: logger,
             _seed_genomes: None,
         }
@@ -137,6 +140,13 @@ impl SimpleExperiment {
 
         self._last_entry_id = genome_entry.uid;
 
+        if self
+            .genome_entries
+            .iter()
+            .any(|e| e.uid == genome_entry.uid)
+        {
+            panic!("uid is duplicated");
+        }
         self.genome_entries.push(genome_entry);
     }
 
@@ -182,7 +192,7 @@ impl SimpleExperiment {
         self.genome_entries[min_i].uid
     }
 
-    pub fn partition_into_groups(&mut self) -> Vec<Vec<ExperimentGenomeUid>> {
+    pub fn partition_into_groups(&mut self) -> Vec<Vec<(GenomeEntryId, ExperimentGenomeUid)>> {
         // explog!(
         //     "partitioning uids: {:?}",
         //     self.genome_entries
@@ -193,7 +203,7 @@ impl SimpleExperiment {
         let num_genomes = self.genome_entries.len();
         let group_size = self.settings.sim_settings.num_genomes_per_sim;
 
-        let mut entries_by_fitness = self.genome_entries.clone();
+        let mut entries_by_fitness = self.genome_entries.clone(); // inefficient
         entries_by_fitness.sort_by_cached_key(|entry| entry.current_rank_score);
 
         let mut partitions = vec![];
@@ -221,12 +231,15 @@ impl SimpleExperiment {
                 for i in (0..group_size) {
                     // count backwards from the end of the genome list. ie. some genomes will get included in two groups
                     let genome_idx = num_genomes - 1 - i;
-                    group.insert(0, entries_by_fitness[genome_idx].uid);
-                    // group.push(entries_by_fitness[genome_idx].uid);
+                    let uid = entries_by_fitness[genome_idx].uid;
+                    let idx = self._find_by_uid(uid).unwrap();
+                    group.insert(0, (idx, uid));
                 }
             } else {
                 for i in (0..group_size) {
-                    group.push(entries_by_fitness[genome_idx].uid);
+                    let uid = entries_by_fitness[genome_idx].uid;
+                    let idx = self._find_by_uid(uid).unwrap();
+                    group.push((idx, uid));
                     genome_idx += 1;
                 }
             }
@@ -249,24 +262,28 @@ impl SimpleExperiment {
     //     s
     // }
 
-    pub fn _get_unit_entries_for_uids(&mut self, uids: &[ExperimentGenomeUid]) -> Vec<UnitEntry> {
+    pub fn _get_unit_entries_for_uids(
+        &self,
+        entry_ids: &[(GenomeEntryId, ExperimentGenomeUid)],
+    ) -> Vec<UnitEntry> {
         let mut unit_entries = vec![];
         let mut count = 0;
 
         let cm = &self._gm.chemistry_manifest;
-        for uid in uids {
+        for (entry_idx, uid) in entry_ids {
             perf_timer_start!("building_unit_entries");
-            let maybe_idx = self._find_by_uid(*uid);
-            let idx = maybe_idx.unwrap();
+            // let maybe_idx = self._find_by_uid(*uid);
+            // let idx = maybe_idx.unwrap();
 
-            let genome = self.genome_entries[idx].compiled_genome.clone();
+            let genome = self.genome_entries[*entry_idx].compiled_genome.clone();
 
-            let gm = self._gm.clone();
+            let gm = self._gm.as_ref().clone();
             let unit_entry = UnitEntryBuilder::default()
                 .species_name(format!("species: {}", count))
-                .behavior(FramedGenomeUnitBehavior::new(genome, gm.clone()).construct())
+                .behavior(FramedGenomeUnitBehavior::new(genome, Rc::new(gm)).construct())
                 .default_resources(self.settings.sim_settings.default_unit_resources.clone())
                 .default_attributes(self.settings.sim_settings.default_unit_attr.clone())
+                .external_id(*entry_idx)
                 .build(cm);
             perf_timer_stop!("building_unit_entries");
 
@@ -278,17 +295,17 @@ impl SimpleExperiment {
     }
 
     pub fn run_evaluation_for_uids(
-        &mut self,
-        genome_uids: &Vec<ExperimentGenomeUid>,
+        &self,
+        genome_ids: &Vec<(GenomeEntryId, ExperimentGenomeUid)>,
     ) -> Vec<TrialResultItem> {
         let chemistry = self.settings.sim_settings.chemistry_options.build();
 
         perf_timer_start!("get_unit_entries");
-        let unit_entries = self._get_unit_entries_for_uids(genome_uids.as_slice());
+        let unit_entries = self._get_unit_entries_for_uids(genome_ids.as_slice());
 
         perf_timer_stop!("get_unit_entries");
 
-        explog!("EVAL fitness for genomes: {:?}", genome_uids);
+        explog!("EVAL fitness for genomes: {:?}", genome_ids);
 
         perf_timer_start!("sim_build");
         let mut sim = SimulationBuilder::default()
@@ -316,36 +333,40 @@ impl SimpleExperiment {
         perf_timer_start!("experiment_fitness_tally");
         let mut fitness_scores = vec![];
         let mut unit_entries = executor.simulation.unit_manifest.units.clone();
-        unit_entries.sort_by_cached_key(|entry| entry.info.id);
+        // unit_entries.sort_by_cached_key(|entry| entry.info.id);
+
         // println!(
         //     "unit_entries after sim: {:?}",
         //     unit_entries
         //         .iter()
-        //         .map(|entry| entry.info.clone())
+        //         .enumerate()
+        //         .map(|(i, entry)| (i, entry.info.id))
         //         .collect::<Vec<_>>()
         // );
 
-        assert_eq!(unit_entries.len(), genome_uids.len());
+        assert_eq!(unit_entries.len(), genome_ids.len());
 
-        for (i, entry) in unit_entries.iter().enumerate() {}
-
-        for i in (0..genome_uids.len()) {
+        for i in (0..genome_ids.len()) {
             let entry = &unit_entries[i];
-            let sim_unit_entry_id = entry.info.id;
-            let genome_uid = genome_uids[i as usize];
-            let genome_idx = self._find_by_uid(genome_uid).unwrap();
+            let entry_idx = entry.info.external_id;
+            let (genome_idx, genome_uid) = genome_ids[i as usize];
 
-            let mut genome_entry = &mut self.genome_entries[genome_idx];
-            genome_entry.num_evaluations += 1;
+            // if sim_unit_entry_id != genome_idx {
+            //     panic!("assumption failed: {}, {}", sim_unit_entry_id, genome_idx);
+            // }
 
+            // let mut genome_entry = &mut self.genome_entries[genome_idx];
+            // genome_entry.num_evaluations += 1;
+            // entry.info.
             // println!("fitness key: {}", self.settings.fitness_calculation_key);
             let mut fitness_score = calculate_fitness(
                 &self.settings.fitness_calculation_key,
-                entry.info.id,
+                entry.info.unit_entry_id,
                 &mut executor.simulation.editable(),
             );
 
-            let penalty_pct = if genome_entry.raw_genome.len() > 5000 {
+            // println!("fitness: {:?}", fitness_score);
+            let penalty_pct = if self.genome_entries[genome_idx].compiled_genome.raw_size > 5000 {
                 // (genome_entry.genome.len() as f64 / 4.0) as f64
                 0.10
             } else {
@@ -355,7 +376,7 @@ impl SimpleExperiment {
             fitness_score = ((fitness_score as f64) * (1.0 - penalty_pct)) as u64;
 
             let resultItem = TrialResultItem {
-                sim_unit_entry_id,
+                sim_unit_entry_id: entry.info.unit_entry_id,
                 experiment_genome_uid: genome_uid,
                 genome_idx,
                 fitness_score,
@@ -415,9 +436,15 @@ impl SimpleExperiment {
         let mut sorted_result = fitness_result.clone();
         sorted_result.sort_by_cached_key(|x| x.fitness_score);
 
+        // println!("processing fitness result: {:?}", fitness_result);
+
+        // self.print_fitness_summary();
+
         for (result_rank, fitness_result_item) in sorted_result.iter().enumerate() {
-            let our_genome_idx = fitness_result_item.genome_idx;
             let our_genome_uid = fitness_result_item.experiment_genome_uid;
+            let __our_genome_idx = fitness_result_item.genome_idx;
+            let our_genome_idx = self._find_by_uid(our_genome_uid).unwrap();
+
             let our_fitness_score = fitness_result_item.fitness_score;
 
             let mut max_fitness = self.genome_entries[our_genome_idx]
@@ -431,6 +458,7 @@ impl SimpleExperiment {
             }
 
             self.genome_entries[our_genome_idx].max_fitness_metric = Some(max_fitness);
+            self.genome_entries[our_genome_idx].num_evaluations += 1;
 
             push_into_with_max(
                 &mut self.genome_entries[our_genome_idx].last_fitness_metrics,
@@ -570,7 +598,13 @@ impl SimpleExperiment {
         by_rank.sort_by_cached_key(|entry| entry.current_rank_score);
         by_rank[i].uid
     }
-    fn _find_by_uid(&self, uid: usize) -> Option<usize> {
+    fn _find_by_uid(&self, uid: ExperimentGenomeUid) -> Option<usize> {
+        //aoeu
+        let count = self.genome_entries.iter().filter(|e| e.uid == uid).count();
+        if count > 1 {
+            panic!("duplicate");
+        }
+
         for i in (0..self.genome_entries.len()) {
             if self.genome_entries[i].uid == uid {
                 return Some(i);
@@ -612,8 +646,9 @@ impl SimpleExperiment {
     fn print_fitness_summary(&self) {
         let mut entries = self.genome_entries.clone();
         entries.sort_by_cached_key(|entry| entry.current_rank_score);
-        let summary = entries.iter().map(|entry| {
+        let summary = entries.iter().enumerate().map(|(idx, entry)| {
             (
+                entry.uid,
                 entry.current_rank_score,
                 entry.max_fitness_metric,
                 entry.last_fitness_metrics.clone(),
@@ -621,8 +656,12 @@ impl SimpleExperiment {
         });
 
         for line in summary {
-            println!("<{}> max: {:?}, recent:{:?}", &line.0, &line.1, &line.2);
+            println!(
+                "[uid: {}] <{}> max: {:?}, recent:{:?}",
+                &line.0, &line.1, &line.2, line.3,
+            );
         }
+        println!("");
     }
 
     fn _highest_fitness_idx(&self) -> usize {
@@ -638,8 +677,8 @@ impl SimpleExperiment {
 
     pub fn scramble_groups(
         &self,
-        mut groups: Vec<Vec<ExperimentGenomeUid>>,
-    ) -> Vec<Vec<ExperimentGenomeUid>> {
+        mut groups: Vec<Vec<(GenomeEntryId, ExperimentGenomeUid)>>,
+    ) -> Vec<Vec<(GenomeEntryId, ExperimentGenomeUid)>> {
         if groups.len() == 0 || groups[0].len() == 0 {
             return groups;
         }
@@ -674,6 +713,49 @@ impl SimpleExperiment {
         groups
     }
 
+    pub fn run_eval_for_groups(
+        &self,
+        groups: Vec<Vec<(GenomeEntryId, ExperimentGenomeUid)>>,
+    ) -> Vec<Vec<TrialResultItem>> {
+        let (tx, rx) = mpsc::channel();
+        let pool = ThreadPool::new(3);
+
+        for i in 0..groups.len() {
+            // println!("starting job");
+            let chemistry_builder = self.settings.sim_settings.chemistry_options.clone();
+            let entries = groups[i]
+                .iter()
+                .map(|(entry_idx, uid)| {
+                    // let entry_idx = self._find_by_uid(*uid).unwrap();
+                    let entry = &self.genome_entries[*entry_idx];
+                    (*entry_idx, *uid, entry.compiled_genome.as_ref().clone())
+                })
+                .collect::<Vec<_>>();
+
+            // println!(
+            //     "entries: {:?}",
+            //     entries.iter().map(|e| (e.0, e.1)).collect::<Vec<_>>()
+            // );
+
+            let sim_settings = self.settings.sim_settings.clone();
+            let fitness_key = self.settings.fitness_calculation_key.clone();
+
+            let tx = tx.clone();
+            pool.execute(move || {
+                let mut runner =
+                    ExperimentSimRunner::new(chemistry_builder, entries, sim_settings, fitness_key);
+
+                let result = runner.run_evaluation_for_uids();
+                tx.send(result)
+                    .expect("channel will be there waiting for the pool");
+            });
+        }
+
+        rx.iter()
+            .take(groups.len())
+            .collect::<Vec<Vec<TrialResultItem>>>()
+    }
+
     pub fn tick(&mut self) {
         // if self.current_tick == 98 {
         //     self.inject_special_genome();
@@ -686,16 +768,21 @@ impl SimpleExperiment {
         explog!("groups: {:?}", &groups);
         perf_timer_stop!("experiment_partition");
 
-        perf_timer_start!("experiment_sim_eval");
-        for group in groups {
-            // std::thread::sleep(Duration::from_millis(1));
-            let fitness_result = self.run_evaluation_for_uids(&group);
-            // println!("fitness_scores: {:?}", fitness_result);
-            perf_timer_start!("adjust_ranks");
+        // perf_timer_start!("experiment_sim_eval");
+        // perf_timer_stop!("experiment_sim_eval");
+
+        let group_results = self.run_eval_for_groups(groups);
+        for fitness_result in group_results.iter() {
             self.update_genomes_with_fitness_result(&fitness_result);
-            perf_timer_stop!("adjust_ranks");
         }
-        perf_timer_stop!("experiment_sim_eval");
+
+        // perf_timer_start!("adjust_ranks");
+        // perf_timer_stop!("adjust_ranks");
+
+        // for group in groups {
+        //     let fitness_result = self.run_evaluation_for_uids(&group);
+        //     self.update_genomes_with_fitness_result(&fitness_result);
+        // }
 
         if self.current_tick > 0 && self.current_tick % 2000 == 0 {
             println!("num genomes: {}", self.genome_entries.len());
@@ -886,8 +973,19 @@ pub mod tests {
 
         let flattened = groups.iter().flatten().map(|x| *x).collect::<Vec<_>>();
         assert_eq!(flattened.len(), num_genomes + 1); //because the genome count isn't a multiple of the group size, there's double inclusion
-        assert_eq!(flattened, vec![4, 3, 2, 1, 1, 0]);
-        assert_eq!(groups, vec![vec![4, 3], vec![2, 1], vec![1, 0]]);
+
+        assert_eq!(
+            flattened,
+            vec![(0, 4), (1, 3), (2, 2), (3, 1), (3, 1), (4, 0)]
+        );
+        assert_eq!(
+            groups,
+            vec![
+                vec![(0, 4), (1, 3)],
+                vec![(2, 2), (3, 1)],
+                vec![(3, 1), (4, 0)]
+            ]
+        );
     }
 
     #[test]

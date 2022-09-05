@@ -6,16 +6,17 @@ use std::{
 };
 
 use crate::{
-    biology::unit_behavior::framed::FramedGenomeUnitBehavior, simulation::common::UnitManifest,
+    biology::{
+        experiments::variants::utils::{get_exp_genomes_dir, get_experiments_dir},
+        unit_behavior::framed::FramedGenomeUnitBehavior,
+    },
+    simulation::common::UnitManifest,
     unit_entry::builder::UnitEntryBuilder,
 };
 
 use crate::{
     biology::{
-        experiments::variants::simple::utils::{
-            get_exp_genomes_dir, get_experiments_dir, ExperimentSimSettings,
-            SimpleExperimentSettings,
-        },
+        experiments::variants::simple::utils::{ExperimentSimSettings, SimpleExperimentSettings},
         genetic_manifest::GeneticManifestData,
         genome::framed::{
             builders::FramedGenomeCompiler,
