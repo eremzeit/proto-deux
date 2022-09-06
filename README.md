@@ -2,11 +2,15 @@
 
 Protomolecule is an general purpose engine for executing and evolving agents in a discreet 2D environment with arbitrary rulesets.
 
-Some important definitions,
+![image](https://user-images.githubusercontent.com/1264533/188751481-42473ddd-b1df-4157-9d98-3ddf1b3eb278.png)
+
+
+### Basic definitions
+
 - A simulation is one instance of the 2D grid, along with a chemistry specifications.
 - Each location in the grid is called a position. 
 - Each instance of an agent is called a unit.
-- A chemistry is a custom struct and implementation that implements the Chemistry trait, which among other things defines a list of existing
+- A chemistry is a custom struct and implementation that implements the Chemistry trait, which among other things defines a list of existing...
   - UnitAttributes (eg can_move)
   - UnitResources (eg. cheese)
   - PositionAttributes (eg. cheese_source)
@@ -55,7 +59,7 @@ pub mod defs {
             reagent!("gobble_cheese"),
         ),
 
-        reaction!("move_unit",  // move_unit means: subject the movement cost and the move the unit
+        reaction!("move_unit",  // move_unit means... subtract the movement cost and the move the unit
             reagent!("offset_unit_resource", // moving costs the unit resource cheese
                 constant_arg!(UnitResourceKey, "cheese"),
                 chemistry_arg!(UnitResourceAmount, move_cost), // this amount is configurable on a per-simulation basis
