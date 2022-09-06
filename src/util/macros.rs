@@ -244,7 +244,7 @@ macro_rules! chemistry_arg {
 }
 
 #[macro_export]
-macro_rules! param_value {
+macro_rules! constant_arg {
     ($x:ident, $val:expr) => {
         ActionParam::$x($val)
     };

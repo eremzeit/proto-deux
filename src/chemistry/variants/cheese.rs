@@ -62,9 +62,8 @@ pub struct CheeseChemistry {
 }
 
 pub mod defs {
-    use super::*;
-
     const CHEMISTRY_KEY: &str = "cheese";
+    use super::*;
 
     def_unit_entry_attributes! {[
         [total_cheese_consumed, Number]
@@ -103,9 +102,9 @@ pub mod defs {
 
         reaction!("move_unit",
             reagent!("offset_unit_resource",
-                param_value!(UnitResourceKey, "cheese"),
+                constant_arg!(UnitResourceKey, "cheese"),
                 chemistry_arg!(UnitResourceAmount, move_cost),
-                param_value!(Boolean, false),
+                constant_arg!(Boolean, false),
             ),
             reagent!("move_unit",
                 unit_behavior_arg!(Direction)
@@ -114,9 +113,9 @@ pub mod defs {
 
         reaction!("new_unit",
             reagent!("offset_unit_resource",
-                param_value!(UnitResourceKey, "cheese"),
+                constant_arg!(UnitResourceKey, "cheese"),
                 chemistry_arg!(UnitResourceAmount, new_unit_cost),
-                param_value!(Boolean, false),
+                constant_arg!(Boolean, false),
             ),
             reagent!("new_unit",
                 unit_behavior_arg!(Direction),
