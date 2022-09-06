@@ -2,9 +2,6 @@
 
 Protomolecule is an general purpose engine for executing and evolving agents in a discreet 2D environment with arbitrary rulesets.
 
-![image](https://user-images.githubusercontent.com/1264533/188751481-42473ddd-b1df-4157-9d98-3ddf1b3eb278.png)
-
-
 ### Basic definitions
 
 - A simulation is one instance of the 2D grid, along with a chemistry specifications.
@@ -13,12 +10,18 @@ Protomolecule is an general purpose engine for executing and evolving agents in 
 - A chemistry is a custom struct and implementation that implements the Chemistry trait, which among other things defines a list of existing...
   - UnitAttributes (eg can_move)
   - UnitResources (eg. cheese)
-  - PositionAttributes (eg. cheese_source)
+  - PositionAttributes (eg. is_cheese_source)
   - PositionResources (eg. cheese)
   - Reactions: these are the possible actions that a unit can execute to cause a change in the world (eg. move_unit, eat_food, make_new_unit) 
 - Each reaction is a list of sub-actions (ie. "reagents", "actions") that execute but require parameters to be passed, either by the chemistry or the unit.  Each action corresponds to a function that implements that desired behavior.  
 - Each position instance has its own set of PositionAttributes and PositionResources.
 - Each unit instance has its own set of UnitAttributes and UnitResources.
+
+### Example screenshot
+
+![image](https://user-images.githubusercontent.com/1264533/188751481-42473ddd-b1df-4157-9d98-3ddf1b3eb278.png)
+
+The above screenshot is a simple example using the very simple Cheese chemistry in which agents just move around, collect cheese, and reproduce.  In this rendering, red circles are the units.  Green squares means there's cheese.
 
 ## An example chemistry
 
@@ -144,9 +147,9 @@ In evolution experiments, genomes are organized into gene pools of size N.  Each
 - [x] Long-running evolutionary experiments that demonstrate it's possible to start with random genome data and evolve into basic solutions
 - [x] Multithreaded execution
 - [x] Rendering a realtime visual grid using OpenGL
-- [] Features supporting cluster computing
-- [] More advanced chemistries that support more interesting problem spaces for agents to solve
-- [] More advanced tools and metrics used to detect and handle when evolution converges on "local maxima"
+- [ ] Features supporting cluster computing
+- [ ] More advanced chemistries that support more interesting problem spaces for agents to solve
+- [ ] More advanced tools and metrics used to detect and handle when evolution converges on "local maxima"
 
 
 
