@@ -6,12 +6,13 @@ use crate::biology::genetic_manifest::predicates::OperatorImplementation;
 pub use crate::biology::unit_behavior::framed::ParsedGenomeParam;
 use crate::chemistry::reactions::ReactionCall;
 use crate::simulation::common::*;
+use std::cell::RefCell;
 use std::fmt::{Debug, Formatter, Result};
 use std::rc::Rc;
 
 pub trait UnitBehavior {
     fn get_behavior(
-        &self,
+        &mut self,
         coord: &Coord,
         sim_attr: &SimulationAttributes,
         world: &World,
@@ -60,10 +61,10 @@ impl UnitBehaviorResult {
 pub struct NullBehavior {}
 impl UnitBehavior for NullBehavior {}
 
-pub type BoxedUnitBehavior = Rc<Box<dyn UnitBehavior>>;
+// pub type BoxedUnitBehavior = Rc<Box<dyn UnitBehavior>>;
 
 impl NullBehavior {
-    pub fn construct() -> BoxedUnitBehavior {
-        Rc::new(Box::new(Self {}))
+    pub fn construct() -> Rc<RefCell<dyn UnitBehavior>> {
+        Rc::new(RefCell::new(Self {}))
     }
 }

@@ -1,6 +1,16 @@
+#[derive(Clone)]
 pub struct FramedGenomeExecutionStats {
     pub frames: Vec<FrameExecutionStats>,
     pub eval_count: usize,
+}
+
+impl FramedGenomeExecutionStats {
+    pub fn new() -> Self {
+        Self {
+            eval_count: 0,
+            frames: vec![],
+        }
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -8,6 +18,16 @@ pub struct FrameExecutionStats {
     pub eval_count: usize,
     pub eval_true_count: usize,
     pub genes: Vec<GeneExecutionStats>,
+}
+
+impl FrameExecutionStats {
+    pub fn new() -> Self {
+        Self {
+            eval_count: 0,
+            eval_true_count: 0,
+            genes: vec![],
+        }
+    }
 }
 
 #[derive(Debug, Clone)]

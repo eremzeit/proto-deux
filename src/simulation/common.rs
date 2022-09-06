@@ -13,9 +13,7 @@ pub use super::{
 };
 
 pub use crate::biology::sensor_manifest::{SensorContext, SensorManifest};
-pub use crate::biology::unit_behavior::{
-    BoxedUnitBehavior, NullBehavior, UnitBehavior, UnitBehaviorResult,
-};
+pub use crate::biology::unit_behavior::{NullBehavior, UnitBehavior, UnitBehaviorResult};
 
 pub use crate::biology::genetic_manifest::{GeneticManifest, GeneticManifestData};
 

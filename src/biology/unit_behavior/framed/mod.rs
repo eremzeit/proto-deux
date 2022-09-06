@@ -20,6 +20,7 @@ use crate::chemistry::{ChemistryInstance, ReactionId};
 use crate::simulation::common::*;
 use crate::simulation::world::World;
 use crate::util::Coord;
+use std::cell::RefCell;
 use std::rc::Rc;
 
 pub mod common {
@@ -27,14 +28,17 @@ pub mod common {
     pub use crate::biology::unit_behavior::framed::types::*;
 }
 
+use crate::biology::genome::framed::annotated::FramedGenomeExecutionStats;
+
 pub struct FramedGenomeUnitBehavior {
     pub genome: Rc<CompiledFramedGenome>,
     pub genetic_manifest: Rc<GeneticManifest>,
+    pub execution_stats: FramedGenomeExecutionStats,
 }
 
 impl UnitBehavior for FramedGenomeUnitBehavior {
     fn get_behavior(
-        &self,
+        &mut self,
         coord: &Coord,
         sim_attr: &SimulationAttributes,
         world: &World,
@@ -52,6 +56,7 @@ impl UnitBehavior for FramedGenomeUnitBehavior {
             new_registers,
             &self.genetic_manifest,
             computation_points,
+            &mut self.execution_stats,
         );
 
         // let mut rng = rand::thread_rng();
@@ -107,11 +112,12 @@ impl FramedGenomeUnitBehavior {
         Self {
             genome,
             genetic_manifest,
+            execution_stats: FramedGenomeExecutionStats::new(),
         }
     }
 
-    pub fn construct(self) -> BoxedUnitBehavior {
-        Rc::new(Box::new(self))
+    pub fn construct(self) -> Rc<RefCell<FramedGenomeUnitBehavior>> {
+        Rc::new(RefCell::new(self))
     }
 }
 

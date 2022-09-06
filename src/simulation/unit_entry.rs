@@ -4,6 +4,7 @@ use crate::simulation::common::{
 };
 use crate::simulation::unit::util::convert_maybe_resources_to_resources;
 use std::boxed::Box;
+use std::cell::{Cell, RefCell};
 use std::rc::Rc;
 use std::sync::Arc;
 
@@ -45,7 +46,7 @@ impl UnitManifest {
 #[derive(Clone)]
 pub struct UnitEntry {
     pub info: UnitEntryData,
-    pub behavior: Rc<Box<dyn UnitBehavior>>,
+    pub behavior: Rc<RefCell<dyn UnitBehavior>>,
     /*
         technically, the unit_behavior accesses the world via sensors, which might differ by unit_entry.
         so the sensor manifest should be included in each unit_entry.
@@ -54,7 +55,7 @@ pub struct UnitEntry {
 }
 
 impl UnitEntry {
-    pub fn new(species_name: &'static str, unit_behavior: Rc<Box<dyn UnitBehavior>>) -> Self {
+    pub fn new(species_name: &'static str, unit_behavior: Rc<RefCell<dyn UnitBehavior>>) -> Self {
         Self {
             info: UnitEntryData {
                 species_name: species_name.to_string(),
@@ -140,7 +141,7 @@ pub mod builder {
     #[builder(pattern = "owned", setter(strip_option))]
     #[builder(build_fn(skip))]
     pub struct UnitEntry {
-        pub behavior: Rc<Box<dyn UnitBehavior>>,
+        pub behavior: Rc<RefCell<dyn UnitBehavior>>,
         pub species_name: String,
         pub default_attributes: Vec<(String, UnitAttributeValue)>,
         pub default_resources: Vec<(String, UnitResourceAmount)>,

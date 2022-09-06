@@ -9,7 +9,7 @@ use super::{UnitBehavior, UnitBehaviorResult};
 pub struct SimpleLever {}
 impl UnitBehavior for SimpleLever {
     fn get_behavior(
-        &self,
+        &mut self,
         coord: &Coord,
         sim_attr: &SimulationAttributes,
         world: &World,

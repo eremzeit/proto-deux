@@ -26,7 +26,7 @@ where
 pub struct SmartMouse {}
 impl UnitBehavior for SmartMouse {
     fn get_behavior(
-        &self,
+        &mut self,
         coord: &Coord,
         sim_attr: &SimulationAttributes,
         world: &World,

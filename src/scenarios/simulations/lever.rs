@@ -14,6 +14,7 @@ use crate::simulation::common::variants::LeverChemistry;
 use crate::simulation::common::*;
 use crate::simulation::config::*;
 use crate::simulation::executors::threaded::ThreadedSimulationExecutor;
+use std::cell::RefCell;
 use std::rc::Rc;
 
 pub fn basic(sim_args: &SimulationRunnerArgs) -> SimulationBuilder {
@@ -48,5 +49,5 @@ pub fn with_genome(sim_args: &SimulationRunnerArgs) -> SimulationBuilder {
 pub fn get_unit_entries_for_lever() -> Vec<UnitEntryBuilder> {
     vec![UnitEntryBuilder::default()
         .species_name("main".to_string())
-        .behavior(Rc::new(Box::new(SimpleLever::construct())))]
+        .behavior(Rc::new(RefCell::new(SimpleLever::construct())))]
 }

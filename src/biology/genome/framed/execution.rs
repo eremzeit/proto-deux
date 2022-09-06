@@ -1,3 +1,5 @@
+use super::annotated::{FrameExecutionStats, FramedGenomeExecutionStats};
+use crate::biology::genome::framed::render::render_gene;
 use chemistry::reactions::ReactionCallParam;
 
 use crate::biology::genetic_manifest::predicates::{
@@ -43,10 +45,9 @@ pub struct GenomeExecutionContext<'a> {
 
     pub sensor_context: &'a SensorContext<'a>,
     pub registers: PhenotypeRegisters,
-    // pub register_changes: PhenotypeRegisterChanges,
-}
 
-use crate::biology::genome::framed::render::render_gene;
+    pub stats: &'a mut FramedGenomeExecutionStats,
+}
 
 impl<'a> GenomeExecutionContext<'a> {
     pub fn new(
@@ -55,6 +56,7 @@ impl<'a> GenomeExecutionContext<'a> {
         registers: PhenotypeRegisters,
         gm: &'a GeneticManifest,
         compute_points: u64,
+        stats: &'a mut FramedGenomeExecutionStats,
     ) -> Self {
         Self {
             genetic_manifest: gm,
@@ -65,10 +67,12 @@ impl<'a> GenomeExecutionContext<'a> {
             registers,
             consumed_compute_points: 0,
             allotted_compute_points: compute_points,
+            stats,
         }
     }
 
     pub fn execute(&mut self) -> Vec<ReactionCall> {
+        self.stats.eval_count += 1;
         let mut reactions = vec![];
         while self.current_frame < self.frames.len()
             && self.consumed_compute_points < self.allotted_compute_points
@@ -85,8 +89,21 @@ impl<'a> GenomeExecutionContext<'a> {
         reactions
     }
 
+    // pub fn execute_frame(&mut self) -> Option<ReactionCall> {
+
+    //     let result = self._execute_frame();
+    //     result
+    // }
     pub fn execute_frame(&mut self) -> Option<ReactionCall> {
+        // self.stats.frames.push(FrameExecutionStats::new());
+
+        {
+            let frame_stats = &mut self.stats.frames[self.current_frame];
+            frame_stats.eval_count += 1;
+        }
+
         let frame = &self.frames[self.current_frame];
+
         let channel = self.override_channel.unwrap_or(frame.default_channel) % NUM_CHANNELS as u8;
 
         let genes = &frame.channels[channel as usize];
@@ -99,6 +116,11 @@ impl<'a> GenomeExecutionContext<'a> {
             }
             // println!("executing conditional: {:?}", &cond);
             let cond_result = self.execute_conditional(&cond);
+            self.stats.frames[self.current_frame].genes[i].eval_count += 1;
+
+            if cond_result {
+                self.stats.frames[self.current_frame].genes[i].eval_true_count += 1;
+            }
 
             if cond_result {
                 let op = &gene.operation;
@@ -260,7 +282,10 @@ impl<'a> GenomeExecutionContext<'a> {
 
 pub mod tests {
     use crate::{
-        biology::unit_behavior::framed::GenomeExecutionContext,
+        biology::{
+            genome::framed::annotated::FramedGenomeExecutionStats,
+            unit_behavior::framed::GenomeExecutionContext,
+        },
         simulation::common::{
             helpers::place_units::PlaceUnitsMethod, properties::CheeseChemistry,
             variants::FooChemistry, Chemistry, ChemistryConfiguration, ChemistryInstance,
@@ -327,8 +352,15 @@ pub mod tests {
         let sim = sim_builder(chemistry).to_simulation();
         let sensor_context = SensorContext::from(&sim.world, &sim.attributes, &(1, 1));
 
-        let mut execution =
-            GenomeExecutionContext::new(&compiled.frames, &sensor_context, registers, &gm, 10000);
+        let mut stats = FramedGenomeExecutionStats::new();
+        let mut execution = GenomeExecutionContext::new(
+            &compiled.frames,
+            &sensor_context,
+            registers,
+            &gm,
+            10000,
+            &mut stats,
+        );
         let result = execution.execute();
 
         println!("execution: {:?}", result);
@@ -382,8 +414,15 @@ pub mod tests {
         let sim = sim_builder(chemistry).to_simulation();
         let sensor_context = SensorContext::from(&sim.world, &sim.attributes, &(1, 1));
 
-        let mut execution =
-            GenomeExecutionContext::new(&compiled.frames, &sensor_context, registers, &gm, 10000);
+        let mut stats = FramedGenomeExecutionStats::new();
+        let mut execution = GenomeExecutionContext::new(
+            &compiled.frames,
+            &sensor_context,
+            registers,
+            &gm,
+            10000,
+            &mut stats,
+        );
         let result = execution.execute();
 
         println!("execution: {:?}", result);
@@ -448,8 +487,15 @@ pub mod tests {
         let sim = sim_builder(chemistry).to_simulation();
         let sensor_context = SensorContext::from(&sim.world, &sim.attributes, &(1, 1));
 
-        let mut execution =
-            GenomeExecutionContext::new(&compiled.frames, &sensor_context, registers, &gm, 10000);
+        let mut stats = FramedGenomeExecutionStats::new();
+        let mut execution = GenomeExecutionContext::new(
+            &compiled.frames,
+            &sensor_context,
+            registers,
+            &gm,
+            10000,
+            &mut stats,
+        );
         let result = execution.execute();
 
         println!("execution: {:?}", result);

@@ -180,6 +180,8 @@ impl Chemistry for LeverChemistry {
 }
 
 mod tests {
+    use std::cell::RefCell;
+
     #[allow(unused_imports)]
     use super::*;
     use crate::biology::unit_behavior::lever::SimpleLever;
@@ -194,7 +196,7 @@ mod tests {
             .chemistry(ChemistryBuilder::with_key("lever").build())
             .unit_entries(vec![UnitEntryBuilder::default()
                 .species_name("main".to_string())
-                .behavior(Rc::new(Box::new(SimpleLever::construct())))])
+                .behavior(Rc::new(RefCell::new(SimpleLever::construct())))])
             .size((1, 1))
             .iterations(10)
             .to_simulation();

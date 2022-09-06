@@ -46,11 +46,12 @@ pub fn behavior_execution(sim: &mut SimCell) {
         sim.world.set_unit_last_update_tick(&coord, sim.world.tick);
 
         let entry = &sim.unit_manifest.units[entry_id];
-
-        let result =
-            entry
-                .behavior
-                .get_behavior(&coord, &sim.attributes, &sim.world, sim.chemistry);
+        let result = entry.behavior.borrow_mut().get_behavior(
+            &coord,
+            &sim.attributes,
+            &sim.world,
+            sim.chemistry,
+        );
 
         // chemistry.consume_execution_points(result.consumed_execution_points);
 

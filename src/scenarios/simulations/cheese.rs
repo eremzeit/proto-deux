@@ -12,6 +12,7 @@ use crate::simulation::common::helpers::place_units::PlaceUnitsMethod;
 use crate::simulation::common::*;
 use crate::simulation::config::*;
 use crate::simulation::executors::threaded::ThreadedSimulationExecutor;
+use std::cell::RefCell;
 use std::rc::Rc;
 
 pub fn basic(sim_args: &SimulationRunnerArgs) -> SimulationBuilder {
@@ -73,6 +74,6 @@ pub fn with_genome(sim_args: &SimulationRunnerArgs) -> SimulationBuilder {
 pub fn get_unit_entries_for_cheese() -> Vec<UnitEntryBuilder> {
     vec![UnitEntryBuilder::default()
         .species_name("main".to_string())
-        .behavior(Rc::new(Box::new(SimpleMouse::construct())))
+        .behavior(Rc::new(RefCell::new(SimpleMouse::construct())))
         .default_resources(vec![("cheese".to_owned(), 200)])]
 }

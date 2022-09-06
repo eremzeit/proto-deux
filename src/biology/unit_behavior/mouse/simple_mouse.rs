@@ -12,7 +12,7 @@ use rand::Rng;
 pub struct SimpleMouse {}
 impl UnitBehavior for SimpleMouse {
     fn get_behavior(
-        &self,
+        &mut self,
         coord: &Coord,
         sim_attr: &SimulationAttributes,
         world: &World,
