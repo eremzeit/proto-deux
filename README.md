@@ -2,6 +2,10 @@
 
 Protomolecule is an general purpose engine for executing and evolving agents in a discreet 2D environment with arbitrary rulesets.
 
+The goal?  I want to open-endedly evolve a diverse set of agents that demonstrate the qualities of "aliveness".
+
+The codebase is in alpha and will probably change as I work out the special sauce of the evolutionary algorithm.
+
 ### Basic definitions
 
 - A simulation is one instance of the 2D grid, along with a chemistry specifications.
