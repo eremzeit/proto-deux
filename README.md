@@ -6,6 +6,20 @@ The goal?  I want to open-endedly evolve a diverse set of agents that demonstrat
 
 The codebase is in alpha and will probably change as I work out the special sauce of the evolutionary algorithm.
 
+### Current status
+
+- [x] Simulation execution
+- [x] A few simple chemistries included for debugging (ie. cheese chemistry)
+- [x] Genome compilation from binary data and rendering as readable text
+- [x] Long-running evolutionary experiments that demonstrate it's possible to start with random genome data and evolve into basic solutions
+- [x] Multithreaded execution
+- [x] Rendering a realtime visual grid using OpenGL
+- [ ] Features supporting cluster computing
+- [ ] More advanced chemistries that support more interesting problem spaces for agents to solve
+- [ ] More advanced tools and metrics used to detect and handle when evolution converges on "local maxima"
+
+
+
 ### Basic definitions
 
 - A simulation is one instance of the 2D grid, along with a chemistry specifications.
@@ -140,20 +154,6 @@ CALL move_unit(Constant(2)) IF (is_truthy(pos_attr::is_cheese_source(0, 0)) && i
 # Genome Evolution
 
 In evolution experiments, genomes are organized into gene pools of size N.  Each iteration of the experiment, some subset of the genomes are selected to compete in a single simulation.  Based on the fitness results of that simulation, the genome rank scores are adjusted.  Then some subset of genomes are selected to be eliminated and other genomes copy but are modified via some genome alteration (eg. point insertion, point deletion, crossover, random region insertion).  Then the next iteration begins.  Through the principle of survival of the fittest, the gene pool over time evolves towards increasing fitness scores.  
-
-
-# Current status
-
-
-- [x] Simulation execution
-- [x] A few simple chemistries for debugging (ie. cheese chemistry)
-- [x] Genome compilation from binary data and rendering as readable text
-- [x] Long-running evolutionary experiments that demonstrate it's possible to start with random genome data and evolve into basic solutions
-- [x] Multithreaded execution
-- [x] Rendering a realtime visual grid using OpenGL
-- [ ] Features supporting cluster computing
-- [ ] More advanced chemistries that support more interesting problem spaces for agents to solve
-- [ ] More advanced tools and metrics used to detect and handle when evolution converges on "local maxima"
 
 
 
