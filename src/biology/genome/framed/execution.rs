@@ -58,7 +58,9 @@ impl<'a> GenomeExecutionContext<'a> {
         compute_points: u64,
         stats: &'a mut FramedGenomeExecutionStats,
     ) -> Self {
+        stats.initialize(frames);
         Self {
+            stats: stats,
             genetic_manifest: gm,
             frames,
             sensor_context,
@@ -67,12 +69,12 @@ impl<'a> GenomeExecutionContext<'a> {
             registers,
             consumed_compute_points: 0,
             allotted_compute_points: compute_points,
-            stats,
         }
     }
 
     pub fn execute(&mut self) -> Vec<ReactionCall> {
-        self.stats.eval_count += 1;
+        self.stats.mark_eval();
+
         let mut reactions = vec![];
         while self.current_frame < self.frames.len()
             && self.consumed_compute_points < self.allotted_compute_points
@@ -83,52 +85,49 @@ impl<'a> GenomeExecutionContext<'a> {
                 reactions.push(result.unwrap());
                 return reactions; // ie. we can have only one reaction, for right now
             }
+
             self.current_frame += 1;
         }
 
         reactions
     }
 
-    // pub fn execute_frame(&mut self) -> Option<ReactionCall> {
-
-    //     let result = self._execute_frame();
-    //     result
-    // }
     pub fn execute_frame(&mut self) -> Option<ReactionCall> {
-        // self.stats.frames.push(FrameExecutionStats::new());
-
-        {
-            let frame_stats = &mut self.stats.frames[self.current_frame];
-            frame_stats.eval_count += 1;
-        }
-
         let frame = &self.frames[self.current_frame];
 
-        let channel = self.override_channel.unwrap_or(frame.default_channel) % NUM_CHANNELS as u8;
+        let channel =
+            (self.override_channel.unwrap_or(frame.default_channel) % NUM_CHANNELS as u8) as usize;
+
+        self.stats.frames[self.current_frame].mark_eval();
+        self.stats.frames[self.current_frame].channels[channel].mark_eval();
 
         let genes = &frame.channels[channel as usize];
+
+        let frame_channel_idx = (self.current_frame, channel as usize);
 
         'gene_loop: for (i, gene) in genes.iter().enumerate() {
             let cond = &gene.conditional;
 
+            self.stats.frames[self.current_frame].channels[channel].genes[i].mark_eval();
+
             if self.consumed_compute_points > self.allotted_compute_points {
                 return None;
             }
+
             // println!("executing conditional: {:?}", &cond);
-            let cond_result = self.execute_conditional(&cond);
-            self.stats.frames[self.current_frame].genes[i].eval_count += 1;
+            let cond_result = self.execute_conditional(&cond, &frame_channel_idx, i);
 
             if cond_result {
-                self.stats.frames[self.current_frame].genes[i].eval_true_count += 1;
-            }
+                self.stats.frames[self.current_frame].mark_eval_true();
+                self.stats.frames[self.current_frame].channels[channel].mark_eval_true();
+                self.stats.frames[self.current_frame].channels[channel].genes[i].mark_eval_true();
 
-            if cond_result {
                 let op = &gene.operation;
                 let _result = self.evaluate_gene_operation_call(op);
                 if let Some(result) = _result {
                     match result {
                         ExecutableGeneOperation::ReactionCall(reaction_call) => {
-                            return Some(reaction_call)
+                            return Some(reaction_call);
                         }
                         ExecutableGeneOperation::JumpAheadFrames(frames) => {
                             self.current_frame += frames as usize;
@@ -199,25 +198,74 @@ impl<'a> GenomeExecutionContext<'a> {
         }
     }
 
-    pub fn execute_conditional(&mut self, conditional: &Disjunction) -> bool {
+    pub fn execute_conditional(
+        &mut self,
+        conditional: &Disjunction,
+        frame_and_channel_idx: &(usize, usize),
+        gene_idx: usize,
+    ) -> bool {
+        self.stats.frames[frame_and_channel_idx.0].channels[frame_and_channel_idx.1].genes
+            [gene_idx]
+            .conditional
+            .mark_eval();
+
         let mut or_result = false;
         let is_negated = conditional.is_negated;
 
-        for disjunctive in &conditional.conjunctive_clauses {
-            let is_negated = disjunctive.is_negated;
+        // loop OR sub-expressions
+        for (i, conjunctive) in conditional.conjunctive_clauses.iter().enumerate() {
+            self.stats.frames[frame_and_channel_idx.0].channels[frame_and_channel_idx.1].genes
+                [gene_idx]
+                .conditional
+                .conjunctive_clauses[i]
+                .mark_eval();
+
+            let is_negated = conjunctive.is_negated;
             let mut and_result = true;
-            for bool_expr in &disjunctive.boolean_variables {
+
+            // loop AND sub-expressions
+            'and_loop: for (bool_idx, bool_expr) in conjunctive.boolean_variables.iter().enumerate()
+            {
+                self.stats.frames[frame_and_channel_idx.0].channels[frame_and_channel_idx.1].genes
+                    [gene_idx]
+                    .conditional
+                    .conjunctive_clauses[i]
+                    .bool_conditionals[bool_idx]
+                    .mark_eval();
+
                 if !self.execute_boolean(bool_expr) {
-                    and_result = false
+                    and_result = false;
+                    break 'and_loop;
+                } else {
+                    self.stats.frames[frame_and_channel_idx.0].channels[frame_and_channel_idx.1]
+                        .genes[gene_idx]
+                        .conditional
+                        .conjunctive_clauses[i]
+                        .bool_conditionals[bool_idx]
+                        .mark_eval_true();
                 }
             }
 
             if and_result ^ is_negated {
                 or_result = true;
+                self.stats.frames[frame_and_channel_idx.0].channels[frame_and_channel_idx.1].genes
+                    [gene_idx]
+                    .conditional
+                    .conjunctive_clauses[i]
+                    .mark_eval_true();
+                break; // break early
             }
         }
 
-        or_result ^ is_negated
+        if or_result ^ is_negated {
+            self.stats.frames[frame_and_channel_idx.0].channels[frame_and_channel_idx.1].genes
+                [gene_idx]
+                .conditional
+                .mark_eval_true();
+            true
+        } else {
+            false
+        }
     }
     pub fn eval_param(&mut self, parsed_param: &ParsedGenomeParam) -> i32 {
         use rand::Rng;
@@ -353,6 +401,7 @@ pub mod tests {
         let sensor_context = SensorContext::from(&sim.world, &sim.attributes, &(1, 1));
 
         let mut stats = FramedGenomeExecutionStats::new();
+
         let mut execution = GenomeExecutionContext::new(
             &compiled.frames,
             &sensor_context,

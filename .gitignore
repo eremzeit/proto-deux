@@ -8,7 +8,7 @@ Cargo.lock
 **/*.rs.bk
 .idea
 
-data/
+data/*
 
 .DS_Store
 
