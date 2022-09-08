@@ -105,6 +105,8 @@ impl<'a> GenomeExecutionContext<'a> {
 
         let frame_channel_idx = (self.current_frame, channel as usize);
 
+        let mut has_evaluated_to_true = false;
+
         'gene_loop: for (i, gene) in genes.iter().enumerate() {
             let cond = &gene.conditional;
 
@@ -118,9 +120,13 @@ impl<'a> GenomeExecutionContext<'a> {
             let cond_result = self.execute_conditional(&cond, &frame_channel_idx, i);
 
             if cond_result {
-                self.stats.frames[self.current_frame].mark_eval_true();
-                self.stats.frames[self.current_frame].channels[channel].mark_eval_true();
+                if !has_evaluated_to_true {
+                    self.stats.frames[self.current_frame].mark_eval_true();
+                    self.stats.frames[self.current_frame].channels[channel].mark_eval_true();
+                }
+
                 self.stats.frames[self.current_frame].channels[channel].genes[i].mark_eval_true();
+                has_evaluated_to_true = true;
 
                 let op = &gene.operation;
                 let _result = self.evaluate_gene_operation_call(op);
@@ -206,18 +212,18 @@ impl<'a> GenomeExecutionContext<'a> {
     ) -> bool {
         self.stats.frames[frame_and_channel_idx.0].channels[frame_and_channel_idx.1].genes
             [gene_idx]
-            .conditional
+            .disjunction_expression
             .mark_eval();
 
         let mut or_result = false;
         let is_negated = conditional.is_negated;
 
         // loop OR sub-expressions
-        for (i, conjunctive) in conditional.conjunctive_clauses.iter().enumerate() {
+        for (conjunction_idx, conjunctive) in conditional.conjunctive_clauses.iter().enumerate() {
             self.stats.frames[frame_and_channel_idx.0].channels[frame_and_channel_idx.1].genes
                 [gene_idx]
-                .conditional
-                .conjunctive_clauses[i]
+                .disjunction_expression
+                .conjunctive_expressions[conjunction_idx]
                 .mark_eval();
 
             let is_negated = conjunctive.is_negated;
@@ -228,8 +234,8 @@ impl<'a> GenomeExecutionContext<'a> {
             {
                 self.stats.frames[frame_and_channel_idx.0].channels[frame_and_channel_idx.1].genes
                     [gene_idx]
-                    .conditional
-                    .conjunctive_clauses[i]
+                    .disjunction_expression
+                    .conjunctive_expressions[conjunction_idx]
                     .bool_conditionals[bool_idx]
                     .mark_eval();
 
@@ -239,8 +245,8 @@ impl<'a> GenomeExecutionContext<'a> {
                 } else {
                     self.stats.frames[frame_and_channel_idx.0].channels[frame_and_channel_idx.1]
                         .genes[gene_idx]
-                        .conditional
-                        .conjunctive_clauses[i]
+                        .disjunction_expression
+                        .conjunctive_expressions[conjunction_idx]
                         .bool_conditionals[bool_idx]
                         .mark_eval_true();
                 }
@@ -250,8 +256,8 @@ impl<'a> GenomeExecutionContext<'a> {
                 or_result = true;
                 self.stats.frames[frame_and_channel_idx.0].channels[frame_and_channel_idx.1].genes
                     [gene_idx]
-                    .conditional
-                    .conjunctive_clauses[i]
+                    .disjunction_expression
+                    .conjunctive_expressions[conjunction_idx]
                     .mark_eval_true();
                 break; // break early
             }
@@ -260,7 +266,7 @@ impl<'a> GenomeExecutionContext<'a> {
         if or_result ^ is_negated {
             self.stats.frames[frame_and_channel_idx.0].channels[frame_and_channel_idx.1].genes
                 [gene_idx]
-                .conditional
+                .disjunction_expression
                 .mark_eval_true();
             true
         } else {
@@ -481,6 +487,16 @@ pub mod tests {
         assert_eq!(execution.registers[0], 100);
         assert_eq!(execution.registers[1], 1337);
         assert_eq!(execution.override_channel, Some(1));
+
+        assert_eq!(execution.stats.eval_count.get(), 1);
+        assert_eq!(execution.stats.frames[0].channels[0].eval_count.get(), 1);
+        assert_eq!(execution.stats.frames[0].channels[1].eval_count.get(), 0);
+        assert_eq!(execution.stats.frames[1].channels[1].eval_count.get(), 1);
+
+        assert_eq!(
+            execution.stats.frames[0].channels[0].eval_true_count.get(),
+            1
+        );
     }
 
     #[test]
@@ -492,15 +508,19 @@ pub mod tests {
             frame(
                 vec![
                     gene(
-                        if_any(vec![if_all(vec![conditional!(is_truthy, 1)])]),
+                        if_any(vec![
+                            if_all(vec![conditional!(false)]),
+                            if_all(vec![conditional!(true)]),
+                            if_all(vec![conditional!(false)]),
+                        ]),
                         then_do!(set_register, 0, 100),
                     ),
                     gene(
-                        if_any(vec![if_all(vec![conditional!(is_truthy, 1)])]),
+                        if_any(vec![if_all(vec![conditional!(true)])]),
                         then_do!(jump_ahead_frames, 1),
                     ),
                     gene(
-                        if_any(vec![if_all(vec![conditional!(is_truthy, 1)])]),
+                        if_any(vec![if_all(vec![conditional!(true)])]),
                         then_do!(set_register, 0, 101),
                     ),
                 ],
@@ -553,5 +573,41 @@ pub mod tests {
         assert_eq!(execution.registers[0], 100);
         assert_eq!(execution.registers[1], 1337);
         assert_ne!(execution.registers[2], 13);
+
+        assert_eq!(execution.stats.eval_count.get(), 1);
+        assert_eq!(execution.stats.frames[0].eval_count.get(), 1);
+        assert_eq!(
+            execution.stats.frames[0].channels[0].genes[0]
+                .disjunction_expression
+                .conjunctive_expressions[0]
+                .eval_true_count
+                .get(),
+            0
+        );
+        assert_eq!(
+            execution.stats.frames[0].channels[0].genes[0]
+                .disjunction_expression
+                .conjunctive_expressions[1]
+                .eval_true_count
+                .get(),
+            1
+        );
+
+        assert_eq!(
+            execution.stats.frames[0].channels[0].genes[0]
+                .disjunction_expression
+                .conjunctive_expressions[2]
+                .eval_count
+                .get(),
+            0
+        );
+        assert_eq!(
+            execution.stats.frames[0].channels[0].genes[0]
+                .disjunction_expression
+                .conjunctive_expressions[2]
+                .eval_true_count
+                .get(),
+            0
+        );
     }
 }

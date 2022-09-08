@@ -75,10 +75,24 @@ impl FramedGenomeExecutionStats {
             }
 
             gene_stats
-                .conditional
-                .conjunctive_clauses
+                .disjunction_expression
+                .conjunctive_expressions
                 .push(conjunctive_clause);
         }
+    }
+
+    /**
+     * A helper for incrementing the eval_true count for the frame, channel, and gene all at once.
+     */
+    pub fn mark_gene_and_parents_eval_true(
+        &self,
+        frame_idx: usize,
+        channel_idx: usize,
+        gene_idx: usize,
+    ) {
+        self.frames[frame_idx].mark_eval_true();
+        self.frames[frame_idx].channels[channel_idx].mark_eval_true();
+        self.frames[frame_idx].channels[channel_idx].genes[gene_idx].mark_eval_true();
     }
 }
 
@@ -139,7 +153,7 @@ pub struct GeneExecutionStats {
     pub eval_count: Cell<usize>,
     pub eval_true_count: Cell<usize>,
 
-    pub conditional: DisjunctionExpressionStats,
+    pub disjunction_expression: DisjunctionExpressionStats,
 }
 
 impl GeneExecutionStats {
@@ -147,7 +161,7 @@ impl GeneExecutionStats {
         Self {
             eval_count: Cell::new(0),
             eval_true_count: Cell::new(0),
-            conditional: DisjunctionExpressionStats::new(),
+            disjunction_expression: DisjunctionExpressionStats::new(),
         }
     }
     pub fn mark_eval(&self) {
@@ -162,7 +176,7 @@ impl GeneExecutionStats {
 pub struct DisjunctionExpressionStats {
     pub eval_count: Cell<usize>, // tracked on the gene stat object
     pub eval_true_count: Cell<usize>,
-    pub conjunctive_clauses: Vec<ConjunctionExpressionStats>,
+    pub conjunctive_expressions: Vec<ConjunctionExpressionStats>,
 }
 
 impl DisjunctionExpressionStats {
@@ -170,7 +184,7 @@ impl DisjunctionExpressionStats {
         Self {
             eval_count: Cell::new(0),
             eval_true_count: Cell::new(0),
-            conjunctive_clauses: vec![],
+            conjunctive_expressions: vec![],
         }
     }
     pub fn mark_eval(&self) {
