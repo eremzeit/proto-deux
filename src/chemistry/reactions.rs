@@ -235,8 +235,8 @@ pub mod tests {
                 "foo_reaction",
                 reagent![
                     "foo_reagent",
-                    param_value!(UnitResourceIndex, 0),
-                    param_value!(UnitResourceIndex, 0),
+                    constant_arg!(UnitResourceIndex, 0),
+                    constant_arg!(UnitResourceIndex, 0),
                     unit_behavior_arg!(UnitResourceIndex)
                 ],
             ],
@@ -246,9 +246,9 @@ pub mod tests {
         assert_eq!(
             action_params,
             vec![[
-                param_value!(UnitResourceIndex, 0),
-                param_value!(UnitResourceIndex, 0),
-                param_value!(UnitResourceIndex, 10),
+                constant_arg!(UnitResourceIndex, 0),
+                constant_arg!(UnitResourceIndex, 0),
+                constant_arg!(UnitResourceIndex, 10),
             ]]
         );
     }
@@ -260,15 +260,15 @@ pub mod tests {
                 "",
                 reagent![
                     "",
-                    param_value!(UnitResourceIndex, 0),
+                    constant_arg!(UnitResourceIndex, 0),
                     unit_behavior_arg!(PositionResourceAmount),
                     unit_behavior_arg!(PositionResourceAmount)
                 ],
                 reagent![
                     "",
                     unit_behavior_arg!(PositionResourceAmount),
-                    param_value!(UnitResourceIndex, 0),
-                    param_value!(UnitResourceIndex, 0)
+                    constant_arg!(UnitResourceIndex, 0),
+                    constant_arg!(UnitResourceIndex, 0)
                 ],
             ],
             (42 /*not used*/, 1, 2, 3),
@@ -278,14 +278,14 @@ pub mod tests {
             action_params,
             vec![
                 [
-                    param_value!(UnitResourceIndex, 0),
-                    param_value!(PositionResourceAmount, 1),
-                    param_value!(PositionResourceAmount, 2),
+                    constant_arg!(UnitResourceIndex, 0),
+                    constant_arg!(PositionResourceAmount, 1),
+                    constant_arg!(PositionResourceAmount, 2),
                 ],
                 [
-                    param_value!(PositionResourceAmount, 3),
-                    param_value!(UnitResourceIndex, 0),
-                    param_value!(UnitResourceIndex, 0),
+                    constant_arg!(PositionResourceAmount, 3),
+                    constant_arg!(UnitResourceIndex, 0),
+                    constant_arg!(UnitResourceIndex, 0),
                 ],
             ]
         );

@@ -89,9 +89,9 @@ pub mod offset_unit_resource {
         sim.world
             .set_unit_resource_at(&(2, 2), unit_resources.cheese, 0);
         let params = vec![
-            param_value!(UnitResourceIndex, unit_resources.cheese),
-            param_value!(UnitResourceAmount, -10), // <-- expresses how much resources it will attempt to offset
-            param_value!(Boolean, false),
+            constant_arg!(UnitResourceIndex, unit_resources.cheese),
+            constant_arg!(UnitResourceAmount, -10), // <-- expresses how much resources it will attempt to offset
+            constant_arg!(Boolean, false),
         ];
 
         let actions = default_actions();
