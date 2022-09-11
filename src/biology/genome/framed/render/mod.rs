@@ -1,3 +1,9 @@
+pub mod with_stats;
+
+use super::annotated::{
+    ChannelExecutionStats, ConjunctionExpressionStats, DisjunctionExpressionStats,
+    FramedGenomeExecutionStats, GeneExecutionStats,
+};
 use super::types::*;
 use super::types::{BooleanVariable, Conjunction};
 use crate::biology::genetic_manifest::predicates::{
@@ -17,21 +23,11 @@ use std::fmt::{Debug, Formatter, Result};
 
 use crate::biology::unit_behavior::framed::{ParamedGeneOperationCall, ParsedGenomeParam};
 
-pub fn render_param(param: &ParsedGenomeParam, sensor_manifest: &SensorManifest) -> String {
-    match param {
-        ParsedGenomeParam::Constant(x) => format!("Constant({})", x),
-        ParsedGenomeParam::SensorLookup(sensor_id) => {
-            let sensor = &sensor_manifest.sensors[*sensor_id];
-            sensor.key.clone()
-        }
-        ParsedGenomeParam::Register(register_id) => {
-            format!("Register({})", register_id)
-        }
-        ParsedGenomeParam::Random(max_val) => {
-            format!("Random({})", max_val)
-        }
-    }
-}
+// pub struct FramedGenomeRenderer {}
+
+// impl FramedGenomeRenderer {
+//     pub fn render(genome: &CompiledFramedGenome) -> String {}
+// }
 
 pub fn render_frames(frames: &Vec<Frame>, genetic_manifest: &GeneticManifest) -> String {
     let mut s = String::new();
@@ -54,10 +50,26 @@ pub fn render_frames(frames: &Vec<Frame>, genetic_manifest: &GeneticManifest) ->
     s
 }
 
+pub fn render_param(param: &ParsedGenomeParam, sensor_manifest: &SensorManifest) -> String {
+    match param {
+        ParsedGenomeParam::Constant(x) => format!("Constant({})", x),
+        ParsedGenomeParam::SensorLookup(sensor_id) => {
+            let sensor = &sensor_manifest.sensors[*sensor_id];
+            sensor.key.clone()
+        }
+        ParsedGenomeParam::Register(register_id) => {
+            format!("Register({})", register_id)
+        }
+        ParsedGenomeParam::Random(max_val) => {
+            format!("Random({})", max_val)
+        }
+    }
+}
+
 pub fn render_genes(genes: &Vec<Gene>, genetic_manifest: &GeneticManifest) -> String {
     let mut s = String::new();
 
-    for gene in genes {
+    for (gene_i, gene) in genes.iter().enumerate() {
         let gene_str = render_gene(gene, genetic_manifest);
         s.push_str(&format!("{}\n", &gene_str));
     }

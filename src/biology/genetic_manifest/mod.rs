@@ -24,6 +24,7 @@ use super::unit_behavior::framed::PhenotypeRegisterValue;
  * Used when actually executing genomes
  *
  * This might be broken up into multiple objects... ie. those that change when the ChemistryConfig changes and those that dont
+ * Because the genetic manifest is used to compile genomes which is seperate from chemistry config.
  */
 #[derive(Clone)]
 pub struct GeneticManifest {

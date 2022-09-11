@@ -123,6 +123,10 @@ impl FrameExecutionStats {
     pub fn mark_eval_true(&self) {
         self.eval_true_count.set(self.eval_true_count.get() + 1);
     }
+
+    pub fn pct_true(&self) -> f32 {
+        self.eval_true_count.get() as f32 / self.eval_count.get() as f32
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -143,8 +147,13 @@ impl ChannelExecutionStats {
     pub fn mark_eval(&self) {
         self.eval_count.set(self.eval_count.get() + 1);
     }
+
     pub fn mark_eval_true(&self) {
         self.eval_true_count.set(self.eval_true_count.get() + 1);
+    }
+
+    pub fn pct_true(&self) -> f32 {
+        self.eval_true_count.get() as f32 / self.eval_count.get() as f32
     }
 }
 
@@ -170,6 +179,10 @@ impl GeneExecutionStats {
     pub fn mark_eval_true(&self) {
         self.eval_true_count.set(self.eval_true_count.get() + 1);
     }
+
+    pub fn pct_true(&self) -> f32 {
+        self.eval_true_count.get() as f32 / self.eval_count.get() as f32
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -190,8 +203,13 @@ impl DisjunctionExpressionStats {
     pub fn mark_eval(&self) {
         self.eval_count.set(self.eval_count.get() + 1);
     }
+
     pub fn mark_eval_true(&self) {
         self.eval_true_count.set(self.eval_true_count.get() + 1);
+    }
+
+    pub fn pct_true(&self) -> f32 {
+        self.eval_true_count.get() as f32 / self.eval_count.get() as f32
     }
 }
 
@@ -211,11 +229,17 @@ impl ConjunctionExpressionStats {
             bool_conditionals: vec![],
         }
     }
+
     pub fn mark_eval(&self) {
         self.eval_count.set(self.eval_count.get() + 1);
     }
+
     pub fn mark_eval_true(&self) {
         self.eval_true_count.set(self.eval_true_count.get() + 1);
+    }
+
+    pub fn pct_true(&self) -> f32 {
+        self.eval_true_count.get() as f32 / self.eval_count.get() as f32
     }
 }
 
@@ -236,7 +260,12 @@ impl BooleanVariableStats {
     pub fn mark_eval(&self) {
         self.eval_count.set(self.eval_count.get() + 1);
     }
+
     pub fn mark_eval_true(&self) {
         self.eval_true_count.set(self.eval_true_count.get() + 1);
+    }
+
+    pub fn pct_true(&self) -> f32 {
+        self.eval_true_count.get() as f32 / self.eval_count.get() as f32
     }
 }
