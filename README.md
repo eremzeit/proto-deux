@@ -156,6 +156,9 @@ CALL move_unit(Constant(2)) IF (is_truthy(pos_attr::is_cheese_source(0, 0)) && i
 In evolution experiments, genomes are organized into gene pools of size N.  Each iteration of the experiment, some subset of the genomes are selected to compete in a single simulation.  Based on the fitness results of that simulation, the genome rank scores are adjusted.  Then some subset of genomes are selected to be eliminated and other genomes copy but are modified via some genome alteration (eg. point insertion, point deletion, crossover, random region insertion).  Then the next iteration begins.  Through the principle of survival of the fittest, the gene pool over time evolves towards increasing fitness scores.  
 
 
+![image](https://user-images.githubusercontent.com/1264533/189597021-b7ee0e42-f89d-4787-a953-5cdc4e078d0e.png)
+Here's an example of how fitness increases even over a relatively short number of iterations.  Notice how there are long periods of stagnation with sudden increases in fitness.
+
 
 # Running 
 
