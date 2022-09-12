@@ -163,39 +163,6 @@ pub fn render_disjunction(
 
     let pct_s = stats.map_or(String::new(), |stats| display_pct(stats.pct_true()));
 
-    //  [100%] CALL move_unit(Constant(1)) IF:
-    //
-    //           [20%] NOR:
-    //               [82%] AND:
-    //                    [10%] is_truthy(pos_attr::is_cheese_source(0, 0))
-    //                    [29%] pos_attr::is_cheese_source(0,0)
-    //           [100%] NOT AND:
-    //                   [92%] is_truthy(pos_attr::is_cheese_source(0, 0))
-    //                   [28%] pos_attr::is_cheese_source(0,0)
-    //
-
-    //  [100%] CALL move_unit(Constant(1)) IF:
-    //           [20%] NOT OR:
-    //               [82%] AND:
-    //                    [10%] is_truthy(pos_attr::is_cheese_source(0, 0))
-    //                    [29%] pos_attr::is_cheese_source(0,0)
-    //
-
-    // if count == 1 {
-    //     return format!(
-    //         "{}{}{}\n",
-    //         indent,
-    //         pct_s,
-    //         render_conjunction(
-    //             &dis.conjunctive_clauses[0],
-    //             genetic_manifest,
-    //             stats.map(|stats| &stats.conjunctive_expressions[0]),
-    //             indent_level,
-    //             is_negated,
-    //         )
-    //     );
-    // }
-
     let operation_line = format!(
         "{}{}{}:\n",
         indent,
@@ -337,6 +304,26 @@ pub fn render_param(param: &ParsedGenomeParam, sensor_manifest: &SensorManifest)
     }
 }
 
+pub fn display_pct(pct: f32) -> String {
+    if pct.is_nan() {
+        return "[--%]  ".to_owned();
+    }
+
+    let truncated = (pct * 100.0) as u8;
+    let s = format!("{}", truncated);
+    let len = s.len();
+
+    if len == 2 {
+        format!("[{}%]  ", s)
+    } else {
+        format!("[{}%] ", s)
+    }
+}
+
+pub fn indent_for_level(indent_level: usize) -> String {
+    " ".repeat(indent_level * INDENT_SIZE)
+}
+
 pub mod tests {
     use chemistry::variants::CheeseChemistry;
     // use crate::biology::framed::::{frame, framed_genome};
@@ -347,86 +334,6 @@ pub mod tests {
     // use crate::biology::genome::framed::*;
     use crate::biology::unit_behavior::framed::*;
     use crate::simulation::common::*;
-
-    // #[test]
-    // pub fn render_gene__simple() {
-    //     let gene = Gene {
-    //         conditional: Disjunction {
-    //             is_negated: false,
-    //             conjunctive_clauses: vec![
-    //                 Conjunction::new(false, vec![BooleanVariable::Literal(true)]),
-    //                 Conjunction::new(
-    //                     false,
-    //                     vec![
-    //                         BooleanVariable::Literal(true),
-    //                         BooleanVariable::Literal(false),
-    //                     ],
-    //                 ),
-    //             ],
-
-    //             address_range: (0, 0),
-    //         },
-
-    //         operation: ParamedGeneOperationCall::Nil,
-
-    //         address_range: (0, 0),
-    //     };
-
-    //     let gm = GeneticManifest::from_default_chemistry_config::<CheeseChemistry>();
-
-    //     let result = render_gene(&gene, &gm);
-
-    //     assert_eq!(
-    //         result,
-    //         "CALL NilGeneOperationCall IF ( Value(true) || (Value(true) && Value(false)) )"
-    //             .to_string()
-    //     );
-    // }
-
-    //     #[test]
-    //     pub fn render_genes__simple() {
-    //         let genes: Vec<Gene> = vec![
-    //             Gene::new(
-    //                 Disjunction::new(
-    //                     false,
-    //                     vec![
-    //                         Conjunction::new(false, vec![BooleanVariable::Literal(false)]),
-    //                         Conjunction::new(false, vec![BooleanVariable::Literal(true)]),
-    //                     ],
-    //                 ),
-    //                 ParamedGeneOperationCall::Reaction((
-    //                     0,
-    //                     ParsedGenomeParam::Constant(0),
-    //                     ParsedGenomeParam::Constant(0),
-    //                     ParsedGenomeParam::Constant(0),
-    //                 )),
-    //             ),
-    //             Gene::new(
-    //                 Disjunction::new(
-    //                     false,
-    //                     vec![
-    //                         Conjunction::new(false, vec![BooleanVariable::Literal(true)]),
-    //                         Conjunction::new(false, vec![BooleanVariable::Literal(false)]),
-    //                     ],
-    //                 ),
-    //                 ParamedGeneOperationCall::Reaction((
-    //                     1,
-    //                     ParsedGenomeParam::Constant(0),
-    //                     ParsedGenomeParam::Constant(0),
-    //                     ParsedGenomeParam::Constant(0),
-    //                 )),
-    //             ),
-    //         ];
-
-    //         let gm = GeneticManifest::from_default_chemistry_config::<CheeseChemistry>();
-
-    //         let result = render_genes(&genes, &gm);
-    //         let expected = "CALL gobble_cheese() IF ( Value(false) || Value(true) )
-    // CALL move_unit(Constant(0)) IF ( Value(true) || Value(false) )\n";
-
-    //         println!("RESULT: \n{}", &result);
-    //         assert_eq!(result, expected);
-    //     }
 
     #[test]
     pub fn test_render_genes() {
@@ -616,32 +523,4 @@ CALL gobble_cheese() IF TRUE\n";
 
         assert_eq!(expected, s);
     }
-}
-
-//     pub fn render_genes(
-//         genes: &Vec<Gene>,
-//         genetic_manifest: &GeneticManifest,
-//         stats: Option<&ChannelExecutionStats>,
-//     ) -> String {
-//         render_frames_with_stats();
-//     }
-
-pub fn display_pct(pct: f32) -> String {
-    if pct.is_nan() {
-        return "[--%]  ".to_owned();
-    }
-
-    let truncated = (pct * 100.0) as u8;
-    let s = format!("{}", truncated);
-    let len = s.len();
-
-    if len == 2 {
-        format!("[{}%]  ", s)
-    } else {
-        format!("[{}%] ", s)
-    }
-}
-
-pub fn indent_for_level(indent_level: usize) -> String {
-    " ".repeat(indent_level * INDENT_SIZE)
 }
