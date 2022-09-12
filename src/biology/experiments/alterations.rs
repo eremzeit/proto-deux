@@ -10,6 +10,24 @@ pub type GenomeAlterationTypeKey = String;
 pub type ExecuteGenomeAlterationFn<A> = dyn Fn(&[&CompiledFramedGenome], &[A]) -> Vec<A>;
 pub type PrepareAlterationParamsFn<A> = dyn Fn(&[&CompiledFramedGenome]) -> Vec<A>;
 
+pub struct AlterationManifest {
+    pub alterations: Vec<GenomeAlterationImplementation>,
+}
+
+pub struct AlterationManifestEntry {
+    pub key: String,
+    pub weight: usize,
+}
+
+impl AlterationManifestEntry {
+    pub fn new(key: &str, weight: usize) -> Self {
+        Self {
+            key: key.to_owned(),
+            weight,
+        }
+    }
+}
+
 #[derive(Clone)]
 pub struct GenomeAlterationImplementation {
     pub key: String,
@@ -312,7 +330,7 @@ pub fn default_alterations() -> Vec<GenomeAlterationImplementation> {
                 };
 
                 let mut genome = genomes[0].raw_values.clone();
-                
+
                 let earlier_vals = get_from_range(&genome, earlier_frame);
                 let later_vals = get_from_range(&genome, later_frame);
 
