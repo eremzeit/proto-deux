@@ -406,7 +406,7 @@ pub mod tests {
         let sim = sim_builder(chemistry).to_simulation();
         let sensor_context = SensorContext::from(&sim.world, &sim.attributes, &(1, 1));
 
-        let mut stats = FramedGenomeExecutionStats::new();
+        let mut stats = FramedGenomeExecutionStats::empty();
 
         let mut execution = GenomeExecutionContext::new(
             &compiled.frames,
@@ -469,7 +469,7 @@ pub mod tests {
         let sim = sim_builder(chemistry).to_simulation();
         let sensor_context = SensorContext::from(&sim.world, &sim.attributes, &(1, 1));
 
-        let mut stats = FramedGenomeExecutionStats::new();
+        let mut stats = FramedGenomeExecutionStats::empty();
         let mut execution = GenomeExecutionContext::new(
             &compiled.frames,
             &sensor_context,
@@ -556,7 +556,7 @@ pub mod tests {
         let sim = sim_builder(chemistry).to_simulation();
         let sensor_context = SensorContext::from(&sim.world, &sim.attributes, &(1, 1));
 
-        let mut stats = FramedGenomeExecutionStats::new();
+        let mut stats = FramedGenomeExecutionStats::empty();
         let mut execution = GenomeExecutionContext::new(
             &compiled.frames,
             &sensor_context,

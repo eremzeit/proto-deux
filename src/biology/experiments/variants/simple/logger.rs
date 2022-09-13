@@ -1,5 +1,6 @@
 use crate::biology::experiments::alterations;
 use crate::biology::experiments::variants::utils::get_data_dir;
+use crate::biology::genome::framed::render::with_stats::render_frames_with_stats;
 use crate::biology::unit_behavior::framed::common::*;
 use crate::simulation::common::*;
 use crate::{
@@ -135,23 +136,6 @@ impl SimpleExperimentLogger {
         self._write_to_file(path, s.as_bytes(), false);
     }
 
-    // pub fn after_tick(
-    //     &self,
-    //     tick: usize,
-    //     sim_settings: &ExperimentSimSettings,
-    //     genome_entries: &Vec<GenomeExperimentEntry>,
-    //     sensor_manifest: &SensorManifest,
-    //     chemistry_manifest: &ChemistryManifest,
-    //     genetic_manifest: &GeneticManifest,
-    // ) {
-    //     if tick != 0 && tick % self.settings.checkpoint_interval == 0 {
-    //         self._log_status(tick, genome_entries, genetic_manifest);
-    //         self.log_best_genomes(tick, genome_entries, sim_settings.num_genomes_per_sim);
-    //     }
-
-    //     self._log_fitness_percentiles(tick, genome_entries);
-    // }
-
     fn _write_to_file(&self, file_path: PathBuf, buf: &[u8], append: bool) {
         // println!("append: {}", append);
         // println!("file path: {}", file_path.as_path().to_str().unwrap());
@@ -165,12 +149,23 @@ impl SimpleExperimentLogger {
         file.write_all(buf);
     }
 
+    pub fn _should_log_percentiles(tick: usize) -> bool {
+        let factor = (10.0 as f32)
+            .powf((tick as f32).log10().trunc() - 1.0)
+            .max(1.0);
+        tick % (factor as usize) == 0
+    }
+
     // log csv where each row is an iteration and each column is a fitness score
     pub fn _log_fitness_percentiles(
         &self,
         tick: usize,
         genome_entries: &Vec<GenomeExperimentEntry>,
     ) {
+        if !Self::_should_log_percentiles(tick) {
+            return;
+        }
+
         let mut path = self.get_log_dir();
         path.push("fitness.csv");
 
@@ -183,7 +178,7 @@ impl SimpleExperimentLogger {
             entry.max_fitness_metric.unwrap()
         });
 
-        let mut s = format!("({}),", tick);
+        let mut s = format!("{},", tick);
 
         for i in 0..pcts.len() {
             s.push_str(format!("{}", pcts[i]).as_str());
@@ -215,12 +210,17 @@ impl SimpleExperimentLogger {
         });
 
         for entry in sorted_entries.iter() {
-            let genome_str =
-                FramedGenomeCompiler::compile(entry.raw_genome.clone(), genetic_manifest)
-                    .display(genetic_manifest);
+            // let genome_str =
+            //     FramedGenomeCompiler::compile(entry.raw_genome.clone(), genetic_manifest)
+            //         .display(genetic_manifest);
+            let genome_str = render_frames_with_stats(
+                &entry.compiled_genome.frames,
+                genetic_manifest,
+                Some(&entry.previous_execution_stats),
+            );
 
             s.push_str(&format!(
-                "{}------------------ (f: {})",
+                "{}------------------ (f: {})\n",
                 entry.uid,
                 entry.max_fitness_metric.unwrap()
             ));
@@ -265,6 +265,8 @@ where
     result
 }
 pub mod tests {
+    use crate::biology::experiments::variants::simple::logger::SimpleExperimentLogger;
+
     use super::get_percentiles;
 
     #[test]
@@ -281,5 +283,23 @@ pub mod tests {
         assert_eq!(pcts[0], 0);
         assert_eq!(pcts[1], 49);
         assert_eq!(pcts[2], 99);
+    }
+
+    #[test]
+    pub fn test_should_log_percentiles() {
+        assert_eq!(SimpleExperimentLogger::_should_log_percentiles(1), true);
+        assert_eq!(SimpleExperimentLogger::_should_log_percentiles(10), true);
+        assert_eq!(SimpleExperimentLogger::_should_log_percentiles(101), false);
+        assert_eq!(SimpleExperimentLogger::_should_log_percentiles(100), true);
+        assert_eq!(SimpleExperimentLogger::_should_log_percentiles(1001), false);
+        assert_eq!(SimpleExperimentLogger::_should_log_percentiles(1010), false);
+        // assert_eq!(SimpleExperimentLogger::_should_log_percentiles(101), true);
+
+        // for i in 0..10000000 {
+        //     if SimpleExperimentLogger::_should_log_percentiles(i) {
+        //         print!("tick: {}\n", i);
+        //     }
+        // }
+        // panic!("");
     }
 }

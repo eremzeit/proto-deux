@@ -33,9 +33,13 @@ const INDENT_SIZE: usize = 4;
 pub fn render_frames_with_stats(
     frames: &Vec<Frame>,
     genetic_manifest: &GeneticManifest,
-    stats: Option<&FramedGenomeExecutionStats>,
+    mut stats: Option<&FramedGenomeExecutionStats>,
 ) -> String {
     let mut s = String::new();
+
+    if stats.is_some() && frames.len() != stats.unwrap().frames.len() {
+        panic!("Stats hasn't been initialized");
+    }
 
     for (frame_i, frame) in frames.iter().enumerate() {
         let pct_str = if let Some(_stats) = stats {
@@ -486,7 +490,7 @@ CALL gobble_cheese() IF TRUE\n";
             address_range: (0, 0),
         }];
 
-        let mut stats = FramedGenomeExecutionStats::new();
+        let mut stats = FramedGenomeExecutionStats::empty();
         stats.initialize(&frames);
         stats.frames[0].eval_count.set(10);
         stats.frames[0].eval_true_count.set(5);

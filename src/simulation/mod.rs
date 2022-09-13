@@ -223,7 +223,7 @@ impl Simulation {
     // }
 
     pub fn finish(&mut self) {
-        // std::thread::sleep(Duration::from_millis(1000)); // AOEU
+        // std::thread::sleep(Duration::from_millis(1000));
 
         self.chemistry.on_simulation_finish(&mut SimCell {
             attributes: &mut self.attributes,

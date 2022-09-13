@@ -1,5 +1,6 @@
 use crate::biology::experiments::alterations;
 use crate::biology::genetic_manifest::GeneticManifest;
+use crate::biology::genome::framed::annotated::FramedGenomeExecutionStats;
 use crate::biology::unit_behavior::framed::common::*;
 use crate::simulation::common::builder::ChemistryBuilder;
 use crate::simulation::common::*;
@@ -39,17 +40,8 @@ pub struct GenomeExperimentEntry {
     pub uid: ExperimentGenomeUid,
     pub current_rank_score: usize,
     pub compiled_genome: Rc<CompiledFramedGenome>,
+    pub previous_execution_stats: FramedGenomeExecutionStats,
 }
-
-// impl GenomeExperimentEntry {
-//     pub fn compile(&mut self, gm: &GeneticManifest) -> Rc<CompiledFramedGenome> {
-//         if self.compiled_genome.is_none() {
-//             self.compiled_genome = Some(FramedGenomeCompiler::compile(self.raw_genome.clone(), gm));
-//         }
-
-//         self.compiled_genome.clone().unwrap()
-//     }
-// }
 
 #[derive(Clone, Serialize, Deserialize)]
 pub struct ExperimentSimSettings {
