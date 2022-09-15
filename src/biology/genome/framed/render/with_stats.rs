@@ -33,9 +33,13 @@ const INDENT_SIZE: usize = 4;
 pub fn render_frames_with_stats(
     frames: &Vec<Frame>,
     genetic_manifest: &GeneticManifest,
-    stats: Option<&FramedGenomeExecutionStats>,
+    mut stats: Option<&FramedGenomeExecutionStats>,
 ) -> String {
     let mut s = String::new();
+
+    if stats.is_some() && frames.len() != stats.unwrap().frames.len() {
+        panic!("Stats hasn't been initialized");
+    }
 
     for (frame_i, frame) in frames.iter().enumerate() {
         let pct_str = if let Some(_stats) = stats {
@@ -58,12 +62,27 @@ pub fn render_frames_with_stats(
         s.push_str("\n");
 
         for channel in (0..4) {
-            let gene_str = render_genes(
-                &frame.channels[channel],
-                genetic_manifest,
-                stats.and_then(|stats| Some(&stats.frames[frame_i].channels[channel])),
-                2,
+            let skip_channel = stats.is_some()
+                && stats.unwrap().frames[frame_i].channels[channel]
+                    .eval_count
+                    .get()
+                    == 0;
+            println!(
+                "skipping channel? ({}, {}), {}",
+                frame_i, channel, skip_channel
             );
+
+            let gene_str = if skip_channel {
+                "".to_owned()
+            } else {
+                render_genes(
+                    &frame.channels[channel],
+                    genetic_manifest,
+                    stats.and_then(|stats| Some(&stats.frames[frame_i].channels[channel])),
+                    2,
+                )
+            };
+
             let is_default = frame.default_channel as usize == channel;
             let default_str = if is_default {
                 " (DEFAULT)".to_owned()
@@ -75,11 +94,18 @@ pub fn render_frames_with_stats(
                 display_pct(stats.frames[frame_i].channels[channel].pct_true())
             });
 
+            let skip_str = if skip_channel {
+                "(unused)".to_owned()
+            } else {
+                String::new()
+            };
+
             s.push_str(&format!(
-                "{}{}Channel #{}{}\n",
+                "{}{}Channel #{} {}{}\n",
                 indent_for_level(1),
                 pct_s,
                 channel,
+                skip_str,
                 &default_str
             ));
 
@@ -486,7 +512,7 @@ CALL gobble_cheese() IF TRUE\n";
             address_range: (0, 0),
         }];
 
-        let mut stats = FramedGenomeExecutionStats::new();
+        let mut stats = FramedGenomeExecutionStats::empty();
         stats.initialize(&frames);
         stats.frames[0].eval_count.set(10);
         stats.frames[0].eval_true_count.set(5);

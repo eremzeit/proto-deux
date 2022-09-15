@@ -2,18 +2,29 @@ use std::cell::Cell;
 
 use super::common::{Frame, Gene, NUM_CHANNELS};
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct FramedGenomeExecutionStats {
     pub frames: Vec<FrameExecutionStats>,
     pub eval_count: Cell<usize>,
 }
 
 impl FramedGenomeExecutionStats {
-    pub fn new() -> Self {
+    pub fn empty() -> Self {
         Self {
             eval_count: Cell::new(0),
             frames: vec![],
         }
+    }
+
+    pub fn new(frames: &Vec<Frame>) -> Self {
+        let mut s = Self {
+            eval_count: Cell::new(0),
+            frames: vec![],
+        };
+
+        s.initialize(frames);
+
+        s
     }
 
     pub fn mark_eval(&self) {

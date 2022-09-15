@@ -28,21 +28,20 @@ impl RateCounter {
         }
     }
 
-    pub fn inc_and_update(&mut self) {
-        //println!("inc");
-        self.count = self.count + 1;
-
+    pub fn calculate_and_print_rate(&mut self) {
         let elapsed_ms = self.last_update.elapsed().as_millis();
-        if (elapsed_ms > 5000) {
-            self.last_rate = (self.count as f64 / elapsed_ms as f64) as f64;
-            println!(
-                "rate: {:?}",
-                (self.last_rate * 1000.0, self.count, elapsed_ms)
-            );
+        self.last_rate = (self.count as f64 / elapsed_ms as f64) as f64;
+        println!(
+            "rate: {:?}",
+            (self.last_rate * 1000.0, self.count, elapsed_ms)
+        );
 
-            self.count = 0;
-            self.last_update = Instant::now();
-        }
+        self.count = 0;
+        self.last_update = Instant::now();
+    }
+
+    pub fn increment(&mut self) {
+        self.count = self.count + 1;
     }
 }
 

@@ -33,7 +33,7 @@ use crate::biology::genome::framed::annotated::FramedGenomeExecutionStats;
 pub struct FramedGenomeUnitBehavior {
     pub genome: Rc<CompiledFramedGenome>,
     pub genetic_manifest: Rc<GeneticManifest>,
-    pub execution_stats: FramedGenomeExecutionStats,
+    pub execution_stats: Rc<RefCell<FramedGenomeExecutionStats>>,
 }
 
 impl UnitBehavior for FramedGenomeUnitBehavior {
@@ -50,13 +50,15 @@ impl UnitBehavior for FramedGenomeUnitBehavior {
         let computation_points = 100;
 
         let new_registers = vec![0; 10];
+
+        let mut mut_stats = self.execution_stats.borrow_mut();
         let mut execution_context = GenomeExecutionContext::new(
             &self.genome.frames,
             &sensor_context,
             new_registers,
             &self.genetic_manifest,
             computation_points,
-            &mut self.execution_stats,
+            &mut mut_stats,
         );
 
         // let mut rng = rand::thread_rng();
@@ -73,46 +75,23 @@ impl UnitBehavior for FramedGenomeUnitBehavior {
     }
 }
 
-// pub enum ParsedGenomeParam {
-//     Constant(OperatorParam),
-//     SensorLookup(SensorId),
-//     Register(RegisterId),
-//     Random(usize)
-// }
-
-// pub fn eval_parsed_genome_param(param: &ParsedGenomeParam, coord: &Coord, world: &World, sim_attr: &SimulationAttributes, sm: &SensorManifest) -> ReactionCallParam {
-//     match param {
-//         ParsedGenomeParam::Constant(c) => {
-//             return *c as ReactionCallParam;
-//         },
-//
-//         ParsedGenomeParam::SensorLookup(sensor_id) => {
-//             let sensor = sm.sensors[*sensor_id as usize];
-//             sensor.calculate(&SensorContext {
-//                 world,
-//                 coord,
-//                 sim_attr,
-//             }).try_into().unwrap()
-//         },
-//
-//         ParsedGenomeParam::Random(max_val) => {
-//             let sensor = sm.sensors[*sensor_id as usize];
-//             sensor.calculate(&SensorContext {
-//                 world,
-//                 coord,
-//                 sim_attr,
-//             }).try_into().unwrap()
-//         },
-//
-//     }
-// }
-
 impl FramedGenomeUnitBehavior {
+    pub fn new_with_stats(
+        genome: Rc<CompiledFramedGenome>,
+        genetic_manifest: Rc<GeneticManifest>,
+        execution_stats: Rc<RefCell<FramedGenomeExecutionStats>>,
+    ) -> Self {
+        Self {
+            genome,
+            genetic_manifest,
+            execution_stats,
+        }
+    }
     pub fn new(genome: Rc<CompiledFramedGenome>, genetic_manifest: Rc<GeneticManifest>) -> Self {
         Self {
             genome,
             genetic_manifest,
-            execution_stats: FramedGenomeExecutionStats::new(),
+            execution_stats: Rc::new(RefCell::new(FramedGenomeExecutionStats::empty())),
         }
     }
 

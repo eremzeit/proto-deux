@@ -2,6 +2,7 @@ use variants::CheeseChemistry;
 
 use crate::biology::genome::framed::builders::simple_convert_into_frames;
 use crate::biology::genome::framed::builders::FramedGenomeCompiler;
+use crate::biology::genome::framed::samples::cheese::get_genome2;
 use crate::biology::genome::framed::samples::legacy;
 use crate::biology::unit_behavior::framed::FramedGenomeUnitBehavior;
 use crate::biology::unit_behavior::mouse::simple_mouse::SimpleMouse;
@@ -35,7 +36,7 @@ pub fn basic(sim_args: &SimulationRunnerArgs) -> SimulationBuilder {
         .iterations(1000)
 }
 
-pub fn with_genome(sim_args: &SimulationRunnerArgs) -> SimulationBuilder {
+pub fn with_genomes(sim_args: &SimulationRunnerArgs) -> SimulationBuilder {
     let chemistry_builder = ChemistryBuilder::with_key("cheese");
     let chemistry = chemistry_builder.build();
     let gm = GeneticManifest::from_chemistry(&chemistry).wrap_rc();
@@ -68,6 +69,29 @@ pub fn with_genome(sim_args: &SimulationRunnerArgs) -> SimulationBuilder {
         .iterations(1000)
         .unit_manifest(UnitManifest {
             units: vec![entry1, entry2],
+        })
+}
+
+pub fn with_genome2(sim_args: &SimulationRunnerArgs) -> SimulationBuilder {
+    let chemistry_builder = ChemistryBuilder::with_key("cheese");
+    let chemistry = chemistry_builder.build();
+    let gm = GeneticManifest::from_chemistry(&chemistry).wrap_rc();
+
+    use crate::biology::genome::framed::samples::cheese::get_genome1;
+    let frames1 = get_genome2(&gm);
+
+    let entry1 = UnitEntryBuilder::default()
+        .species_name("species1".to_string())
+        .behavior(FramedGenomeUnitBehavior::new(frames1, gm.clone()).construct())
+        .default_resources(vec![("cheese".to_string(), 100)])
+        .build(&chemistry_builder.manifest());
+
+    SimulationBuilder::default()
+        .chemistry(chemistry_builder.build())
+        .size((50, 30))
+        .iterations(1000)
+        .unit_manifest(UnitManifest {
+            units: vec![entry1],
         })
 }
 

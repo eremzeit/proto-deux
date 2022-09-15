@@ -93,7 +93,7 @@ impl ThreadedSimulationExecutor {
                 std::thread::sleep(target_tick_delay / divisor);
 
                 if should_tick {
-                    counter.inc_and_update();
+                    counter.increment();
                     self.simulation.tick();
                     self.last_tick = Instant::now();
                     has_initialized = true;

@@ -1,5 +1,7 @@
 use crate::biology::experiments::{alterations, fitness};
 use crate::biology::genetic_manifest::GeneticManifest;
+use crate::biology::genome::framed::annotated::FramedGenomeExecutionStats;
+use crate::biology::genome::framed::render::with_stats::render_frames_with_stats;
 use crate::biology::unit_behavior::framed::common::*;
 use crate::simulation::common::builder::ChemistryBuilder;
 use crate::simulation::common::*;
@@ -9,6 +11,7 @@ use crate::{
 use rand::Rng;
 use serde::{Deserialize, Serialize};
 use std::borrow::Cow;
+use std::cell::RefCell;
 use std::fmt::{Debug, Formatter, Result};
 use std::path::PathBuf;
 use std::time::Duration;
@@ -31,9 +34,16 @@ macro_rules! explog {
     })
 }
 
+pub struct SimRunnerGenomeEntry {
+    pub genome_idx: GenomeEntryId,
+    pub genome_uid: ExperimentGenomeUid,
+    pub genome: CompiledFramedGenome,
+    pub execution_stats: FramedGenomeExecutionStats,
+}
+
 pub struct ExperimentSimRunner {
     gm: Rc<GeneticManifest>,
-    genomes: Vec<(GenomeEntryId, ExperimentGenomeUid, CompiledFramedGenome)>,
+    genomes: Vec<SimRunnerGenomeEntry>,
     sim_settings: ExperimentSimSettings,
     chemistry_builder: ChemistryBuilder,
     fitness_calculation_key: String,
@@ -42,7 +52,7 @@ pub struct ExperimentSimRunner {
 impl ExperimentSimRunner {
     pub fn new(
         chemistry_builder: ChemistryBuilder,
-        genomes: Vec<(GenomeEntryId, ExperimentGenomeUid, CompiledFramedGenome)>,
+        genomes: Vec<SimRunnerGenomeEntry>,
         sim_settings: ExperimentSimSettings,
         fitness_calculation_key: String,
     ) -> Self {
@@ -63,10 +73,10 @@ impl ExperimentSimRunner {
     ) -> Vec<TrialResultItem> {
         let chemistry = self.chemistry_builder.build();
 
-        let unit_entries = self.get_unit_entries();
-
+        perf_timer_start!("get_unit_entries");
+        let (unit_entries, stat_entries) = self.get_unit_entries();
+        perf_timer_stop!("get_unit_entries");
         // explog!("EVAL fitness for genomes: {:?}", genome_uids);
-
         let mut sim = SimulationBuilder::default()
             .size(self.sim_settings.grid_size.clone())
             .iterations(self.sim_settings.num_simulation_ticks)
@@ -96,8 +106,13 @@ impl ExperimentSimRunner {
             let entry = &unit_entries[i];
             let sim_unit_entry_id = entry.info.unit_entry_id;
 
-            let (genome_id, genome_uid, genome) = &self.genomes[i];
+            let genome_entry = &self.genomes[i];
+            let genome_idx = genome_entry.genome_idx;
+            let genome_uid = genome_entry.genome_uid;
+            let genome = &genome_entry.genome;
+            let stats = stat_entries[i].clone();
 
+            // let (genome_id, genome_uid, genome) = &self.genomes[i];
             // println!("{:?}", executor.simulation.unit_entry_attributes);
 
             let mut fitness_score = calculate_fitness(
@@ -118,39 +133,46 @@ impl ExperimentSimRunner {
 
             let resultItem = TrialResultItem {
                 sim_unit_entry_id,
-                experiment_genome_uid: *genome_uid,
+                experiment_genome_uid: genome_uid,
                 fitness_score,
-                genome_idx: *genome_id,
+                genome_idx,
+                stats: (*stats).clone().into_inner(),
             };
             fitness_scores.push(resultItem);
         }
         fitness_scores
     }
 
-    pub fn get_unit_entries(&mut self) -> Vec<UnitEntry> {
+    pub fn get_unit_entries(
+        &mut self,
+    ) -> (Vec<UnitEntry>, Vec<Rc<RefCell<FramedGenomeExecutionStats>>>) {
         let mut unit_entries = vec![];
+        let mut stat_entries = vec![];
         let mut count = 0;
-
         let cm = &self.gm.chemistry_manifest;
-        for (id, uid, compiled_genome) in self.genomes.iter() {
+        for genome_entry in self.genomes.iter() {
+            let stats = Rc::new(RefCell::new(genome_entry.execution_stats.clone()));
+            stat_entries.push(stats.clone());
+
             let unit_entry = UnitEntryBuilder::default()
                 .species_name(format!("species: {}", count))
                 .behavior(
-                    FramedGenomeUnitBehavior::new(
-                        Rc::new(compiled_genome.clone()),
+                    FramedGenomeUnitBehavior::new_with_stats(
+                        Rc::new(genome_entry.genome.clone()),
                         Rc::new(self.gm.as_ref().clone()),
+                        stats,
                     )
                     .construct(),
                 )
                 .default_resources(self.sim_settings.default_unit_resources.clone())
                 .default_attributes(self.sim_settings.default_unit_attr.clone())
-                .external_id(*id)
+                .external_id(genome_entry.genome_idx)
                 .build(&self.gm.chemistry_manifest);
 
             unit_entries.push(unit_entry);
             count += 1;
         }
 
-        unit_entries
+        (unit_entries, stat_entries)
     }
 }

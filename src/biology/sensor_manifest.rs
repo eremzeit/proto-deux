@@ -89,7 +89,7 @@ impl SensorDefinition {
             SensorType::Random(range) => {
                 use rand::Rng;
 
-                // AOEU: this is probably slow
+                //question: is this slow?
                 let mut rng = rand::thread_rng();
                 use std::convert::TryInto;
                 rng.gen_range(range.clone()).try_into().unwrap()

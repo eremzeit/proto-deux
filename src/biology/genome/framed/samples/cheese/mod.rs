@@ -30,6 +30,50 @@ pub fn get_genome1(gm: &GeneticManifest) -> Rc<CompiledFramedGenome> {
 pub fn get_genome2_raw(gm: &GeneticManifest) -> Vec<u64> {
     genome_from_genes(vec![
         gene(
+            if_any!(if_all!(conditional!(false))),
+            then_do!(gobble_cheese),
+        ),
+        gene(
+            if_any!(if_all!(conditional!(false))),
+            then_do!(gobble_cheese),
+        ),
+        gene(
+            if_any!(if_all!(conditional!(false))),
+            then_do!(gobble_cheese),
+        ),
+        gene(
+            if_any!(if_all!(conditional!(false))),
+            then_do!(gobble_cheese),
+        ),
+        gene(
+            if_any!(if_all!(conditional!(false))),
+            then_do!(gobble_cheese),
+        ),
+        gene(
+            if_any!(if_all!(conditional!(false))),
+            then_do!(gobble_cheese),
+        ),
+        gene(
+            if_any!(if_all!(conditional!(false))),
+            then_do!(gobble_cheese),
+        ),
+        gene(
+            if_any!(if_all!(conditional!(false))),
+            then_do!(gobble_cheese),
+        ),
+        gene(
+            if_any!(if_all!(conditional!(false))),
+            then_do!(gobble_cheese),
+        ),
+        gene(
+            if_any!(if_all!(conditional!(false))),
+            then_do!(gobble_cheese),
+        ),
+        gene(
+            if_any!(if_all!(conditional!(false))),
+            then_do!(gobble_cheese),
+        ),
+        gene(
             if_any!(if_all!(conditional!(gt, pos_res::cheese, 10))),
             then_do!(gobble_cheese),
         ),

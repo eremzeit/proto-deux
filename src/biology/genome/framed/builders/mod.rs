@@ -160,7 +160,7 @@ pub fn genome_from_genes(first_channel_genes: Vec<GeneBuilder>) -> GenomeBuilder
 
             let mut current_frame = vec![];
             for gene in raw_genes.iter() {
-                if current_frame.len() + gene.len() > MAX_FRAME_LENGTH as usize {
+                if current_frame.len() + gene.len() >= MAX_FRAME_LENGTH as usize {
                     frames.push(current_frame);
                     current_frame = vec![];
                 }
