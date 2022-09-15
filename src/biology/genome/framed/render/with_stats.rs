@@ -335,8 +335,15 @@ pub fn display_pct(pct: f32) -> String {
         return "[--%]  ".to_owned();
     }
 
-    let truncated = (pct * 100.0) as u8;
-    let s = format!("{}", truncated);
+    let s = if pct == 0.0 {
+        "0".to_owned()
+    } else if pct < 0.01 {
+        format!("{:.2}", pct * 100.0)
+    } else {
+        let truncated = (pct * 100.0) as u8;
+        truncated.to_string()
+    };
+
     let len = s.len();
 
     if len == 2 {
@@ -360,6 +367,13 @@ pub mod tests {
     // use crate::biology::genome::framed::*;
     use crate::biology::unit_behavior::framed::*;
     use crate::simulation::common::*;
+
+    #[test]
+    pub fn test_display_pct() {
+        println!("{}", format!("{:.2}", 0.01));
+
+        assert_eq!(display_pct(0.0010), "[0.10%] ");
+    }
 
     #[test]
     pub fn test_render_genes() {
@@ -533,7 +547,7 @@ CALL gobble_cheese() IF TRUE\n";
         println!("{}", &s);
 
         let expected = "[50%]   ***FRAME 0:***
-    [50%]  Channel #0 (DEFAULT)
+    [50%]  Channel #0  (DEFAULT)
         [50%]  CALL move_unit(Constant(0)) IF:
             [--%]  OR:
                 [--%]  AND:
@@ -543,9 +557,9 @@ CALL gobble_cheese() IF TRUE\n";
         [50%]  CALL gobble_cheese() IF FALSE
         [50%]  CALL gobble_cheese() IF TRUE
 
-    [--%]  Channel #1
-    [--%]  Channel #2
-    [--%]  Channel #3\n";
+    [--%]  Channel #1 (unused)
+    [--%]  Channel #2 (unused)
+    [--%]  Channel #3 (unused)\n";
 
         assert_eq!(expected, s);
     }
