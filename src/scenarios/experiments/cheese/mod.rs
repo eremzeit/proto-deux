@@ -57,8 +57,8 @@ pub fn simple_experiment(runner_args: ExperimentRunnerArgs) -> SimpleExperiment 
             chemistry_options: chemistry_builder,
         },
 
-        // iterations: 200,
-        iterations: 100000000,
+        iterations: 10001,
+        // iterations: 100000000,
         alteration_set: alterations(),
         experiment_key: runner_args.experiment_name_key.to_string(),
         logging_settings: Some(LoggingSettings {

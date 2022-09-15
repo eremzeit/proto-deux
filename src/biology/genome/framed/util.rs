@@ -80,7 +80,7 @@ pub fn identify_raw_param_string(str_param: &String, gm: &GeneticManifest) -> Pa
             .trim_end_matches(")")
             .to_string();
 
-        println!("RANDOM: {}, {}, {}", &str_param, &new_s, &key);
+        // println!("RANDOM: {}, {}, {}", &str_param, &new_s, &key);
         let maybe_random_max = key.parse::<RegisterId>();
         if maybe_random_max.is_ok() {
             let random_max = maybe_random_max.unwrap() % gm.number_of_registers;

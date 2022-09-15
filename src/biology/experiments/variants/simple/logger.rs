@@ -120,7 +120,7 @@ impl SimpleExperimentLogger {
         let mut s = String::new();
 
         for entry in entries {
-            let genome = &entry.raw_genome;
+            let genome = &entry.compiled_genome.raw_values;
             for i in 0..genome.len() {
                 if i == genome.len() - 1 {
                     s.push_str(&format!("{}", &genome[i]));
@@ -225,10 +225,13 @@ impl SimpleExperimentLogger {
                 entry.max_fitness_metric.unwrap()
             ));
             s.push_str(&genome_str);
-            s.push_str(&format!("raw_genome: {:?}\n\n", entry.raw_genome.clone()));
+            s.push_str(&format!(
+                "raw_genome: {:?}\n\n",
+                &entry.compiled_genome.raw_values
+            ));
             s.push_str(&format!(
                 "raw_genome_length: {}\n",
-                entry.raw_genome.clone().len()
+                entry.compiled_genome.raw_size
             ));
             s.push_str(&format!("\n\n\n\n"));
         }

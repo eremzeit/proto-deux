@@ -12,6 +12,7 @@ use crate::biology::genome::framed::samples::cheese::get_genome2_raw;
 use crate::biology::unit_behavior::framed::common::*;
 use crate::perf::{perf_timer_start, perf_timer_stop};
 use crate::simulation::common::*;
+use crate::util::RateCounter;
 use crate::{
     biology::genome::framed::common::*, simulation::common::helpers::place_units::PlaceUnitsMethod,
 };
@@ -53,6 +54,8 @@ pub struct SimpleExperiment {
     _gm: Rc<GeneticManifest>, // a cached copy.  note that this might eventually change depending on the genome.
     _logger: Option<SimpleExperimentLogger>,
     _seed_genomes: Option<Vec<RawFramedGenome>>,
+
+    _rate_counter: RateCounter,
 }
 
 impl SimpleExperiment {
@@ -77,6 +80,7 @@ impl SimpleExperiment {
             _gm: Rc::new(gm),
             _logger: logger,
             _seed_genomes: None,
+            _rate_counter: RateCounter::new(),
         }
     }
 
@@ -138,7 +142,7 @@ impl SimpleExperiment {
             max_fitness_metric: None,
             num_evaluations: 0,
             compiled_genome: compiled_genome,
-            raw_genome: genome,
+            // raw_genome: genome,
             uid: next_genome_id as ExperimentGenomeUid,
             current_rank_score: 0,
             previous_execution_stats: stats,
@@ -547,9 +551,11 @@ impl SimpleExperiment {
             self.genome_entries.remove(idx);
         }
 
+        perf_timer_start!("cull_and_replace__2nd_half");
         while self.genome_entries.len() < self.settings.num_genomes {
             self.pull_fresh_genome();
         }
+        perf_timer_stop!("cull_and_replace__2nd_half");
     }
 
     pub fn pull_fresh_genome(&mut self) {
@@ -558,6 +564,7 @@ impl SimpleExperiment {
         self._pull_fresh_genome(alt_i);
     }
 
+    // TODO: something about this is slow
     fn _pull_fresh_genome(&mut self, alteration_index: usize) {
         //explog!("Pulling new genome...");
         let alteration = &self.settings.alteration_set.alterations[alteration_index].clone();
@@ -703,51 +710,82 @@ impl SimpleExperiment {
     pub fn run_eval_for_groups(
         &self,
         groups: Vec<Vec<(GenomeEntryId, ExperimentGenomeUid)>>,
+        use_threads: bool,
     ) -> Vec<Vec<TrialResultItem>> {
-        let (tx, rx) = mpsc::channel();
-        let pool = ThreadPool::new(3);
+        let groups = groups
+            .iter()
+            .enumerate()
+            .map(|(i, group)| {
+                groups[i]
+                    .iter()
+                    .map(|(entry_idx, uid)| {
+                        // let entry_idx = self._find_by_uid(*uid).unwrap();
+                        let entry = &self.genome_entries[*entry_idx];
+                        // (*entry_idx, *uid, entry.compiled_genome.as_ref().clone())
 
-        for i in 0..groups.len() {
-            // println!("starting job");
-            let chemistry_builder = self.settings.sim_settings.chemistry_options.clone();
-            let entries = groups[i]
-                .iter()
-                .map(|(entry_idx, uid)| {
-                    // let entry_idx = self._find_by_uid(*uid).unwrap();
-                    let entry = &self.genome_entries[*entry_idx];
-                    // (*entry_idx, *uid, entry.compiled_genome.as_ref().clone())
+                        SimRunnerGenomeEntry {
+                            genome_idx: *entry_idx,
+                            genome_uid: entry.uid,
+                            genome: entry.compiled_genome.as_ref().clone(),
+                            execution_stats: entry.previous_execution_stats.clone(),
+                        }
+                    })
+                    .collect::<Vec<_>>()
+            })
+            .collect::<Vec<_>>();
 
-                    SimRunnerGenomeEntry {
-                        genome_idx: *entry_idx,
-                        genome_uid: entry.uid,
-                        genome: entry.compiled_genome.as_ref().clone(),
-                        execution_stats: entry.previous_execution_stats.clone(),
-                    }
+        if use_threads {
+            let (tx, rx) = mpsc::channel();
+            let pool = ThreadPool::new(5);
+            let group_count = groups.len();
+            for entries in groups {
+                let sim_settings = self.settings.sim_settings.clone();
+                let fitness_key = self.settings.fitness_calculation_key.clone();
+                let chemistry_builder = self.settings.sim_settings.chemistry_options.clone();
+
+                let tx = tx.clone();
+                pool.execute(move || {
+                    let mut runner = ExperimentSimRunner::new(
+                        chemistry_builder,
+                        entries,
+                        sim_settings,
+                        fitness_key,
+                    );
+
+                    let result = runner.run_evaluation_for_uids();
+                    tx.send(result)
+                        .expect("channel will be there waiting for the pool");
+                });
+            }
+            rx.iter()
+                .take(group_count)
+                .collect::<Vec<Vec<TrialResultItem>>>()
+        } else {
+            let result = groups
+                .into_iter()
+                .map(|entries| {
+                    perf_timer_start!("preinit_simulation");
+                    let sim_settings = self.settings.sim_settings.clone();
+                    let fitness_key = self.settings.fitness_calculation_key.clone();
+                    let chemistry_builder = self.settings.sim_settings.chemistry_options.clone();
+
+                    perf_timer_stop!("preinit_simulation");
+                    let mut runner = ExperimentSimRunner::new(
+                        chemistry_builder,
+                        entries,
+                        sim_settings,
+                        fitness_key,
+                    );
+
+                    perf_timer_start!("run_simulation");
+                    let result = runner.run_evaluation_for_uids();
+                    perf_timer_stop!("run_simulation");
+                    result
                 })
                 .collect::<Vec<_>>();
 
-            // println!(
-            //     "entries: {:?}",
-            //     entries.iter().map(|e| (e.0, e.1)).collect::<Vec<_>>()
-            // );
-
-            let sim_settings = self.settings.sim_settings.clone();
-            let fitness_key = self.settings.fitness_calculation_key.clone();
-
-            let tx = tx.clone();
-            pool.execute(move || {
-                let mut runner =
-                    ExperimentSimRunner::new(chemistry_builder, entries, sim_settings, fitness_key);
-
-                let result = runner.run_evaluation_for_uids();
-                tx.send(result)
-                    .expect("channel will be there waiting for the pool");
-            });
+            result
         }
-
-        rx.iter()
-            .take(groups.len())
-            .collect::<Vec<Vec<TrialResultItem>>>()
     }
 
     pub fn tick(&mut self) {
@@ -758,14 +796,15 @@ impl SimpleExperiment {
         explog!("groups: {:?}", &groups);
         perf_timer_stop!("experiment_partition");
 
-        // perf_timer_start!("experiment_sim_eval");
-        // perf_timer_stop!("experiment_sim_eval");
+        perf_timer_start!("run_eval_for_groups");
+        let group_results = self.run_eval_for_groups(groups, true);
+        perf_timer_stop!("run_eval_for_groups");
 
-        let group_results = self.run_eval_for_groups(groups);
+        perf_timer_start!("update_fitness_result");
         for fitness_result in group_results.iter() {
             self.update_genomes_with_fitness_result(&fitness_result);
         }
-
+        perf_timer_stop!("update_fitness_result");
         // perf_timer_start!("adjust_ranks");
         // perf_timer_stop!("adjust_ranks");
 
@@ -829,6 +868,12 @@ impl SimpleExperiment {
                 self.current_tick,
                 self.genome_entries[self._highest_fitness_idx()].last_fitness_metrics
             );
+        }
+
+        self._rate_counter.increment();
+
+        if self.current_tick % 1000 == 0 && self.current_tick != 0 {
+            self._rate_counter.calculate_and_print_rate();
         }
     }
 
@@ -1016,18 +1061,21 @@ pub mod tests {
                 sim_unit_entry_id: 0,
                 experiment_genome_uid: 0,
                 fitness_score: 200,
+                stats: FramedGenomeExecutionStats::empty(),
             },
             TrialResultItem {
                 genome_idx: 1,
                 sim_unit_entry_id: 1,
                 experiment_genome_uid: 1,
                 fitness_score: 125,
+                stats: FramedGenomeExecutionStats::empty(),
             },
             TrialResultItem {
                 genome_idx: 2,
                 sim_unit_entry_id: 2,
                 experiment_genome_uid: 2,
                 fitness_score: 100,
+                stats: FramedGenomeExecutionStats::empty(),
             },
         ];
 
@@ -1054,7 +1102,10 @@ pub mod tests {
         exp.initialize();
 
         assert_eq!(exp.genome_entries.len(), num_genomes);
-        assert_eq!(exp.genome_entries[0].raw_genome, sample_genome.clone());
+        assert_eq!(
+            exp.genome_entries[0].compiled_genome.raw_values,
+            sample_genome.clone()
+        );
     }
 
     fn collect_ranks(exp: &SimpleExperiment) -> Vec<usize> {

@@ -24,6 +24,16 @@ use crate::biology::unit_behavior::framed::types::*;
 use crate::chemistry::reactions::ReactionCall;
 use std::convert::TryInto;
 
+#[macro_export]
+macro_rules! if_stats_enabled {
+    ($code:tt) => {{
+        #[cfg(any(feature = "genome_stats", test))]
+        {
+            $code
+        }
+    }};
+}
+
 pub const MAX_JUMP_AHEAD_FRAMES: u64 = 3;
 /** Represents the final result of a gene operation with the literal values that can be used for executing. */
 pub enum ExecutableGeneOperation {
@@ -98,8 +108,10 @@ impl<'a> GenomeExecutionContext<'a> {
         let channel =
             (self.override_channel.unwrap_or(frame.default_channel) % NUM_CHANNELS as u8) as usize;
 
-        self.stats.frames[self.current_frame].mark_eval();
-        self.stats.frames[self.current_frame].channels[channel].mark_eval();
+        if_stats_enabled! {{
+            self.stats.frames[self.current_frame].mark_eval();
+            self.stats.frames[self.current_frame].channels[channel].mark_eval();
+        }}
 
         let genes = &frame.channels[channel as usize];
 
@@ -110,7 +122,9 @@ impl<'a> GenomeExecutionContext<'a> {
         'gene_loop: for (i, gene) in genes.iter().enumerate() {
             let cond = &gene.conditional;
 
-            self.stats.frames[self.current_frame].channels[channel].genes[i].mark_eval();
+            if_stats_enabled! {{
+                self.stats.frames[self.current_frame].channels[channel].genes[i].mark_eval();
+            }}
 
             if self.consumed_compute_points > self.allotted_compute_points {
                 return None;
@@ -121,11 +135,16 @@ impl<'a> GenomeExecutionContext<'a> {
 
             if cond_result {
                 if !has_evaluated_to_true {
-                    self.stats.frames[self.current_frame].mark_eval_true();
-                    self.stats.frames[self.current_frame].channels[channel].mark_eval_true();
+                    if_stats_enabled! {{
+                        self.stats.frames[self.current_frame].mark_eval_true();
+                        self.stats.frames[self.current_frame].channels[channel].mark_eval_true();
+                    }}
                 }
 
-                self.stats.frames[self.current_frame].channels[channel].genes[i].mark_eval_true();
+                if_stats_enabled! {{
+                        self.stats.frames[self.current_frame].channels[channel].genes[i].mark_eval_true();
+                }}
+
                 has_evaluated_to_true = true;
 
                 let op = &gene.operation;
@@ -210,21 +229,25 @@ impl<'a> GenomeExecutionContext<'a> {
         frame_and_channel_idx: &(usize, usize),
         gene_idx: usize,
     ) -> bool {
-        self.stats.frames[frame_and_channel_idx.0].channels[frame_and_channel_idx.1].genes
-            [gene_idx]
-            .disjunction_expression
-            .mark_eval();
+        if_stats_enabled! {{
+            self.stats.frames[frame_and_channel_idx.0].channels[frame_and_channel_idx.1].genes
+                [gene_idx]
+                .disjunction_expression
+                .mark_eval();
+        }}
 
         let mut or_result = false;
         let is_negated = conditional.is_negated;
 
         // loop OR sub-expressions
         for (conjunction_idx, conjunctive) in conditional.conjunctive_clauses.iter().enumerate() {
-            self.stats.frames[frame_and_channel_idx.0].channels[frame_and_channel_idx.1].genes
-                [gene_idx]
-                .disjunction_expression
-                .conjunctive_expressions[conjunction_idx]
-                .mark_eval();
+            if_stats_enabled! {{
+                self.stats.frames[frame_and_channel_idx.0].channels[frame_and_channel_idx.1].genes
+                    [gene_idx]
+                    .disjunction_expression
+                    .conjunctive_expressions[conjunction_idx]
+                    .mark_eval();
+            }}
 
             let is_negated = conjunctive.is_negated;
             let mut and_result = true;
@@ -232,42 +255,51 @@ impl<'a> GenomeExecutionContext<'a> {
             // loop AND sub-expressions
             'and_loop: for (bool_idx, bool_expr) in conjunctive.boolean_variables.iter().enumerate()
             {
-                self.stats.frames[frame_and_channel_idx.0].channels[frame_and_channel_idx.1].genes
-                    [gene_idx]
-                    .disjunction_expression
-                    .conjunctive_expressions[conjunction_idx]
-                    .bool_conditionals[bool_idx]
-                    .mark_eval();
+                if_stats_enabled! {{
+                        self.stats.frames[frame_and_channel_idx.0].channels[frame_and_channel_idx.1].genes
+                            [gene_idx]
+                            .disjunction_expression
+                            .conjunctive_expressions[conjunction_idx]
+                            .bool_conditionals[bool_idx]
+                            .mark_eval();
+                }}
 
                 if !self.execute_boolean(bool_expr) {
                     and_result = false;
                     break 'and_loop;
                 } else {
-                    self.stats.frames[frame_and_channel_idx.0].channels[frame_and_channel_idx.1]
-                        .genes[gene_idx]
-                        .disjunction_expression
-                        .conjunctive_expressions[conjunction_idx]
-                        .bool_conditionals[bool_idx]
-                        .mark_eval_true();
+                    if_stats_enabled! {{
+                        self.stats.frames[frame_and_channel_idx.0].channels[frame_and_channel_idx.1]
+                            .genes[gene_idx]
+                            .disjunction_expression
+                            .conjunctive_expressions[conjunction_idx]
+                            .bool_conditionals[bool_idx]
+                            .mark_eval_true();
+                    }}
                 }
             }
 
             if and_result ^ is_negated {
                 or_result = true;
-                self.stats.frames[frame_and_channel_idx.0].channels[frame_and_channel_idx.1].genes
-                    [gene_idx]
-                    .disjunction_expression
-                    .conjunctive_expressions[conjunction_idx]
-                    .mark_eval_true();
+
+                if_stats_enabled! {{
+                        self.stats.frames[frame_and_channel_idx.0].channels[frame_and_channel_idx.1].genes
+                            [gene_idx]
+                            .disjunction_expression
+                            .conjunctive_expressions[conjunction_idx]
+                            .mark_eval_true();
+                }}
                 break; // break early
             }
         }
 
         if or_result ^ is_negated {
-            self.stats.frames[frame_and_channel_idx.0].channels[frame_and_channel_idx.1].genes
-                [gene_idx]
-                .disjunction_expression
-                .mark_eval_true();
+            if_stats_enabled! {{
+                self.stats.frames[frame_and_channel_idx.0].channels[frame_and_channel_idx.1].genes
+                    [gene_idx]
+                    .disjunction_expression
+                    .mark_eval_true();
+            }}
             true
         } else {
             false

@@ -72,10 +72,19 @@ pub fn test_fitness(key: &str) {
     let mut exp = SimpleExperiment::new(settings);
     exp.initialize();
 
-    exp.genome_entries[0].raw_genome = genome_vals1.clone();
-    exp.genome_entries[1].raw_genome = genome_vals2.clone();
-    exp.genome_entries[2].raw_genome = genome_vals3.clone();
-    exp.genome_entries[3].raw_genome = genome_vals4.clone();
+    exp.genome_entries[0].compiled_genome =
+        Rc::new(FramedGenomeCompiler::compile(genome_vals1, &gm));
+    exp.genome_entries[1].compiled_genome =
+        Rc::new(FramedGenomeCompiler::compile(genome_vals2, &gm));
+    exp.genome_entries[2].compiled_genome =
+        Rc::new(FramedGenomeCompiler::compile(genome_vals3, &gm));
+    exp.genome_entries[3].compiled_genome =
+        Rc::new(FramedGenomeCompiler::compile(genome_vals4, &gm));
+
+    // exp.genome_entries[0].compiled_genome.raw_values = genome_vals1.clone();
+    // exp.genome_entries[1].compiled_genome.raw_values = genome_vals2.clone();
+    // exp.genome_entries[2].compiled_genome.raw_values = genome_vals3.clone();
+    // exp.genome_entries[3].compiled_genome.raw_values = genome_vals4.clone();
 
     exp.resume();
 }

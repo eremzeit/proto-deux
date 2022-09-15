@@ -62,12 +62,27 @@ pub fn render_frames_with_stats(
         s.push_str("\n");
 
         for channel in (0..4) {
-            let gene_str = render_genes(
-                &frame.channels[channel],
-                genetic_manifest,
-                stats.and_then(|stats| Some(&stats.frames[frame_i].channels[channel])),
-                2,
+            let skip_channel = stats.is_some()
+                && stats.unwrap().frames[frame_i].channels[channel]
+                    .eval_count
+                    .get()
+                    == 0;
+            println!(
+                "skipping channel? ({}, {}), {}",
+                frame_i, channel, skip_channel
             );
+
+            let gene_str = if skip_channel {
+                "".to_owned()
+            } else {
+                render_genes(
+                    &frame.channels[channel],
+                    genetic_manifest,
+                    stats.and_then(|stats| Some(&stats.frames[frame_i].channels[channel])),
+                    2,
+                )
+            };
+
             let is_default = frame.default_channel as usize == channel;
             let default_str = if is_default {
                 " (DEFAULT)".to_owned()
@@ -79,11 +94,18 @@ pub fn render_frames_with_stats(
                 display_pct(stats.frames[frame_i].channels[channel].pct_true())
             });
 
+            let skip_str = if skip_channel {
+                "(unused)".to_owned()
+            } else {
+                String::new()
+            };
+
             s.push_str(&format!(
-                "{}{}Channel #{}{}\n",
+                "{}{}Channel #{} {}{}\n",
                 indent_for_level(1),
                 pct_s,
                 channel,
+                skip_str,
                 &default_str
             ));
 

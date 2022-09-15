@@ -36,7 +36,7 @@ pub struct GenomeExperimentEntry {
     pub last_fitness_metrics: Vec<FitnessScore>,
     pub max_fitness_metric: Option<FitnessScore>,
     pub num_evaluations: usize,
-    pub raw_genome: RawFramedGenome,
+    // pub raw_genome: RawFramedGenome,
     pub uid: ExperimentGenomeUid,
     pub current_rank_score: usize,
     pub compiled_genome: Rc<CompiledFramedGenome>,

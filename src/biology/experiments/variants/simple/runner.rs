@@ -73,7 +73,9 @@ impl ExperimentSimRunner {
     ) -> Vec<TrialResultItem> {
         let chemistry = self.chemistry_builder.build();
 
+        perf_timer_start!("get_unit_entries");
         let (unit_entries, stat_entries) = self.get_unit_entries();
+        perf_timer_stop!("get_unit_entries");
         // explog!("EVAL fitness for genomes: {:?}", genome_uids);
         let mut sim = SimulationBuilder::default()
             .size(self.sim_settings.grid_size.clone())

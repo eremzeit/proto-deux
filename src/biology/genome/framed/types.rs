@@ -81,6 +81,18 @@ impl CompiledFramedGenome {
     pub fn wrap_rc(self) -> Rc<Self> {
         Rc::new(self)
     }
+
+    pub fn new_stats(&self) -> FramedGenomeExecutionStats {
+        FramedGenomeExecutionStats::new(&self.frames)
+    }
+
+    pub fn render_with_stats(
+        &self,
+        gm: &GeneticManifest,
+        stats: &FramedGenomeExecutionStats,
+    ) -> String {
+        render_frames_with_stats(&self.frames, gm, Some(stats))
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -163,7 +175,9 @@ pub enum BooleanVariable {
     ),
 }
 
+use super::annotated::FramedGenomeExecutionStats;
 use super::render::render_param;
+use super::render::with_stats::render_frames_with_stats;
 
 impl BooleanVariable {
     pub fn render(&self, genetic_manifest: &GeneticManifest) -> String {
