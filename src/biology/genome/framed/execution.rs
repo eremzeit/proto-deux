@@ -27,7 +27,7 @@ use std::convert::TryInto;
 #[macro_export]
 macro_rules! if_stats_enabled {
     ($code:tt) => {{
-        #[cfg(any(feature = "genome_stats", test))]
+        #[cfg(any(not(feature = "skip_genome_stats"), test))]
         {
             $code
         }

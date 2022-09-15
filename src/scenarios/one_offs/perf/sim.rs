@@ -37,6 +37,10 @@ pub fn test_sim_perf() {
     let start_time = Instant::now();
 
     for i in 0..1000 {
+        // for j in 0..3 {
+        //     let g1_clone = genome1.clone();
+        // }
+
         let entry1 = UnitEntryBuilder::default()
             .species_name("species1".to_string())
             .behavior(
@@ -78,7 +82,7 @@ pub fn test_sim_perf() {
 
         let sim = SimulationBuilder::default()
             .chemistry(chemistry_builder.build())
-            .size((50, 30))
+            .size((20, 20))
             .iterations(1000)
             .unit_manifest(UnitManifest {
                 units: vec![entry1, entry2, entry3],
