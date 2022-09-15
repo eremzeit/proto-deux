@@ -29,7 +29,7 @@ pub trait MultiPoolExperimentDataStore {
     fn save_snapshot(&mut self, experiment: &MultiPoolExperiment);
     fn load_snapshot(&mut self, experiment_key: &str) -> MultiPoolExperiment;
 
-	fn save_genepool()
+    fn update_genepool(&mut self, genepool: ExperimentGenePool);
 }
 
 #[derive(Clone)]
@@ -49,7 +49,7 @@ pub struct MultiPoolExperimentLogger {}
 
 #[derive(Clone)]
 pub struct ExperimentGenePool {
-	pub id: usize,
+    pub id: usize,
     pub genomes: Vec<GenomeExperimentEntry>,
     _last_entry_id: usize,
     pub settings: GenePoolSimSettings,
@@ -71,8 +71,8 @@ pub struct GenePoolSettings {
     pub num_genomes: usize,
     pub alteration_specs: AlterationManifest,
     pub fitness_calculation_key: String,
-    // pub cull_strategy: CullStrategy,
     pub fitness_cycle_strategy: FitnessCycleStrategy,
+    pub name_key: String,
 }
 
 #[derive(Clone)]
