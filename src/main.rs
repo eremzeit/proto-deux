@@ -1,3 +1,5 @@
+#![feature(let_chains)]
+#![feature(trace_macros)]
 #![allow(dead_code)]
 #![allow(unreachable_code)]
 #![allow(unused_assignments)]
@@ -9,7 +11,6 @@
 #![allow(unused_macros)]
 #![allow(non_snake_case)]
 #![allow(unused_must_use)]
-#![feature(trace_macros)]
 
 use crate::{runners::RunMode, scenarios::one_offs::run_one_off};
 

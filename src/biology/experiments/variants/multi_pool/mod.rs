@@ -1,3 +1,4 @@
+pub mod builder;
 pub mod data_store;
 pub mod gene_pool;
 pub mod types;
