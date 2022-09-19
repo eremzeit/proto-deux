@@ -409,6 +409,7 @@ impl World {
 //     local_grid: ArrayViewMut<'b, A, D>,
 // }
 
+#[cfg(test)]
 pub mod tests {
     use crate::simulation::common::{
         builder::ChemistryBuilder, helpers::place_units::PlaceUnitsMethod,

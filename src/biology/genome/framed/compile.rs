@@ -455,6 +455,7 @@ impl<'a> FramedGenomeCompiler<'a> {
     }
 }
 
+#[cfg(test)]
 pub mod tests {
     use variants::CheeseChemistry;
 

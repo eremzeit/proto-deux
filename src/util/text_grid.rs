@@ -1,6 +1,4 @@
 use crate::simulation::common::*;
-use crate::simulation::iterators::CoordIterator;
-use crate::util::GridSize2D;
 
 use pad::PadStr;
 
@@ -123,12 +121,12 @@ mod tests {
     }
 
     #[allow(unused_imports)]
-    use super::*;
-    use crate::{
-        chemistry::variants::cheese::*,
-        simulation::common::{builder::ChemistryBuilder, helpers::place_units::PlaceUnitsMethod},
-    };
+    use crate::chemistry::builder::ChemistryBuilder;
+    #[allow(unused_imports)]
+    use crate::chemistry::helpers::place_units::PlaceUnitsMethod;
 
+    use super::*;
+    //
     #[test]
     fn render_coords_with_border() {
         let renderer: Box<dyn GridCellRenderer> = Box::new(TestGridCellRenderer {});

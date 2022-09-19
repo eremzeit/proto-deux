@@ -301,6 +301,7 @@ pub fn cull_genomes(
     }
 }
 
+#[cfg(test)]
 pub mod tests {
     use crate::biology::experiments::util::{_scramble_groups, partition_into_thirds};
 

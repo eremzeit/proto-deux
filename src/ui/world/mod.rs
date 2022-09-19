@@ -1,9 +1,9 @@
 pub mod cheese;
 pub mod draw_world;
-use crate::simulation::simulation_data::{SimulationData, ThreadedSimulationReference};
+use crate::simulation::simulation_data::SimulationData;
 use opengl_graphics::GlGraphics;
 use piston_window::types::Color;
-use piston_window::{clear, rectangle, Context, Viewport};
+use piston_window::{clear, Context, Viewport};
 
 use self::cheese::CheeseCellRenderer;
 

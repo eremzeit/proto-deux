@@ -50,6 +50,7 @@ pub fn calculate_fitness(
     (fitnessDef.execute)(unit_entry_id, sim)
 }
 
+#[cfg(test)]
 pub mod tests {
     use crate::{runners::SimulationRunnerArgs, scenarios::simulations::get_simulation_scenario};
 

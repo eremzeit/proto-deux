@@ -22,16 +22,15 @@ extern crate derive_builder;
 extern crate chrono;
 extern crate clap;
 extern crate find_folder;
-extern crate ndarray;
-extern crate pad;
-extern crate palette;
-extern crate rand;
-
 extern crate fps_counter;
 extern crate image as im;
+extern crate ndarray;
 extern crate once_cell;
 extern crate opengl_graphics;
+extern crate pad;
+extern crate palette;
 extern crate piston_window;
+extern crate rand;
 extern crate ron;
 
 #[macro_use]
@@ -49,28 +48,10 @@ pub mod scenarios;
 pub mod tests;
 pub mod ui;
 
-use chemistry::builder::ChemistryBuilder;
-use common::ThreadedSimulationExecutor;
-use ndarray::*;
-use ndarray::{Array2, Dim, Shape};
-use perf::{perf_timer_print, perf_timer_start, perf_timer_stop};
-use simulation::simulation_data::new_threaded_simulation_reference;
-use std::cell::RefCell;
+// use ndarray::*;
 use std::collections::HashMap;
 
-use crate::biology::genome::framed::builders::FramedGenomeCompiler;
-use crate::biology::genome::framed::common::FramedGenomeWord;
-use crate::biology::*;
-use crate::scenarios::simulations::get_simulation_scenario;
-use crate::simulation::*;
-
 fn main() {
-    //tests::test_framed_genome();
-    // ui::start_app_with_genome();
-    // ui::execute::start_app();
-
-    //tests::fps::test_with_genome();
-    //tests::perf::test_multithreading2();
     perf_timer_start!("main");
     let args = util::cli::parse_cli_args();
     match args {

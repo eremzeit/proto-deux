@@ -57,6 +57,7 @@ impl ChemistryManifestData {
     }
 }
 
+#[cfg(test)]
 pub mod tests {
     use crate::chemistry::{Chemistry, FooChemistry};
     use crate::simulation::common::*;

@@ -1,27 +1,10 @@
-use super::annotated::{FrameExecutionStats, FramedGenomeExecutionStats};
-use crate::biology::genome::framed::render::render_gene;
-use chemistry::reactions::ReactionCallParam;
-
-use crate::biology::genetic_manifest::predicates::{
-    OperatorImplementation, OperatorLibrary, OperatorManifest, OperatorParamDefinition,
-    OperatorParamType,
-};
-use crate::biology::genome::framed::common::*;
-use crate::biology::genome::framed::types::NUM_META_REACTIONS;
-use crate::biology::unit_behavior::UnitBehavior;
-use crate::chemistry;
-use crate::chemistry::{ChemistryInstance, ReactionId};
-use crate::simulation::common::*;
-use std::rc::Rc;
-//use crate::simulation::world::World;
-pub use crate::chemistry::properties::RawPropertyId;
-use crate::util::Coord;
-use std::fmt::{Debug, Formatter, Result};
-//use crate::biology::unit_behavior::{ParamedReactionCall};
-
-use crate::biology::genome::framed::*;
+use super::annotated::FramedGenomeExecutionStats;
+use super::common::{BooleanVariable, Disjunction, Frame, RegisterId};
+use crate::biology::genome::framed::common::NUM_CHANNELS;
 use crate::biology::unit_behavior::framed::types::*;
+// use crate::chemistry::properties::RawPropertyId;
 use crate::chemistry::reactions::ReactionCall;
+use crate::simulation::common::*;
 use std::convert::TryInto;
 
 #[macro_export]
@@ -366,6 +349,7 @@ impl<'a> GenomeExecutionContext<'a> {
     }
 }
 
+#[cfg(test)]
 pub mod tests {
     use crate::{
         biology::{
@@ -375,8 +359,8 @@ pub mod tests {
         simulation::common::{
             helpers::place_units::PlaceUnitsMethod, properties::CheeseChemistry,
             variants::FooChemistry, Chemistry, ChemistryConfiguration, ChemistryInstance,
-            ChemistryManifest, GeneticManifest, NullBehavior, SensorContext, SimulationBuilder,
-            UnitEntry, UnitManifest,
+            GeneticManifest, NullBehavior, SensorContext, SimulationBuilder, UnitEntry,
+            UnitManifest,
         },
     };
 

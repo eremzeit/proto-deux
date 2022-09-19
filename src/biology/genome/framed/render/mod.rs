@@ -1,33 +1,10 @@
 pub mod with_stats;
 
-use super::annotated::{
-    ChannelExecutionStats, ConjunctionExpressionStats, DisjunctionExpressionStats,
-    FramedGenomeExecutionStats, GeneExecutionStats,
-};
 use super::types::*;
 use super::types::{BooleanVariable, Conjunction};
-use crate::biology::genetic_manifest::predicates::{
-    OperatorId, OperatorImplementation, OperatorManifest, OperatorParam, OperatorParamDefinition,
-    OperatorParamType,
-};
 use crate::biology::genetic_manifest::GeneticManifest;
 use crate::biology::sensor_manifest::SensorManifest;
-use crate::biology::unit_behavior::UnitBehavior;
-use crate::chemistry;
-use crate::chemistry::properties::AttributeIndex;
-use crate::chemistry::{ChemistryInstance, ReactionId};
-use crate::simulation::common::*;
-use crate::simulation::world::World;
-use crate::util::Coord;
-use std::fmt::{Debug, Formatter, Result};
-
 use crate::biology::unit_behavior::framed::{ParamedGeneOperationCall, ParsedGenomeParam};
-
-// pub struct FramedGenomeRenderer {}
-
-// impl FramedGenomeRenderer {
-//     pub fn render(genome: &CompiledFramedGenome) -> String {}
-// }
 
 pub fn render_frames(frames: &Vec<Frame>, genetic_manifest: &GeneticManifest) -> String {
     let mut s = String::new();
@@ -182,14 +159,17 @@ pub fn render_gene_operation(
     }
 }
 
+#[cfg(test)]
 pub mod tests {
-    use chemistry::variants::CheeseChemistry;
-
-    use super::*;
-    use crate::biology::genetic_manifest::predicates::default_operators;
-    use crate::biology::genome::framed::*;
-    use crate::biology::unit_behavior::framed::*;
-    use crate::simulation::common::*;
+    use crate::biology::genetic_manifest::GeneticManifest;
+    use crate::biology::genome::framed::common::{BooleanVariable, Conjunction, Disjunction, Gene};
+    use crate::biology::genome::framed::render::{
+        render_conjunction, render_disjunction, render_gene, render_genes,
+    };
+    use crate::biology::unit_behavior::framed::ParamedGeneOperationCall;
+    use crate::biology::unit_behavior::ParsedGenomeParam;
+    use crate::chemistry::properties::CheeseChemistry;
+    use crate::chemistry::{Chemistry, ChemistryConfiguration};
 
     #[test]
     pub fn conjunctive_to_str__simple() {

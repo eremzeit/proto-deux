@@ -297,6 +297,7 @@ impl Debug for BooleanVariable {
     }
 }
 
+#[cfg(test)]
 pub mod tests {
     use chemistry::variants::CheeseChemistry;
 

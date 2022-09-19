@@ -2,35 +2,22 @@ pub mod logger;
 pub mod utils;
 
 use crate::biology::experiments::alterations;
-use crate::biology::experiments::sim_runner::{
-    execute_sim_runners, ExperimentSimRunner, SimRunnerGenomeEntry,
-};
+use crate::biology::experiments::sim_runner::{execute_sim_runners, SimRunnerGenomeEntry};
 use crate::biology::experiments::types::{
-    CullStrategy, ExperimentGenomeUid, GenomeEntryId, GenomeExperimentEntry, TrialResultItem,
+    CullStrategy, ExperimentGenomeUid, GenomeExperimentEntry, TrialResultItem,
 };
 use crate::biology::experiments::util::{
     cull_genomes, partition_into_groups, scramble_groups, GenomeEntryInfo,
 };
+use crate::biology::genetic_manifest::GeneticManifest;
 use crate::biology::genome::framed::annotated::FramedGenomeExecutionStats;
-use crate::biology::genome::framed::samples::cheese::get_genome2_raw;
-use crate::biology::unit_behavior::framed::common::*;
-use crate::perf::{perf_timer_start, perf_timer_stop};
-use crate::simulation::common::*;
+use crate::biology::genome::framed::common::*;
+use crate::simulation::fitness::FitnessScore;
 use crate::util::RateCounter;
-use crate::{
-    biology::genome::framed::common::*, simulation::common::helpers::place_units::PlaceUnitsMethod,
-};
 use rand::Rng;
-use std::cell::RefCell;
-use std::fmt::{Debug, Formatter, Result};
-use std::ops::{Add, Div};
-use std::sync::mpsc;
-use std::time::Duration;
-use threadpool::ThreadPool;
 
 use self::logger::SimpleExperimentLogger;
 use self::utils::SimpleExperimentSettings;
-use crate::biology::genome::framed::samples;
 
 use super::multi_pool::gene_pool::pull_fresh_genomes;
 use super::multi_pool::types::FitnessCycleStrategy;
@@ -739,7 +726,6 @@ pub fn push_into_with_max<T>(vec: &mut Vec<T>, item: T, max_size: usize) {
 }
 
 pub fn random_genome_of_length(length: usize) -> Vec<FramedGenomeWord> {
-    use rand::Rng;
     let mut rng = rand::thread_rng();
     let mut vals = vec![];
 
@@ -750,16 +736,14 @@ pub fn random_genome_of_length(length: usize) -> Vec<FramedGenomeWord> {
     vals
 }
 
+#[cfg(test)]
 pub mod tests {
     use variants::CheeseChemistry;
 
     use self::utils::SimpleExperimentSettingsBuilder;
     use super::*;
     use crate::biology::experiments::types::{CullStrategy, ExperimentSimSettings};
-    use crate::biology::experiments::variants::simple::logger::LoggingSettings;
     use crate::biology::genetic_manifest::GeneticManifest;
-    use crate::biology::genome::framed::common::*;
-    use crate::biology::unit_behavior::framed::common::*;
     use crate::simulation::common::builder::ChemistryBuilder;
     use crate::simulation::common::helpers::place_units::PlaceUnitsMethod;
     use crate::simulation::common::*;
@@ -768,7 +752,6 @@ pub mod tests {
         let chemistry_builder = ChemistryBuilder::with_key("cheese");
         let chemistry = chemistry_builder.build();
 
-        // let gm = GeneticManifest::from_chemistry_with_defaults::<CheeseChemistry>().wrap_rc();
         let gm =
             GeneticManifest::construct::<CheeseChemistry>(&chemistry.get_configuration()).wrap_rc();
 

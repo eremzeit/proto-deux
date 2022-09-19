@@ -5,9 +5,7 @@ pub mod text_grid;
 pub mod macros;
 
 use serde::{Deserialize, Serialize};
-use std::cmp::{max, min};
-use std::ops::Index;
-use std::time::{Duration, Instant};
+use std::time::Instant;
 
 pub type Coord = (usize, usize);
 pub type CoordOffset = (i32, i32);

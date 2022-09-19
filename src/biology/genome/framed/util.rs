@@ -126,6 +126,7 @@ pub fn identify_raw_param_string(str_param: &String, gm: &GeneticManifest) -> Pa
     panic!("Invalid input for conditional parameter: {}", str_param);
 }
 
+#[cfg(test)]
 pub mod tests {
     #[test]
     pub fn test_macro__basic() {

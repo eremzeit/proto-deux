@@ -1,19 +1,14 @@
 use crate::chemistry::*;
 use crate::simulation;
 use crate::simulation::common::{
-    NullBehavior, SimulationControlEvent, SimulationControlEventReceiver, UnitAttributeValue,
-    UnitBehavior, UnitEntry, UnitEntryBuilder, UnitEntryData, UnitManifest, UnitResourceAmount,
+    NullBehavior, UnitEntry, UnitEntryBuilder, UnitEntryData, UnitManifest,
 };
-use crate::simulation::fitness::*;
-use crate::simulation::unit::util::convert_maybe_resources_to_resources;
-use crate::simulation::unit::{UnitAttributes, UnitResources};
-use crate::simulation::Simulation;
 use crate::util::GridSize2D;
-use std::rc::Rc;
-use std::sync::Arc;
+// use crate::simulation::fitness::*;
+// use std::rc::Rc;
 
 pub mod builder {
-    use crate::simulation::common::helpers::place_units::PlaceUnitsMethod;
+    use crate::{simulation::common::helpers::place_units::PlaceUnitsMethod, util::GridSize2D};
 
     use super::*;
     #[derive(Builder)]

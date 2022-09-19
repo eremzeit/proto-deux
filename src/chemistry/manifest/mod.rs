@@ -1,6 +1,5 @@
 pub mod serialize;
 
-
 use self::properties::*;
 use self::reactions::*;
 use crate::biology::genetic_manifest::predicates::OperatorParam;
@@ -511,6 +510,7 @@ impl ChemistryManifest {
     }
 }
 
+#[cfg(test)]
 pub mod tests {
     use super::*;
 

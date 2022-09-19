@@ -221,6 +221,7 @@ pub fn get_param_by_index(reaction_call: ReactionCall, i: usize) -> ReactionCall
     }
 }
 
+#[cfg(test)]
 pub mod tests {
     use super::*;
     use crate::simulation::common::*;

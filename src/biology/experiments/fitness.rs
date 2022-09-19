@@ -90,6 +90,7 @@ pub fn normalize_ranks(mut ranks: &mut Vec<(GenomeEntryId, ExperimentFitnessRank
     }
 }
 
+#[cfg(test)]
 pub mod tests {
     use super::{adjust_winners_rank, normalize_ranks, FitnessRankAdjustmentMethod};
 

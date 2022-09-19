@@ -263,6 +263,7 @@ macro_rules! __then_do {
     });
 }
 
+#[cfg(test)]
 pub mod tests {
     use std::rc::Rc; 
     use crate::simulation::common::variants::cheese::CheeseChemistry;

@@ -400,6 +400,7 @@ pub fn default_alterations() -> Vec<GenomeAlterationImplementation> {
 // 	SwapFrames(usize, usize),              //
 // 	FramesCrossover(usize, usize, usize, usize),
 // }
+#[cfg(test)]
 pub mod tests {
     use crate::biology::genome::framed::builders::*;
     use crate::biology::genome::framed::common::FramedGenome;

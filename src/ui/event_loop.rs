@@ -1,31 +1,19 @@
 use crate::simulation::common::{
-    Position, Simulation, SimulationConfig, SimulationControlEvent, SimulationControlEventSender,
-    SimulationData,
+    SimulationControlEvent, SimulationControlEventSender, SimulationData,
 };
 use crate::simulation::simulation_data::ThreadedSimulationReference;
-
-use piston_window::{G2dTextureContext, Viewport};
-
 use crate::util::RateCounter;
-use std::rc::Rc;
-use std::sync::mpsc::{channel, Receiver, Sender};
-use std::sync::Arc;
-use std::time::{Duration, Instant};
-
-use fps_counter::FPSCounter;
-use piston_window::Transformed;
 use std::thread;
+use std::time::{Duration, Instant};
 
 use crate::piston_window::EventLoop;
 use crate::piston_window::RenderEvent;
 use crate::piston_window::UpdateEvent;
-use piston_window::clear;
-use piston_window::rectangle;
 use piston_window::{OpenGL, PistonWindow, WindowSettings};
 
 use opengl_graphics::GlGraphics;
 
-use super::world::{draw_world, get_cell_renderer, CellRenderer};
+use super::world::{draw_world, get_cell_renderer};
 
 // pub fn get_cell_renderer() -> <dyn CellRenderer> {
 //     match sim.config.chemistry_key.as_str() {

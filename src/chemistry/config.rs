@@ -140,6 +140,7 @@ pub fn convert_configurable_to_action_param(
     }
 }
 
+#[cfg(test)]
 pub mod tests {
     use super::variants::foo::defs;
     use super::{ChemistryConfiguration, FooChemistry};

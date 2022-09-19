@@ -357,6 +357,7 @@ pub fn indent_for_level(indent_level: usize) -> String {
     " ".repeat(indent_level * INDENT_SIZE)
 }
 
+#[cfg(test)]
 pub mod tests {
     use chemistry::variants::CheeseChemistry;
     // use crate::biology::framed::::{frame, framed_genome};

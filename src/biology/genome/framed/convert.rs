@@ -353,6 +353,7 @@ impl RawFrameParser {
     }
 }
 
+#[cfg(test)]
 pub mod tests {
     use variants::CheeseChemistry;
 

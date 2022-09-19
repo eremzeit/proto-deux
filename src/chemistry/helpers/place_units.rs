@@ -1,15 +1,8 @@
-use crate::chemistry::variants::CheeseChemistry;
-use crate::simulation::common::{
-    ChemistryInstance, Coord, GridSize2D, NullBehavior, SimCell, Simulation, SimulationAttributes,
-    UnitEntry, UnitEntryData, UnitManifest,
-};
-use crate::simulation::config::SimulationConfig;
-use crate::simulation::config::*;
-use crate::simulation::unit::{UnitAttributeValue, UnitAttributes};
+use crate::simulation::common::{ChemistryInstance, Coord, SimCell, UnitEntryData, UnitManifest};
+use crate::simulation::unit::UnitAttributes;
 use crate::simulation::world::*;
 use rand::Rng;
 use serde::{Deserialize, Serialize};
-use std::sync::Arc;
 
 #[derive(Clone, Default, Debug, Serialize, Deserialize)]
 pub enum PlaceUnitsMethod {
@@ -248,10 +241,13 @@ pub fn place_manual(
     }
 }
 
+#[cfg(test)]
 mod tests {
+    use crate::biology::unit_behavior::NullBehavior;
     use crate::simulation::common::builder::ChemistryBuilder;
+    use crate::simulation::common::UnitEntry;
+    use crate::simulation::config::builder::SimulationBuilder;
 
-    #[allow(unused_imports)]
     use super::*;
 
     #[test]

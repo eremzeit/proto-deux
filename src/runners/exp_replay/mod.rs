@@ -1,9 +1,6 @@
 use ron;
 
-use std::{
-    fs,
-    path::{Path, PathBuf},
-};
+use std::{fs, path::PathBuf};
 
 use crate::{
     biology::{
@@ -14,22 +11,17 @@ use crate::{
         unit_behavior::framed::FramedGenomeUnitBehavior,
     },
     simulation::common::UnitManifest,
-    unit_entry::builder::UnitEntryBuilder,
+    simulation::unit_entry::builder::UnitEntryBuilder,
 };
 
 use crate::{
-    biology::{
-        experiments::variants::simple::utils::SimpleExperimentSettings,
-        genetic_manifest::GeneticManifestData,
-        genome::framed::{
-            builders::FramedGenomeCompiler,
-            common::{CompiledFramedGenome, FramedGenomeWord},
-        },
+    biology::genome::framed::{
+        builders::FramedGenomeCompiler,
+        common::{CompiledFramedGenome, FramedGenomeWord},
     },
     chemistry::builder::ChemistryBuilder,
     simulation::common::{GeneticManifest, SimulationBuilder},
 };
-use std::fs::File;
 use std::io::prelude::*;
 use std::rc::Rc;
 

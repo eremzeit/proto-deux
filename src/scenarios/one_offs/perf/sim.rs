@@ -2,30 +2,24 @@ use std::cell::RefCell;
 use std::rc::Rc;
 use std::time::Instant;
 
-use crate::biology::genome::framed::annotated::FramedGenomeExecutionStats;
-use crate::biology::genome::framed::builders::{simple_convert_into_frames, FramedGenomeCompiler};
 use crate::biology::genome::framed::render::with_stats::render_frames_with_stats;
 use crate::biology::genome::framed::samples::cheese::get_genome2;
 use crate::biology::unit_behavior::framed::FramedGenomeUnitBehavior;
-use crate::runners::SimulationRunnerArgs;
 
 use crate::chemistry::builder::*;
 use crate::scenarios::simulations::lever::get_unit_entries_for_lever;
 use crate::simulation::common::helpers::place_units::PlaceUnitsMethod;
-use crate::simulation::common::{
-    ChemistryInstance, CoordIterator, GeneticManifest, GeneticManifestData, UnitManifest,
-};
+use crate::simulation::common::{ChemistryInstance, CoordIterator, GeneticManifest, UnitManifest};
 use crate::simulation::config::SimulationBuilder;
 use crate::simulation::executors::simple::SimpleSimulationExecutor;
+use crate::simulation::unit_entry::builder::UnitEntryBuilder;
 use crate::simulation::Simulation;
-use crate::unit_entry::builder::UnitEntryBuilder;
 
 pub fn test_sim_perf() {
     let chemistry_builder = ChemistryBuilder::with_key("cheese");
     let chemistry = chemistry_builder.build();
     let gm = GeneticManifest::from_chemistry(&chemistry).wrap_rc();
 
-    use crate::biology::genome::framed::samples::cheese::get_genome1;
     let genome1 = get_genome2(&gm);
     let genome2 = get_genome2(&gm);
     let genome3 = get_genome2(&gm);

@@ -1,21 +1,16 @@
 use crate::biology::experiments::types::{CullStrategy, ExperimentSimSettings};
 use crate::biology::experiments::variants::multi_pool::types::FitnessCycleStrategy;
-use crate::genome::framed::samples;
 use crate::simulation::common::builder::ChemistryBuilder;
-use crate::simulation::common::{GeneticManifest, GeneticManifestData};
+use crate::simulation::common::GeneticManifest;
 use crate::{
     biology::experiments::{
-        alterations::{self, CompiledAlterationSet},
+        alterations::CompiledAlterationSet,
         variants::simple::{
-            logger::LoggingSettings,
-            utils::{SimpleExperimentSettings, SimpleExperimentSettingsBuilder},
-            SimpleExperiment,
+            logger::LoggingSettings, utils::SimpleExperimentSettings, SimpleExperiment,
         },
     },
     runners::ExperimentRunnerArgs,
-    simulation::common::{
-        helpers::place_units::PlaceUnitsMethod, ChemistryConfiguration, SensorManifest,
-    },
+    simulation::common::helpers::place_units::PlaceUnitsMethod,
 };
 
 // pub fn get_experiment_scenario(runner_args: ExperimentRunnerArgs) -> SimpleExperiment {

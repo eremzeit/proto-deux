@@ -266,6 +266,7 @@ where
 
     result
 }
+#[cfg(test)]
 pub mod tests {
     use crate::biology::experiments::variants::simple::logger::SimpleExperimentLogger;
 

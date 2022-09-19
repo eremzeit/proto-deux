@@ -458,6 +458,7 @@ pub struct LocalPropertySensorEntry {
     pub distance: u8,
 }
 
+#[cfg(test)]
 pub mod tests {
     use super::*;
 
