@@ -8,7 +8,6 @@ use crate::simulation::unit::{UnitAttributeValue, UnitAttributes};
 use crate::simulation::world::*;
 use std::rc::Rc;
 use std::sync::Arc;
-use typemap::{CloneMap, Key};
 
 use crate::biology::unit_behavior::mouse::*;
 use crate::simulation::common::*;

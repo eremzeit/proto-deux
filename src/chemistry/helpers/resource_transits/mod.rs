@@ -7,7 +7,6 @@ use crate::simulation::unit::{add_resources_to, UnitAttributes, UnitResources};
 use crate::util::text_grid::TextGridOptions;
 use crate::util::*;
 use std::sync::Arc;
-use typemap::{CloneMap, Key};
 
 // function linearDiffTransitsForCoord(coord, simulation, config = {}) {
 //   const world = simulation.world

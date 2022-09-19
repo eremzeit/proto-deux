@@ -12,7 +12,6 @@ use crate::util::*;
 use rand::Rng;
 use std::sync::Arc;
 use std::time::{Duration, Instant};
-use typemap::{CloneMap, Key};
 
 pub fn behavior_execution(sim: &mut SimCell) {
     //let mut rng = rand::thread_rng();

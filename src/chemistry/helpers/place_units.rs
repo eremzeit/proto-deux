@@ -10,7 +10,6 @@ use crate::simulation::world::*;
 use rand::Rng;
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
-use typemap::{CloneMap, Key};
 
 #[derive(Clone, Default, Debug, Serialize, Deserialize)]
 pub enum PlaceUnitsMethod {

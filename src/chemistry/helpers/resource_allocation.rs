@@ -6,7 +6,6 @@ use crate::simulation::unit::{add_resources_to, UnitAttributes, UnitResources};
 use crate::util::text_grid::TextGridOptions;
 use crate::{fixtures, simulation::common::helpers::place_units::PlaceUnitsMethod};
 use std::sync::Arc;
-use typemap::{CloneMap, Key};
 
 use crate::simulation::common::CoordIterator;
 

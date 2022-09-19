@@ -25,10 +25,7 @@ extern crate find_folder;
 extern crate ndarray;
 extern crate pad;
 extern crate palette;
-extern crate petgraph;
 extern crate rand;
-extern crate roaring;
-extern crate typemap;
 
 extern crate fps_counter;
 extern crate image as im;
