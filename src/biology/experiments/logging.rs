@@ -27,6 +27,7 @@ pub fn get_experiments_dir() -> PathBuf {
     dir
 }
 
+// used only for simple experiments
 pub fn get_exp_genomes_dir(exp_key: &str) -> PathBuf {
     let mut dir = get_data_dir();
     dir.push("experiments");

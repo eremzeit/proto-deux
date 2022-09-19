@@ -1,4 +1,7 @@
 use crate::biology::experiments::alterations;
+use crate::biology::experiments::types::{
+    CullStrategy, ExperimentGenomeUid, ExperimentSimSettings,
+};
 use crate::biology::genetic_manifest::GeneticManifest;
 use crate::biology::genome::framed::annotated::FramedGenomeExecutionStats;
 use crate::biology::unit_behavior::framed::common::*;
@@ -15,45 +18,6 @@ use std::path::PathBuf;
 
 use super::logger::LoggingSettings;
 
-/**
- * Uniquely identifies a genome over the course of the entire experiment
- */
-pub type ExperimentGenomeUid = usize;
-
-/**
- * Stores the current offset of this genome in the genome entries table.  That table
- * changes so this is a value of ephemeral semantics.
- */
-pub type GenomeEntryId = usize;
-
-#[derive(Serialize, Deserialize)]
-pub enum CullStrategy {
-    WorstFirst,
-}
-
-#[derive(Clone)]
-pub struct GenomeExperimentEntry {
-    pub last_fitness_metrics: Vec<FitnessScore>,
-    pub max_fitness_metric: Option<FitnessScore>,
-    pub num_evaluations: usize,
-    // pub raw_genome: RawFramedGenome,
-    pub uid: ExperimentGenomeUid,
-    pub current_rank_score: usize,
-    pub compiled_genome: Rc<CompiledFramedGenome>,
-    pub previous_execution_stats: FramedGenomeExecutionStats,
-}
-
-#[derive(Clone, Serialize, Deserialize)]
-pub struct ExperimentSimSettings {
-    pub num_simulation_ticks: u64,
-    pub grid_size: (usize, usize),
-    pub num_genomes_per_sim: usize,
-    pub default_unit_resources: Vec<(String, UnitResourceAmount)>,
-    pub default_unit_attr: Vec<(String, UnitAttributeValue)>,
-    pub place_units_method: PlaceUnitsMethod,
-    pub chemistry_options: ChemistryBuilder,
-}
-
 pub type MaybeLoggingSettings = Option<LoggingSettings>;
 
 #[derive(Builder)]
@@ -69,20 +33,3 @@ pub struct SimpleExperimentSettings {
     pub cull_strategy: CullStrategy,
     // pub gm: Rc<GeneticManifest>, // note: eventually this might be defined on a per-genome basis
 }
-
-// pub mod builder {
-//     use super::*;
-
-//     pub struct SimpleExperimentSettings {
-//         pub experiment_key: String,
-//         pub logging_settings: MaybeLoggingSettings,
-//         pub num_genomes: usize,
-//         pub iterations: usize,
-//         pub sim_settings: ExperimentSimSettings,
-//         pub alteration_set: alterations::AlterationTypeSet,
-//         pub fitness_calculation_key: String,
-//         pub cull_strategy: CullStrategy,
-//         pub chemistry_options: ChemistryBuilder,
-//         pub gm: GeneticManifest,
-//     }
-// }

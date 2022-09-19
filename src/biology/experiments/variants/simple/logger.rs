@@ -1,5 +1,6 @@
 use crate::biology::experiments::alterations;
-use crate::biology::experiments::variants::utils::get_data_dir;
+use crate::biology::experiments::logging::get_data_dir;
+use crate::biology::experiments::types::GenomeExperimentEntry;
 use crate::biology::genome::framed::render::with_stats::render_frames_with_stats;
 use crate::biology::unit_behavior::framed::common::*;
 use crate::simulation::common::*;
@@ -15,9 +16,7 @@ use std::fs::OpenOptions;
 use std::io::Write;
 use std::path::{Path, PathBuf};
 
-use super::utils::{ExperimentSimSettings, GenomeExperimentEntry, SimpleExperimentSettings};
-
-const DATA_DIR_NAME: &str = "data";
+use super::utils::SimpleExperimentSettings;
 
 #[derive(Clone, Serialize, Deserialize)]
 pub struct LoggingSettings {

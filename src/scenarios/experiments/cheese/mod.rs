@@ -1,3 +1,4 @@
+use crate::biology::experiments::types::{CullStrategy, ExperimentSimSettings};
 use crate::genome::framed::samples;
 use crate::simulation::common::builder::ChemistryBuilder;
 use crate::simulation::common::{GeneticManifest, GeneticManifestData};
@@ -6,10 +7,7 @@ use crate::{
         alterations::{self, CompiledAlterationSet},
         variants::simple::{
             logger::LoggingSettings,
-            utils::{
-                CullStrategy, ExperimentSimSettings, SimpleExperimentSettings,
-                SimpleExperimentSettingsBuilder,
-            },
+            utils::{SimpleExperimentSettings, SimpleExperimentSettingsBuilder},
             SimpleExperiment,
         },
     },
@@ -43,7 +41,7 @@ pub fn simple_experiment(runner_args: ExperimentRunnerArgs) -> SimpleExperiment 
     let gm = GeneticManifest::from_chemistry(&chemistry).wrap_rc();
 
     let settings = SimpleExperimentSettings {
-        cull_strategy: CullStrategy::WorstFirst,
+        cull_strategy: CullStrategy::WorstFirst { percent: 0.30 },
         fitness_calculation_key: "total_cheese_consumed".to_string(),
         num_genomes: 30,
         sim_settings: ExperimentSimSettings {

@@ -1,10 +1,9 @@
 use crate::{
     biology::experiments::{
         alterations::{self, CompiledAlterationSet},
+        types::{CullStrategy, ExperimentSimSettings},
         variants::simple::{
-            logger::LoggingSettings,
-            utils::{CullStrategy, ExperimentSimSettings, SimpleExperimentSettings},
-            SimpleExperiment,
+            logger::LoggingSettings, utils::SimpleExperimentSettings, SimpleExperiment,
         },
     },
     runners::ExperimentRunnerArgs,
@@ -28,7 +27,7 @@ pub fn simple_experiment(runner_args: ExperimentRunnerArgs) -> SimpleExperiment 
     let gm = GeneticManifest::from_chemistry(&chemistry).wrap_rc();
 
     let settings = SimpleExperimentSettings {
-        cull_strategy: CullStrategy::WorstFirst,
+        cull_strategy: CullStrategy::WorstFirst { percent: 0.30 },
         fitness_calculation_key: "lever_pulls".to_string(),
         num_genomes: 10,
         sim_settings: ExperimentSimSettings {

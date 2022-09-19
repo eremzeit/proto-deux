@@ -1,10 +1,9 @@
 use crate::{
     biology::experiments::{
         alterations,
+        types::{CullStrategy, ExperimentSimSettings},
         variants::simple::{
-            logger::LoggingSettings,
-            utils::{CullStrategy, ExperimentSimSettings, SimpleExperimentSettings},
-            SimpleExperiment,
+            logger::LoggingSettings, utils::SimpleExperimentSettings, SimpleExperiment,
         },
     },
     simulation::common::{builder::ChemistryBuilder, helpers::place_units::PlaceUnitsMethod},
@@ -21,7 +20,7 @@ pub fn test_fitness(key: &str) {
     let gm = GeneticManifest::from_chemistry(&chemistry_builder.build()).wrap_rc();
 
     let settings = SimpleExperimentSettings {
-        cull_strategy: CullStrategy::WorstFirst,
+        cull_strategy: CullStrategy::WorstFirst { percent: 0.30 },
         fitness_calculation_key: "total_cheese_consumed".to_string(),
         num_genomes: 4,
         sim_settings: ExperimentSimSettings {

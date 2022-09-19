@@ -7,7 +7,10 @@ use std::{
 
 use crate::{
     biology::{
-        experiments::variants::utils::{get_exp_genomes_dir, get_experiments_dir},
+        experiments::{
+            logging::{get_exp_genomes_dir, get_experiments_dir},
+            types::ExperimentSimSettings,
+        },
         unit_behavior::framed::FramedGenomeUnitBehavior,
     },
     simulation::common::UnitManifest,
@@ -16,7 +19,7 @@ use crate::{
 
 use crate::{
     biology::{
-        experiments::variants::simple::utils::{ExperimentSimSettings, SimpleExperimentSettings},
+        experiments::variants::simple::utils::SimpleExperimentSettings,
         genetic_manifest::GeneticManifestData,
         genome::framed::{
             builders::FramedGenomeCompiler,

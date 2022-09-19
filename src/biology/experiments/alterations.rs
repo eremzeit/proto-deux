@@ -10,9 +10,11 @@ pub type GenomeAlterationTypeKey = String;
 pub type ExecuteGenomeAlterationFn<A> = dyn Fn(&[&CompiledFramedGenome], &[A]) -> Vec<A>;
 pub type PrepareAlterationParamsFn<A> = dyn Fn(&[&CompiledFramedGenome]) -> Vec<A>;
 
-pub struct AlterationManifest {
-    pub alterations: Vec<GenomeAlterationImplementation>,
-}
+// TODO: build out this concept and weights
+// #[derive(Clone)]
+// pub struct AlterationManifest {
+//     pub alterations: Vec<GenomeAlterationImplementation>,
+// }
 
 pub struct AlterationManifestEntry {
     pub key: String,
@@ -37,6 +39,7 @@ pub struct GenomeAlterationImplementation {
     pub prepare: Rc<PrepareAlterationParamsFn<FramedGenomeWord>>,
 }
 
+#[derive(Clone)]
 pub struct CompiledAlterationSet {
     pub alterations: Vec<GenomeAlterationImplementation>,
 }
