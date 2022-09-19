@@ -1,4 +1,5 @@
 use crate::biology::experiments::types::{CullStrategy, ExperimentSimSettings};
+use crate::biology::experiments::variants::multi_pool::types::FitnessCycleStrategy;
 use crate::genome::framed::samples;
 use crate::simulation::common::builder::ChemistryBuilder;
 use crate::simulation::common::{GeneticManifest, GeneticManifestData};
@@ -41,9 +42,15 @@ pub fn simple_experiment(runner_args: ExperimentRunnerArgs) -> SimpleExperiment 
     let gm = GeneticManifest::from_chemistry(&chemistry).wrap_rc();
 
     let settings = SimpleExperimentSettings {
-        cull_strategy: CullStrategy::WorstFirst { percent: 0.30 },
-        fitness_calculation_key: "total_cheese_consumed".to_string(),
+        experiment_key: runner_args.experiment_name_key.to_string(),
+        logging_settings: Some(LoggingSettings {
+            experiment_key: runner_args.experiment_name_key.to_string(),
+            allow_overwrite: true,
+            checkpoint_interval: 2000,
+        }),
         num_genomes: 30,
+        iterations: 10001,
+
         sim_settings: ExperimentSimSettings {
             num_simulation_ticks: 70,
             // num_simulation_ticks: 2,
@@ -54,16 +61,13 @@ pub fn simple_experiment(runner_args: ExperimentRunnerArgs) -> SimpleExperiment 
             place_units_method: PlaceUnitsMethod::Default,
             chemistry_options: chemistry_builder,
         },
-
-        iterations: 10001,
         // iterations: 100000000,
         alteration_set: alterations(),
-        experiment_key: runner_args.experiment_name_key.to_string(),
-        logging_settings: Some(LoggingSettings {
-            experiment_key: runner_args.experiment_name_key.to_string(),
-            allow_overwrite: true,
-            checkpoint_interval: 2000,
-        }),
+        fitness_calculation_key: "total_cheese_consumed".to_string(),
+        cull_strategy: CullStrategy::WorstFirst { percent: 0.30 },
+        fitness_cycle_strategy: FitnessCycleStrategy::Exaustive {
+            group_scramble_pct: 0.30,
+        },
     };
 
     let mut exp = SimpleExperiment::new(settings);

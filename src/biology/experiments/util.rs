@@ -4,7 +4,7 @@ use super::{
 };
 use rand::Rng;
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct GenomeEntryInfo {
     pub id: GenomeEntryId,
     pub uid: ExperimentGenomeUid,
@@ -22,7 +22,7 @@ pub fn partition_genomes_into_subset_groups(
     let mut subset_genomes = select_random_subset_into(genomes.clone(), total_in_subset);
 
     subset_genomes.sort_by_cached_key(|entry| entry.fitness_rank);
-    scramble_groups(partition_groups(subset_genomes, group_size), scramble_pct)
+    partition_groups(subset_genomes, group_size)
 }
 
 pub fn select_random_subset_into(
@@ -44,17 +44,6 @@ pub fn select_random_subset_into(
 pub fn partition_genomes_into_exaustive_groups(
     genomes: Vec<GenomeEntryInfo>,
     group_size: usize,
-    shuffle_pct: f32,
-) -> Vec<Vec<GenomeEntryInfo>> {
-    scramble_groups(
-        _partition_genomes_into_exaustive_groups(genomes, group_size),
-        0.30,
-    )
-}
-
-pub fn _partition_genomes_into_exaustive_groups(
-    genomes: Vec<GenomeEntryInfo>,
-    group_size: usize,
 ) -> Vec<Vec<GenomeEntryInfo>> {
     let num_genomes = genomes.len();
 
@@ -64,7 +53,22 @@ pub fn _partition_genomes_into_exaustive_groups(
     partition_groups(entries_by_fitness, group_size)
 }
 
-pub fn scramble_groups<T>(mut groups: Vec<Vec<T>>, pct_scramble: f32) -> Vec<Vec<T>> {
+pub fn scramble_groups<T>(
+    mut groups: Vec<Vec<T>>,
+    fitness_cycle_strategy: &FitnessCycleStrategy,
+) -> Vec<Vec<T>> {
+    match fitness_cycle_strategy {
+        FitnessCycleStrategy::Exaustive { group_scramble_pct } => {
+            _scramble_groups(groups, *group_scramble_pct)
+        }
+        FitnessCycleStrategy::RandomSubset {
+            percent_of_genomes,
+            group_scramble_pct,
+        } => _scramble_groups(groups, *group_scramble_pct),
+    }
+}
+
+pub fn _scramble_groups<T>(mut groups: Vec<Vec<T>>, pct_scramble: f32) -> Vec<Vec<T>> {
     if groups.len() == 0 || groups[0].len() == 0 || pct_scramble == 0.0 {
         return groups;
     }
@@ -174,7 +178,7 @@ pub fn partition_into_groups(
 ) -> Vec<Vec<GenomeEntryInfo>> {
     match fitness_cycle_strategy {
         FitnessCycleStrategy::Exaustive { group_scramble_pct } => {
-            partition_genomes_into_exaustive_groups(genomes, group_size, *group_scramble_pct)
+            partition_genomes_into_exaustive_groups(genomes, group_size)
         }
         FitnessCycleStrategy::RandomSubset {
             percent_of_genomes,
@@ -298,7 +302,7 @@ pub fn cull_genomes(
 }
 
 pub mod tests {
-    use crate::biology::experiments::util::partition_into_thirds;
+    use crate::biology::experiments::util::{_scramble_groups, partition_into_thirds};
 
     use super::{partition_groups, scramble_groups};
 
@@ -308,7 +312,7 @@ pub mod tests {
 
         // non-deterministic sanity check
         for i in 0..5 {
-            let result = scramble_groups(input.clone(), 0.10);
+            let result = _scramble_groups(input.clone(), 0.10);
             assert_eq!(result.len(), 2);
             assert_eq!(result[0].len(), 5);
             assert_eq!(result[1].len(), 5);

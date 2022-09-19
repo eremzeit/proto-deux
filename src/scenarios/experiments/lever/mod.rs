@@ -2,8 +2,9 @@ use crate::{
     biology::experiments::{
         alterations::{self, CompiledAlterationSet},
         types::{CullStrategy, ExperimentSimSettings},
-        variants::simple::{
-            logger::LoggingSettings, utils::SimpleExperimentSettings, SimpleExperiment,
+        variants::{
+            multi_pool::types::FitnessCycleStrategy,
+            simple::{logger::LoggingSettings, utils::SimpleExperimentSettings, SimpleExperiment},
         },
     },
     runners::ExperimentRunnerArgs,
@@ -48,6 +49,9 @@ pub fn simple_experiment(runner_args: ExperimentRunnerArgs) -> SimpleExperiment 
             allow_overwrite: true,
             checkpoint_interval: 1000,
         }),
+        fitness_cycle_strategy: FitnessCycleStrategy::Exaustive {
+            group_scramble_pct: 0.30,
+        },
     };
 
     let mut exp = SimpleExperiment::new(settings);

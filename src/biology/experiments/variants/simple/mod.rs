@@ -2,9 +2,14 @@ pub mod logger;
 pub mod utils;
 
 use crate::biology::experiments::alterations;
-use crate::biology::experiments::sim_runner::{ExperimentSimRunner, SimRunnerGenomeEntry};
+use crate::biology::experiments::sim_runner::{
+    execute_sim_runners, ExperimentSimRunner, SimRunnerGenomeEntry,
+};
 use crate::biology::experiments::types::{
-    ExperimentGenomeUid, GenomeEntryId, GenomeExperimentEntry, TrialResultItem,
+    CullStrategy, ExperimentGenomeUid, GenomeEntryId, GenomeExperimentEntry, TrialResultItem,
+};
+use crate::biology::experiments::util::{
+    cull_genomes, partition_into_groups, scramble_groups, GenomeEntryInfo,
 };
 use crate::biology::genome::framed::annotated::FramedGenomeExecutionStats;
 use crate::biology::genome::framed::samples::cheese::get_genome2_raw;
@@ -26,6 +31,9 @@ use threadpool::ThreadPool;
 use self::logger::SimpleExperimentLogger;
 use self::utils::SimpleExperimentSettings;
 use crate::biology::genome::framed::samples;
+
+use super::multi_pool::gene_pool::pull_fresh_genomes;
+use super::multi_pool::types::FitnessCycleStrategy;
 
 macro_rules! is_experiment_logging_enabled {
     ( ) => {
@@ -124,38 +132,6 @@ impl SimpleExperiment {
         }
     }
 
-    pub fn register_new_genome(&mut self, genome: RawFramedGenome) {
-        let next_genome_id = if self.genome_entries.len() > 0 {
-            self._last_entry_id + 1
-        } else {
-            0
-        };
-
-        let compiled_genome = FramedGenomeCompiler::compile(genome.clone(), &self._gm).wrap_rc();
-        let stats = FramedGenomeExecutionStats::new(&compiled_genome.frames);
-
-        let genome_entry = GenomeExperimentEntry {
-            last_fitness_metrics: vec![],
-            max_fitness_metric: None,
-            num_evaluations: 0,
-            compiled_genome: compiled_genome,
-            uid: next_genome_id as ExperimentGenomeUid,
-            current_rank_score: 0,
-            previous_execution_stats: stats,
-        };
-
-        self._last_entry_id = genome_entry.uid;
-
-        if self
-            .genome_entries
-            .iter()
-            .any(|e| e.uid == genome_entry.uid)
-        {
-            panic!("uid is duplicated");
-        }
-        self.genome_entries.push(genome_entry);
-    }
-
     pub fn start(&mut self) {
         if !self.is_initialized {
             self.initialize();
@@ -188,7 +164,7 @@ impl SimpleExperiment {
     pub fn tick(&mut self) {
         perf_timer_start!("experiment_partition");
         let groups = self.partition_into_groups();
-        let groups = self.scramble_groups(groups);
+        let groups = scramble_groups(groups, &self.settings.fitness_cycle_strategy);
 
         explog!("groups: {:?}", &groups);
         perf_timer_stop!("experiment_partition");
@@ -269,64 +245,82 @@ impl SimpleExperiment {
         }
     }
 
-    // TODO: use the generalized form of this functionality
-    pub fn partition_into_groups(&mut self) -> Vec<Vec<(GenomeEntryId, ExperimentGenomeUid)>> {
-        // explog!(
-        //     "partitioning uids: {:?}",
-        //     self.genome_entries
-        //         .iter()
-        //         .map(|unit| { unit.uid })
-        //         .collect::<Vec<_>>()
-        // );
-        let num_genomes = self.genome_entries.len();
-        let group_size = self.settings.sim_settings.num_genomes_per_sim;
+    pub fn partition_into_groups(&mut self) -> Vec<Vec<GenomeEntryInfo>> {
+        let entry_items = self
+            .genome_entries
+            .iter()
+            .enumerate()
+            .map(|(i, genome)| GenomeEntryInfo {
+                id: i,
+                uid: genome.uid,
+                fitness_rank: genome.current_rank_score,
+            })
+            .collect::<Vec<_>>();
 
-        let mut entries_by_fitness = self.genome_entries.clone(); // inefficient
-        entries_by_fitness.sort_by_cached_key(|entry| entry.current_rank_score);
+        partition_into_groups(
+            entry_items,
+            &super::multi_pool::types::FitnessCycleStrategy::Exaustive {
+                group_scramble_pct: 0.30,
+            },
+            self.settings.sim_settings.num_genomes_per_sim,
+        )
 
-        let mut partitions = vec![];
-        let mut num_groups = num_genomes / group_size;
+        // // explog!(
+        // //     "partitioning uids: {:?}",
+        // //     self.genome_entries
+        // //         .iter()
+        // //         .map(|unit| { unit.uid })
+        // //         .collect::<Vec<_>>()
+        // // );
+        // let num_genomes = self.genome_entries.len();
+        // let group_size = self.settings.sim_settings.num_genomes_per_sim;
 
-        let mut last_group_is_uneven = false;
-        if num_genomes % group_size > 0 {
-            num_groups += 1;
-            last_group_is_uneven = true;
-        }
+        // let mut entries_by_fitness = self.genome_entries.clone(); // inefficient
+        // entries_by_fitness.sort_by_cached_key(|entry| entry.current_rank_score);
 
-        // println!(
-        //     "uids in entries_by_fitness: {:?}",
-        //     entries_by_fitness
-        //         .iter()
-        //         .map(|unit| { unit.uid })
-        //         .collect::<Vec<_>>()
-        // );
+        // let mut partitions = vec![];
+        // let mut num_groups = num_genomes / group_size;
 
-        let mut genome_idx = 0;
-        for group_idx in (0..num_groups) {
-            let mut group = vec![];
+        // let mut last_group_is_uneven = false;
+        // if num_genomes % group_size > 0 {
+        //     num_groups += 1;
+        //     last_group_is_uneven = true;
+        // }
 
-            if last_group_is_uneven && group_idx == num_groups - 1 {
-                for i in (0..group_size) {
-                    // count backwards from the end of the genome list. ie. some genomes will get included in two groups
-                    let genome_idx = num_genomes - 1 - i;
-                    let uid = entries_by_fitness[genome_idx].uid;
-                    let idx = self._find_by_uid(uid).unwrap();
-                    group.insert(0, (idx, uid));
-                }
-            } else {
-                for i in (0..group_size) {
-                    let uid = entries_by_fitness[genome_idx].uid;
-                    let idx = self._find_by_uid(uid).unwrap();
-                    group.push((idx, uid));
-                    genome_idx += 1;
-                }
-            }
+        // // println!(
+        // //     "uids in entries_by_fitness: {:?}",
+        // //     entries_by_fitness
+        // //         .iter()
+        // //         .map(|unit| { unit.uid })
+        // //         .collect::<Vec<_>>()
+        // // );
 
-            partitions.push(group);
-        }
-        //let flattened = partitions.iter().flatten().collect::<Vec<_>>();
-        //println!("flattened groups: {:?}", flattened.len());
-        partitions
+        // let mut genome_idx = 0;
+        // for group_idx in (0..num_groups) {
+        //     let mut group = vec![];
+
+        //     if last_group_is_uneven && group_idx == num_groups - 1 {
+        //         for i in (0..group_size) {
+        //             // count backwards from the end of the genome list. ie. some genomes will get included in two groups
+        //             let genome_idx = num_genomes - 1 - i;
+        //             let uid = entries_by_fitness[genome_idx].uid;
+        //             let idx = self._find_by_uid(uid).unwrap();
+        //             group.insert(0, (idx, uid));
+        //         }
+        //     } else {
+        //         for i in (0..group_size) {
+        //             let uid = entries_by_fitness[genome_idx].uid;
+        //             let idx = self._find_by_uid(uid).unwrap();
+        //             group.push((idx, uid));
+        //             genome_idx += 1;
+        //         }
+        //     }
+
+        //     partitions.push(group);
+        // }
+        // //let flattened = partitions.iter().flatten().collect::<Vec<_>>();
+        // //println!("flattened groups: {:?}", flattened.len());
+        // partitions
     }
 
     pub fn normalize_ranks(&mut self) {
@@ -444,96 +438,102 @@ impl SimpleExperiment {
     }
 
     pub fn cull_and_replace(&mut self) {
-        let target_count = (self.settings.num_genomes as f64 * 0.50) as usize;
-        let to_remove = self.genome_entries.len() - target_count;
-        let mut by_rank = self
+        cull_genomes(
+            &mut self.genome_entries,
+            &CullStrategy::WorstFirst { percent: 0.30 },
+            self.settings.num_genomes,
+        );
+
+        let raw_genomes = pull_fresh_genomes(
+            &mut self.genome_entries,
+            self.settings.num_genomes,
+            &self.settings.alteration_set,
+        );
+
+        for raw_genome in raw_genomes {
+            self.register_new_genome(raw_genome);
+        }
+    }
+
+    // pub fn pull_fresh_genome(&mut self) {
+    //     let mut rng = rand::thread_rng();
+    //     let alt_i = rng.gen_range((0..self.settings.alteration_set.alterations.len()));
+    //     self._pull_fresh_genome(alt_i);
+    // }
+
+    // // TODO: something about this is slow
+    // fn _pull_fresh_genome(&mut self, alteration_index: usize) {
+    //     //explog!("Pulling new genome...");
+    //     let alteration = &self.settings.alteration_set.alterations[alteration_index].clone();
+
+    //     let mut genomes = vec![];
+    //     for i in (0..alteration.genomes_required) {
+    //         let uid = self._select_random_top_genome();
+    //         let index = self._find_by_uid(uid).unwrap();
+
+    //         genomes.push(self.genome_entries[index].compiled_genome.as_ref());
+    //     }
+
+    //     let params = (alteration.prepare)(&genomes.as_slice());
+    //     let new_genome = (alteration.execute)(&genomes.as_slice(), &params.as_slice());
+
+    //     if new_genome.len() > 0 {
+    //         self.register_new_genome(new_genome);
+    //     }
+    // }
+
+    pub fn register_new_genome(&mut self, genome: RawFramedGenome) {
+        let next_genome_id = if self.genome_entries.len() > 0 {
+            self._last_entry_id + 1
+        } else {
+            0
+        };
+
+        let compiled_genome = FramedGenomeCompiler::compile(genome.clone(), &self._gm).wrap_rc();
+        let stats = FramedGenomeExecutionStats::new(&compiled_genome.frames);
+
+        let genome_entry = GenomeExperimentEntry {
+            last_fitness_metrics: vec![],
+            max_fitness_metric: None,
+            num_evaluations: 0,
+            compiled_genome: compiled_genome,
+            uid: next_genome_id as ExperimentGenomeUid,
+            current_rank_score: 0,
+            previous_execution_stats: stats,
+        };
+
+        self._last_entry_id = genome_entry.uid;
+
+        if self
             .genome_entries
             .iter()
-            .filter(|entry| entry.max_fitness_metric.is_some())
-            .enumerate()
-            .map(|(i, entry)| {
-                (
-                    i,
-                    entry.uid,
-                    entry.current_rank_score,
-                    entry.max_fitness_metric,
-                    entry.num_evaluations,
-                )
-            })
-            .collect::<Vec<_>>()
-            .clone();
-        by_rank.sort_by_cached_key(|entry| entry.2);
-
-        let mut removed_count = 0;
-        let mut uids_to_remove = vec![];
-
-        while removed_count < to_remove && by_rank.len() > 0 {
-            let item = by_rank.remove(0);
-
-            uids_to_remove.push(item.1);
-            removed_count += 1;
+            .any(|e| e.uid == genome_entry.uid)
+        {
+            panic!("uid is duplicated");
         }
-
-        explog!("Culling genomes with uids: {:?}", &uids_to_remove);
-        for uid in uids_to_remove {
-            let idx = self._find_by_uid(uid).unwrap();
-            self.genome_entries.remove(idx);
-        }
-
-        perf_timer_start!("cull_and_replace__2nd_half");
-        while self.genome_entries.len() < self.settings.num_genomes {
-            self.pull_fresh_genome();
-        }
-        perf_timer_stop!("cull_and_replace__2nd_half");
+        self.genome_entries.push(genome_entry);
     }
 
-    pub fn pull_fresh_genome(&mut self) {
-        let mut rng = rand::thread_rng();
-        let alt_i = rng.gen_range((0..self.settings.alteration_set.alterations.len()));
-        self._pull_fresh_genome(alt_i);
-    }
+    // pub fn _find_newest_genome_uid(&self) -> ExperimentGenomeUid {
+    //     let mut min_i = 0;
+    //     let mut min_evals = None;
+    //     for (i, genome) in self.genome_entries.iter().enumerate() {
+    //         if min_evals.is_none() || genome.num_evaluations < min_evals.clone().unwrap() {
+    //             min_evals = Some(genome.num_evaluations);
+    //             min_i = i;
+    //         }
+    //     }
 
-    // TODO: something about this is slow
-    fn _pull_fresh_genome(&mut self, alteration_index: usize) {
-        //explog!("Pulling new genome...");
-        let alteration = &self.settings.alteration_set.alterations[alteration_index].clone();
+    //     self.genome_entries[min_i].uid
+    // }
 
-        let mut genomes = vec![];
-        for i in (0..alteration.genomes_required) {
-            let uid = self._select_random_top_genome();
-            let index = self._find_by_uid(uid).unwrap();
-
-            genomes.push(self.genome_entries[index].compiled_genome.as_ref());
-        }
-
-        let params = (alteration.prepare)(&genomes.as_slice());
-        let new_genome = (alteration.execute)(&genomes.as_slice(), &params.as_slice());
-
-        if new_genome.len() > 0 {
-            self.register_new_genome(new_genome);
-        }
-    }
-
-    pub fn _find_newest_genome_uid(&self) -> ExperimentGenomeUid {
-        let mut min_i = 0;
-        let mut min_evals = None;
-        for (i, genome) in self.genome_entries.iter().enumerate() {
-            if min_evals.is_none() || genome.num_evaluations < min_evals.clone().unwrap() {
-                min_evals = Some(genome.num_evaluations);
-                min_i = i;
-            }
-        }
-
-        self.genome_entries[min_i].uid
-    }
-
-    fn _select_random_top_genome(&self) -> usize {
-        let mut rng = rand::thread_rng();
-        let i = rng.gen_range((0..self.genome_entries.len()));
-        let mut by_rank = self.genome_entries.clone();
-        by_rank.sort_by_cached_key(|entry| entry.current_rank_score);
-        by_rank[i].uid
-    }
+    // fn _select_random_top_genome(&self) -> usize {
+    //     let mut rng = rand::thread_rng();
+    //     let i = rng.gen_range((0..self.genome_entries.len()));
+    //     let mut by_rank = self.genome_entries.clone();
+    //     by_rank.sort_by_cached_key(|entry| entry.current_rank_score);
+    //     by_rank[i].uid
+    // }
     fn _find_by_uid(&self, uid: ExperimentGenomeUid) -> Option<usize> {
         // AOEU
         let count = self.genome_entries.iter().filter(|e| e.uid == uid).count();
@@ -569,48 +569,48 @@ impl SimpleExperiment {
         statuses
     }
 
-    // TODO: use the generalized form of this
-    pub fn scramble_groups(
-        &self,
-        mut groups: Vec<Vec<(GenomeEntryId, ExperimentGenomeUid)>>,
-    ) -> Vec<Vec<(GenomeEntryId, ExperimentGenomeUid)>> {
-        if groups.len() == 0 || groups[0].len() == 0 {
-            return groups;
-        }
+    // // TODO: use the generalized form of this
+    // pub fn scramble_groups(
+    //     &self,
+    //     mut groups: Vec<Vec<(GenomeEntryId, ExperimentGenomeUid)>>,
+    // ) -> Vec<Vec<(GenomeEntryId, ExperimentGenomeUid)>> {
+    //     if groups.len() == 0 || groups[0].len() == 0 {
+    //         return groups;
+    //     }
 
-        use rand::Rng;
-        let mut rng = rand::thread_rng();
+    //     use rand::Rng;
+    //     let mut rng = rand::thread_rng();
 
-        for i in 0..groups.len() {
-            let to_shuffle: usize = (groups[i].len() as f64 * 0.30).round() as usize;
+    //     for i in 0..groups.len() {
+    //         let to_shuffle: usize = (groups[i].len() as f64 * 0.30).round() as usize;
 
-            for count in 0..to_shuffle {
-                let dest_group = rng.gen_range(0..groups.len());
+    //         for count in 0..to_shuffle {
+    //             let dest_group = rng.gen_range(0..groups.len());
 
-                let src_group_length = groups[i].len();
-                let removed = groups[i].remove(rng.gen_range(0..src_group_length));
-                groups[dest_group].push(removed);
+    //             let src_group_length = groups[i].len();
+    //             let removed = groups[i].remove(rng.gen_range(0..src_group_length));
+    //             groups[dest_group].push(removed);
 
-                let dest_group_length = groups[dest_group].len();
-                let removed = groups[dest_group].remove(rng.gen_range(0..dest_group_length));
-                groups[i].push(removed);
-            }
-        }
+    //             let dest_group_length = groups[dest_group].len();
+    //             let removed = groups[dest_group].remove(rng.gen_range(0..dest_group_length));
+    //             groups[i].push(removed);
+    //         }
+    //     }
 
-        // while redeal.len() != 0 {
-        //     let i = rng.gen_range(0..groups.len());
-        //     groups[i].push(redeal.remove(0));
-        // }
-        // println!(
-        //     "GROUPS: {:?}",
-        //     groups // groups.iter().map(|g| g.len()).collect::<Vec<_>>()
-        // );
-        groups
-    }
+    //     // while redeal.len() != 0 {
+    //     //     let i = rng.gen_range(0..groups.len());
+    //     //     groups[i].push(redeal.remove(0));
+    //     // }
+    //     // println!(
+    //     //     "GROUPS: {:?}",
+    //     //     groups // groups.iter().map(|g| g.len()).collect::<Vec<_>>()
+    //     // );
+    //     groups
+    // }
 
     pub fn run_eval_for_groups(
         &self,
-        groups: Vec<Vec<(GenomeEntryId, ExperimentGenomeUid)>>,
+        groups: Vec<Vec<GenomeEntryInfo>>,
         use_threads: bool,
     ) -> Vec<Vec<TrialResultItem>> {
         let groups = groups
@@ -619,75 +619,32 @@ impl SimpleExperiment {
             .map(|(i, group)| {
                 groups[i]
                     .iter()
-                    .map(|(entry_idx, uid)| {
-                        // let entry_idx = self._find_by_uid(*uid).unwrap();
-                        let entry = &self.genome_entries[*entry_idx];
-                        // (*entry_idx, *uid, entry.compiled_genome.as_ref().clone())
+                    .map(|(entry_info)| {
+                        assert_eq!(self.genome_entries[entry_info.id].uid, entry_info.uid);
 
                         SimRunnerGenomeEntry {
                             gene_pool_id: 0, // not used
-                            genome_idx: *entry_idx,
-                            genome_uid: entry.uid,
-                            genome: entry.compiled_genome.as_ref().clone(),
-                            execution_stats: entry.previous_execution_stats.clone(),
+                            genome_idx: entry_info.id,
+                            genome_uid: entry_info.uid,
+                            genome: self.genome_entries[entry_info.id]
+                                .compiled_genome
+                                .as_ref()
+                                .clone(),
+                            execution_stats: self.genome_entries[entry_info.id]
+                                .previous_execution_stats
+                                .clone(),
                         }
                     })
                     .collect::<Vec<_>>()
             })
             .collect::<Vec<_>>();
 
-        if use_threads {
-            let (tx, rx) = mpsc::channel();
-            let pool = ThreadPool::new(5);
-            let group_count = groups.len();
-            for entries in groups {
-                let sim_settings = self.settings.sim_settings.clone();
-                let fitness_key = self.settings.fitness_calculation_key.clone();
-                let chemistry_builder = self.settings.sim_settings.chemistry_options.clone();
-
-                let tx = tx.clone();
-                pool.execute(move || {
-                    let mut runner = ExperimentSimRunner::new(
-                        chemistry_builder,
-                        entries,
-                        sim_settings,
-                        fitness_key,
-                    );
-
-                    let result = runner.run_evaluation_for_uids();
-                    tx.send(result)
-                        .expect("channel will be there waiting for the pool");
-                });
-            }
-            rx.iter()
-                .take(group_count)
-                .collect::<Vec<Vec<TrialResultItem>>>()
-        } else {
-            let result = groups
-                .into_iter()
-                .map(|entries| {
-                    perf_timer_start!("preinit_simulation");
-                    let sim_settings = self.settings.sim_settings.clone();
-                    let fitness_key = self.settings.fitness_calculation_key.clone();
-                    let chemistry_builder = self.settings.sim_settings.chemistry_options.clone();
-
-                    perf_timer_stop!("preinit_simulation");
-                    let mut runner = ExperimentSimRunner::new(
-                        chemistry_builder,
-                        entries,
-                        sim_settings,
-                        fitness_key,
-                    );
-
-                    perf_timer_start!("run_simulation");
-                    let result = runner.run_evaluation_for_uids();
-                    perf_timer_stop!("run_simulation");
-                    result
-                })
-                .collect::<Vec<_>>();
-
-            result
-        }
+        execute_sim_runners(
+            groups,
+            false,
+            &self.settings.sim_settings,
+            &self.settings.fitness_calculation_key,
+        )
     }
 
     fn get_max_fitness_for_genome(&self, uid: ExperimentGenomeUid) -> Option<FitnessScore> {
@@ -828,6 +785,9 @@ pub mod tests {
                 place_units_method: PlaceUnitsMethod::Default,
                 chemistry_options: chemistry_builder,
             })
+            .fitness_cycle_strategy(FitnessCycleStrategy::Exaustive {
+                group_scramble_pct: 0.30,
+            })
             .iterations(1)
             .logging_settings(None)
     }
@@ -858,7 +818,17 @@ pub mod tests {
 
         let groups = exp.partition_into_groups();
 
-        // println!("groups: {:?}", groups);
+        let groups = groups
+            .iter()
+            .map(|group| {
+                group
+                    .iter()
+                    .map(|info| (info.id, info.uid))
+                    .collect::<Vec<_>>()
+            })
+            .collect::<Vec<_>>();
+
+        println!("groups: {:?}", groups);
 
         let flattened = groups.iter().flatten().map(|x| *x).collect::<Vec<_>>();
         assert_eq!(flattened.len(), num_genomes + 1); //because the genome count isn't a multiple of the group size, there's double inclusion

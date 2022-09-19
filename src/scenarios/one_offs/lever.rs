@@ -2,8 +2,9 @@ use crate::{
     biology::experiments::{
         alterations,
         types::{CullStrategy, ExperimentSimSettings},
-        variants::simple::{
-            logger::LoggingSettings, utils::SimpleExperimentSettings, SimpleExperiment,
+        variants::{
+            multi_pool::types::FitnessCycleStrategy,
+            simple::{logger::LoggingSettings, utils::SimpleExperimentSettings, SimpleExperiment},
         },
     },
     simulation::common::{builder::ChemistryBuilder, helpers::place_units::PlaceUnitsMethod},
@@ -66,6 +67,9 @@ pub fn test_fitness(key: &str) {
             allow_overwrite: true,
             checkpoint_interval: 1,
         }),
+        fitness_cycle_strategy: FitnessCycleStrategy::Exaustive {
+            group_scramble_pct: 0.30,
+        },
     };
 
     let mut exp = SimpleExperiment::new(settings);

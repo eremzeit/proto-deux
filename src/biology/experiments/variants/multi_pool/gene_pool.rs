@@ -17,7 +17,7 @@ use crate::{
             util::{
                 cull_genomes, partition_genomes_into_exaustive_groups,
                 partition_genomes_into_subset_groups, partition_into_groups, partition_into_thirds,
-                GenomeEntryInfo,
+                scramble_groups, GenomeEntryInfo,
             },
             variants::simple::{push_into_with_max, random_genome_of_length},
         },
@@ -93,6 +93,7 @@ impl ExperimentGenePool {
 
     pub fn tick(&mut self) {
         let groups = self.partition_into_groups();
+        let groups = scramble_groups(groups, &self.settings.fitness_cycle_strategy);
 
         let group_results = self.run_eval_for_groups(groups, true);
 
