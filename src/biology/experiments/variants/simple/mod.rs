@@ -535,10 +535,12 @@ impl SimpleExperiment {
     //     by_rank[i].uid
     // }
     fn _find_by_uid(&self, uid: ExperimentGenomeUid) -> Option<usize> {
-        // AOEU
-        let count = self.genome_entries.iter().filter(|e| e.uid == uid).count();
-        if count > 1 {
-            panic!("duplicate");
+        #[cfg(debug_assertions)]
+        {
+            let count = self.genome_entries.iter().filter(|e| e.uid == uid).count();
+            if count > 1 {
+                panic!("duplicate");
+            }
         }
 
         for i in (0..self.genome_entries.len()) {

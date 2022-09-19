@@ -308,7 +308,7 @@ pub fn pull_fresh_genomes(
     sorted_by_rank.sort_by_cached_key(|g| g.1);
 
     let mut raw_genomes = vec![];
-    while genomes.len() < target_count {
+    while genomes.len() + raw_genomes.len() < target_count {
         let alteration = choose_random_alteration(alteration_set);
         raw_genomes.push(pull_fresh_genome(genomes, &alteration, &sorted_by_rank));
     }

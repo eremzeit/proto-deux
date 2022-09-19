@@ -67,10 +67,10 @@ pub fn render_frames_with_stats(
                     .eval_count
                     .get()
                     == 0;
-            println!(
-                "skipping channel? ({}, {}), {}",
-                frame_i, channel, skip_channel
-            );
+            // println!(
+            //     "skipping channel? ({}, {}), {}",
+            //     frame_i, channel, skip_channel
+            // );
 
             let gene_str = if skip_channel {
                 "".to_owned()
