@@ -19,7 +19,6 @@ extern crate derive_builder;
 
 // #[macro_use]
 // extern crate serde_json;
-
 extern crate chrono;
 extern crate clap;
 extern crate find_folder;
@@ -49,7 +48,6 @@ pub mod scenarios;
 pub mod tests;
 pub mod ui;
 
-// use ndarray::*;
 use std::collections::HashMap;
 
 fn main() {
@@ -70,6 +68,9 @@ fn main() {
         }
         RunMode::OneOff(scenario_key) => {
             run_one_off(&scenario_key);
+        }
+        RunMode::MultiPoolExperiment(args) => {
+            runners::run_multi_pool_experiment(args);
         }
         _ => panic!("Run mode not implemented yet"),
     }

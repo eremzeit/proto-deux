@@ -1,7 +1,10 @@
 pub mod exp_replay;
 
 use crate::{
-    scenarios::{experiments::get_experiment_scenario, simulations::get_simulation_scenario},
+    scenarios::{
+        experiments::{get_experiment_scenario, get_multipool_experiment_scenario},
+        simulations::get_simulation_scenario,
+    },
     simulation::{
         executors::{simple::SimpleSimulationExecutor, threaded::ThreadedSimulationExecutor},
         simulation_data::{new_threaded_simulation_reference, SimulationData},
@@ -44,6 +47,7 @@ pub enum RunMode {
     GuiSimulation(SimulationRunnerArgs, SimulationUiRunnerArgs),
     ExperimentSimReplayGui(ExperimentSimReplayGuiArgs, SimulationUiRunnerArgs),
     HeadlessExperiment(ExperimentRunnerArgs),
+    MultiPoolExperiment(ExperimentRunnerArgs),
     GuiExperiment(ExperimentRunnerArgs),
     OneOff(String),
 }
@@ -147,4 +151,10 @@ pub fn start_exp_replay_with_ui(
             cell_size: 30.0,
         },
     );
+}
+
+pub fn run_multi_pool_experiment(args: ExperimentRunnerArgs) {
+    let mut exp = get_multipool_experiment_scenario(args);
+
+    exp.start();
 }

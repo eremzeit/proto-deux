@@ -40,7 +40,7 @@ pub fn calculate_new_fitness_ranks(
             let losers_fitness_score = fitness_result[j].0.fitness_score;
 
             // let mut our_new_rank_score = self.genome_entries[our_genome_idx].current_rank_score;
-            assert!(our_fitness_score > losers_fitness_score);
+            assert!(our_fitness_score >= losers_fitness_score);
 
             our_rank_score = adjust_winners_rank(our_rank_score, losers_rank_score, &method);
             fitness_result[i].1 = our_rank_score;

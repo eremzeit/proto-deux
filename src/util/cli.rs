@@ -75,6 +75,12 @@ pub fn parse_cli_args() -> RunMode {
                 .arg(exp_name_key_arg.clone()),
         )
         .subcommand(
+            Command::new("multi_pool_exp")
+                .about("Run an experiment")
+                .arg(scenario_key_arg.clone())
+                .arg(exp_name_key_arg.clone()),
+        )
+        .subcommand(
             Command::new("sim")
                 .about("Run a single simulation")
                 .arg(chemistry_key_arg.clone())
@@ -120,6 +126,23 @@ pub fn parse_cli_args() -> RunMode {
                 .expect("One off scenario key required");
 
             return RunMode::OneOff(scenario_key.clone());
+        }
+        Some(("multi_pool_exp", matches)) => {
+            let scenario_key = matches
+                .get_one::<String>("scenario_key")
+                .expect("Experiment scenario key required");
+
+            // let iterations = matches.get_one::<u64>("num_iterations");
+
+            let default_name_key = "default".to_string();
+            let name_key = matches
+                .get_one::<String>("name_key")
+                .unwrap_or(&default_name_key);
+
+            return RunMode::MultiPoolExperiment(ExperimentRunnerArgs {
+                experiment_scenario_key: scenario_key.clone(),
+                experiment_name_key: name_key.clone(),
+            });
         }
         Some(("exp", matches)) => {
             let scenario_key = matches

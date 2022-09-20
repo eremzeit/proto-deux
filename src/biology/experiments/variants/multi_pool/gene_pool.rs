@@ -43,11 +43,16 @@ pub type GenePoolId = usize;
 #[derive(Clone)]
 pub struct ExperimentGenePool {
     pub id: GenePoolId,
-    pub genomes: Vec<GenomeExperimentEntry>,
-    _last_entry_id: usize,
     pub settings: GenePoolSettings,
-    pub eval_points: usize,
     pub gm: Rc<GeneticManifest>,
+    pub state: ExperimentGenePoolState,
+}
+
+#[derive(Clone)]
+pub struct ExperimentGenePoolState {
+    pub genomes: Vec<GenomeExperimentEntry>,
+    pub eval_points: usize,
+    _last_entry_id: usize,
 }
 
 impl ExperimentGenePool {
@@ -57,9 +62,11 @@ impl ExperimentGenePool {
         let mut s = Self {
             id,
             settings,
-            genomes: vec![],
-            _last_entry_id: 0,
-            eval_points: 0,
+            state: ExperimentGenePoolState {
+                genomes: vec![],
+                _last_entry_id: 0,
+                eval_points: 0,
+            },
             gm: Rc::new(gm),
         };
 
@@ -75,18 +82,18 @@ impl ExperimentGenePool {
     pub fn populate_initial_genomes(&mut self) {
         let mut rng = rand::thread_rng();
 
-        while self.genomes.len() < self.settings.num_genomes {
+        while self.state.genomes.len() < self.settings.num_genomes {
             self.register_new_genome(&random_genome_of_length(rng.gen_range((30..50))));
         }
     }
 
     pub fn add_eval_points(&mut self, eval_points: usize) {
-        self.eval_points += eval_points;
+        self.state.eval_points += eval_points;
     }
 
     pub fn execute_with_points(&mut self, eval_points: usize) {
         self.add_eval_points(eval_points);
-        while self.eval_points > 0 {
+        while self.state.eval_points > 0 {
             self.tick();
         }
     }
@@ -126,12 +133,12 @@ impl ExperimentGenePool {
             .iter()
             .enumerate()
             .map_while(|(i, group)| {
-                if self.eval_points > 0 {
+                if self.state.eval_points > 0 {
                     let result = Some(
                         groups[i]
                             .iter()
                             .map(|genome_item| {
-                                let entry = &self.genomes[genome_item.id];
+                                let entry = &self.state.genomes[genome_item.id];
                                 assert_eq!(entry.uid, genome_item.uid);
 
                                 SimRunnerGenomeEntry {
@@ -145,10 +152,10 @@ impl ExperimentGenePool {
                             .collect::<Vec<_>>(),
                     );
 
-                    if self.eval_points >= group.len() {
-                        self.eval_points -= group.len();
+                    if self.state.eval_points >= group.len() {
+                        self.state.eval_points -= group.len();
                     } else {
-                        self.eval_points = 0;
+                        self.state.eval_points = 0;
                     }
                     result
                 } else {
@@ -160,6 +167,7 @@ impl ExperimentGenePool {
 
     pub fn partition_into_groups(&self) -> Vec<Vec<GenomeEntryInfo>> {
         let entry_items = self
+            .state
             .genomes
             .iter()
             .enumerate()
@@ -185,7 +193,9 @@ impl ExperimentGenePool {
 
             assert_eq!(genome_idx, trial_result.genome_idx);
 
-            let mut max_fitness = self.genomes[genome_idx].max_fitness_metric.unwrap_or(0);
+            let mut max_fitness = self.state.genomes[genome_idx]
+                .max_fitness_metric
+                .unwrap_or(0);
 
             let mut is_new_max = false;
             if trial_result.fitness_score > max_fitness {
@@ -193,11 +203,11 @@ impl ExperimentGenePool {
                 is_new_max = true;
             }
 
-            self.genomes[genome_idx].max_fitness_metric = Some(max_fitness);
-            self.genomes[genome_idx].num_evaluations += 1;
+            self.state.genomes[genome_idx].max_fitness_metric = Some(max_fitness);
+            self.state.genomes[genome_idx].num_evaluations += 1;
 
             push_into_with_max(
-                &mut self.genomes[genome_idx].last_fitness_metrics,
+                &mut self.state.genomes[genome_idx].last_fitness_metrics,
                 trial_result.fitness_score,
                 10,
             );
@@ -206,13 +216,18 @@ impl ExperimentGenePool {
         let new_ranks = calculate_new_fitness_ranks(
             &fitness_results
                 .iter()
-                .map(|res| (res.clone(), self.genomes[res.genome_idx].current_rank_score))
+                .map(|res| {
+                    (
+                        res.clone(),
+                        self.state.genomes[res.genome_idx].current_rank_score,
+                    )
+                })
                 .collect::<Vec<_>>(),
             &self.settings.fitness_rank_adjustment_method,
         );
 
         for new_rank in new_ranks {
-            self.genomes[new_rank.0.genome_idx].current_rank_score = new_rank.1;
+            self.state.genomes[new_rank.0.genome_idx].current_rank_score = new_rank.1;
         }
 
         self.normalize_ranks();
@@ -220,6 +235,7 @@ impl ExperimentGenePool {
 
     pub fn normalize_ranks(&mut self) {
         let mut ranks = self
+            .state
             .genomes
             .iter()
             .enumerate()
@@ -229,19 +245,19 @@ impl ExperimentGenePool {
         normalize_ranks(&mut ranks);
 
         for i in 0..ranks.len() {
-            self.genomes[ranks[i].0].current_rank_score = ranks[i].1;
+            self.state.genomes[ranks[i].0].current_rank_score = ranks[i].1;
         }
     }
 
     pub fn cull_and_replace(&mut self) {
         cull_genomes(
-            &mut self.genomes,
+            &mut self.state.genomes,
             &self.settings.cull_strategy,
             self.settings.num_genomes,
         );
 
         let raw_genomes = pull_fresh_genomes(
-            &mut self.genomes,
+            &mut self.state.genomes,
             self.settings.num_genomes,
             &self.settings.alteration_specs,
         );
@@ -252,8 +268,8 @@ impl ExperimentGenePool {
     }
 
     pub fn register_new_genome(&mut self, genome: &RawFramedGenome) {
-        let next_genome_id = if self.genomes.len() > 0 {
-            self._last_entry_id + 1
+        let next_genome_id = if self.state.genomes.len() > 0 {
+            self.state._last_entry_id + 1
         } else {
             0
         };
@@ -271,23 +287,23 @@ impl ExperimentGenePool {
             previous_execution_stats: stats,
         };
 
-        self._last_entry_id = genome_entry.uid;
+        self.state._last_entry_id = genome_entry.uid;
 
-        if self.genomes.iter().any(|e| e.uid == genome_entry.uid) {
+        if self.state.genomes.iter().any(|e| e.uid == genome_entry.uid) {
             panic!("uid is duplicated");
         }
-        self.genomes.push(genome_entry);
+        self.state.genomes.push(genome_entry);
     }
 
     fn _find_by_uid(&self, uid: ExperimentGenomeUid) -> Option<usize> {
         // AOEU
-        let count = self.genomes.iter().filter(|e| e.uid == uid).count();
+        let count = self.state.genomes.iter().filter(|e| e.uid == uid).count();
         if count > 1 {
             panic!("duplicate");
         }
 
-        for i in (0..self.genomes.len()) {
-            if self.genomes[i].uid == uid {
+        for i in (0..self.state.genomes.len()) {
+            if self.state.genomes[i].uid == uid {
                 return Some(i);
             };
         }

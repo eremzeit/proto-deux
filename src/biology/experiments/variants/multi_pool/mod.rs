@@ -58,12 +58,25 @@ impl MultiPoolExperiment {
         s
     }
 
-    pub fn initialize_gene_pools(&mut self, gene_pool_settings: Vec<GenePoolSettings>) {
+    fn initialize_gene_pools(&mut self, gene_pool_settings: Vec<GenePoolSettings>) {
         self.state.gene_pools = gene_pool_settings
             .iter()
             .enumerate()
             .map(|(i, settings)| ExperimentGenePool::new(i, settings.clone()))
             .collect::<Vec<_>>();
+    }
+
+    pub fn initialize(&mut self) {
+        // if let Some(logger) = &self._logger {
+        //     logger.init();
+        //     logger.log_settings(&self.settings);
+        // }
+
+        // self.populate_initial_genomes();
+    }
+
+    pub fn start(&mut self) {
+        self.resume();
     }
 
     pub fn resume(&mut self) {
@@ -82,6 +95,9 @@ impl MultiPoolExperiment {
         }
 
         self.execute_reference_evaluation();
+
+        println!("Experiment tick: {}", self.state.current_tick);
+        self.state.current_tick += 1;
     }
 
     pub fn execute_reference_evaluation(&mut self) {
@@ -95,6 +111,7 @@ impl MultiPoolExperiment {
             .iter()
             .map(|gene_pool| {
                 let (id, genome) = gene_pool
+                    .state
                     .genomes
                     .iter()
                     .enumerate()
