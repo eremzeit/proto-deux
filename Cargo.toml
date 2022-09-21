@@ -30,4 +30,5 @@ serde = {version = "1.0.144", features = ["derive"]}
 threadpool = "1.8.1"
 
 [features]
+perf_test = []
 skip_genome_stats = []

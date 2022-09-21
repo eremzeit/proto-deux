@@ -32,28 +32,28 @@ use std::collections::HashMap;
 #[macro_use]
 pub mod constants {
 
-    #[macro_export]
-    macro_rules! MAX_GOBBLE_AMOUNT_ {
-        () => {
-            100
-        };
-    }
-    #[macro_export]
-    macro_rules! MOVE_COST_ {
-        () => {
-            1
-        };
-    }
-    #[macro_export]
-    //macro_rules! NEW_UNIT_COST { () => {200} }
-    macro_rules! NEW_UNIT_COST_ {
-        () => {
-            500
-        };
-    }
-    pub const MOVE_COST: i32 = MOVE_COST_!();
-    pub const NEW_UNIT_COST: i32 = NEW_UNIT_COST_!();
-    pub const MAX_GOBBLE_AMOUNT: i32 = 50;
+    // #[macro_export]
+    // macro_rules! MAX_GOBBLE_AMOUNT_ {
+    //     () => {
+    //         100
+    //     };
+    // }
+    // #[macro_export]
+    // macro_rules! MOVE_COST_ {
+    //     () => {
+    //         1
+    //     };
+    // }
+    // #[macro_export]
+    // //macro_rules! NEW_UNIT_COST { () => {200} }
+    // macro_rules! NEW_UNIT_COST_ {
+    //     () => {
+    //         500
+    //     };
+    // }
+    // pub const MOVE_COST: i32 = MOVE_COST_!();
+    // pub const NEW_UNIT_COST: i32 = NEW_UNIT_COST_!();
+    // pub const MAX_GOBBLE_AMOUNT: i32 = 50;
 }
 
 pub struct CheeseChemistry {
@@ -83,8 +83,8 @@ pub mod defs {
     ]}
 
     def_position_resources! {[
-        [cheese, false],
-        [water, false]
+        [cheese, false]
+        // [water, false]
     ]}
 
     def_unit_resources! {[
@@ -94,10 +94,13 @@ pub mod defs {
     pub const REACTION_ID_GOBBLE_CHEESE: ReactionId = 0;
     pub const REACTION_ID_MOVE_UNIT: ReactionId = 1;
     pub const REACTION_ID_NEW_UNIT: ReactionId = 2;
+
     //trace_macros!(true);
     def_reactions! {
         reaction!("gobble_cheese",
-            reagent!("gobble_cheese"),
+            reagent!("gobble_cheese",
+                chemistry_arg!(UnitResourceAmount, max_gobble_amount),
+            ),
         ),
 
         reaction!("move_unit",
@@ -194,6 +197,9 @@ impl Chemistry for CheeseChemistry {
         ChemistryConfigBuilder::new()
             .set_resource_amount("move_cost", -1)
             .set_resource_amount("new_unit_cost", -200)
+            .set_resource_amount("max_gobble_amount", 50)
+            .set_float_amount("cheese_source_odds", 0.30)
+            .set_float_amount("cheese_source_odds", 0.30)
             .build()
     }
 
@@ -393,15 +399,16 @@ fn custom_action_definitions() -> Vec<ActionDefinition> {
                 let sim_attributes = defs::SimulationAttributesLookup::new();
                 let unit_entry_attributes = defs::UnitEntryAttributesLookup::new();
 
-                let max_gobble_amount = constants::MAX_GOBBLE_AMOUNT;
+                let max_gobble_amount = context.params[0].to_unit_resource_amount();
+
                 let pos = sim_cell.world.get_position_at(context.coord).unwrap();
                 let entry_id = &pos.unit.as_ref().unwrap().entry_id.clone();
                 let pos_cheese_amount = pos.get_resource(pos_resources.cheese, sim_cell.world.tick);
 
-                let diff = pos_cheese_amount - constants::MAX_GOBBLE_AMOUNT;
+                let diff = pos_cheese_amount - max_gobble_amount;
 
-                let amount = if pos_cheese_amount >= constants::MAX_GOBBLE_AMOUNT {
-                    constants::MAX_GOBBLE_AMOUNT
+                let amount = if pos_cheese_amount >= max_gobble_amount {
+                    max_gobble_amount
                 } else {
                     pos_cheese_amount
                 };
@@ -527,7 +534,7 @@ mod tests {
 
             sim.world
                 .set_pos_resource_at(&(2, 0), position_resources.cheese, 10);
-            let params = vec![];
+            let params = vec![ActionParam::UnitResourceAmount(50)];
             assert_eq!(
                 sim.world
                     .get_unit_resource_at(&(2, 0), unit_resources.cheese),

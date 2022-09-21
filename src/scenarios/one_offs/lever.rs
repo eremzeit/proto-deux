@@ -4,7 +4,10 @@ use crate::{
         types::{CullStrategy, ExperimentSimSettings},
         variants::{
             multi_pool::types::FitnessCycleStrategy,
-            simple::{logger::LoggingSettings, utils::SimpleExperimentSettings, SimpleExperiment},
+            simple::{
+                logger::SimpleExperimentLoggingSettings, utils::SimpleExperimentSettings,
+                SimpleExperiment,
+            },
         },
     },
     simulation::common::{builder::ChemistryBuilder, helpers::place_units::PlaceUnitsMethod},
@@ -62,7 +65,7 @@ pub fn test_fitness(key: &str) {
         iterations: 1,
         alteration_set: alterations::default_alteration_set(),
         experiment_key: exp_key.clone(),
-        logging_settings: Some(LoggingSettings {
+        logging_settings: Some(SimpleExperimentLoggingSettings {
             experiment_key: exp_key.clone(),
             allow_overwrite: true,
             checkpoint_interval: 1,

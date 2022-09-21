@@ -17,9 +17,9 @@ use std::borrow::Cow;
 use std::fmt::{Debug, Formatter, Result};
 use std::path::PathBuf;
 
-use super::logger::LoggingSettings;
+use super::logger::SimpleExperimentLoggingSettings;
 
-pub type MaybeLoggingSettings = Option<LoggingSettings>;
+pub type MaybeLoggingSettings = Option<SimpleExperimentLoggingSettings>;
 
 #[derive(Builder)]
 #[builder(pattern = "owned", setter(strip_option))]
@@ -27,7 +27,7 @@ pub struct SimpleExperimentSettings {
     pub experiment_key: String,
     pub logging_settings: MaybeLoggingSettings,
     pub num_genomes: usize,
-    pub iterations: usize,
+    pub iterations: u64,
     pub sim_settings: ExperimentSimSettings,
     pub alteration_set: alterations::CompiledAlterationSet,
     pub fitness_calculation_key: String, // needed?  should this be a trait object?  how will fitness calculation change?

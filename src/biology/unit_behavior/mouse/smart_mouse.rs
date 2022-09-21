@@ -4,7 +4,6 @@ use crate::biology::genetic_manifest::predicates::OperatorImplementation;
 use crate::biology::unit_behavior::UnitBehavior;
 use crate::chemistry::variants::cheese::defs;
 use crate::chemistry::{ChemistryInstance, ReactionId};
-use crate::simulation::common::variants::cheese::constants::MAX_GOBBLE_AMOUNT;
 use crate::simulation::common::*;
 use crate::simulation::iterators::CoordOffsetIterator;
 use crate::simulation::world::World;
@@ -36,7 +35,7 @@ impl UnitBehavior for SmartMouse {
         let pos_resources = defs::PositionResourcesLookup::new();
         let pos_attributes = defs::PositionAttributesLookup::new();
 
-        if world.get_pos_resource_at(coord, pos_resources.cheese) > MAX_GOBBLE_AMOUNT / 2 {
+        if world.get_pos_resource_at(coord, pos_resources.cheese) > 50 / 2 {
             return UnitBehaviorResult::with_reactions(vec![(
                 defs::REACTION_ID_GOBBLE_CHEESE,
                 0,

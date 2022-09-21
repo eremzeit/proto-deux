@@ -1,3 +1,5 @@
+use crate::{biology::genome::framed::common::FramedGenomeWord, simulation::fitness::FitnessScore};
+
 use super::{
     types::{CullStrategy, ExperimentGenomeUid, GenomeEntryId, GenomeExperimentEntry},
     variants::multi_pool::types::FitnessCycleStrategy,
@@ -197,8 +199,8 @@ pub fn cull_worst_first(
     percent_cull: f32,
     num_genomes: usize,
 ) {
-    let target_count = (num_genomes as f32 * percent_cull) as usize;
-    let to_remove = genomes.len() - target_count;
+    let to_remove = (num_genomes as f32 * percent_cull) as usize;
+    // let target = genomes.len() - target_count;
 
     let mut by_rank = genomes
         .iter()
@@ -283,6 +285,45 @@ pub fn cull_percent_in_tercile(
     }
 }
 
+pub fn highest_fitness_idx(genome_entries: &Vec<GenomeExperimentEntry>) -> usize {
+    let uid = genome_entries
+        .iter()
+        .max_by_key(|entry| get_mean_fitness_for_genome(genome_entries, entry.uid).unwrap_or(0))
+        .unwrap()
+        .uid
+        .clone();
+    find_by_uid(genome_entries, uid).unwrap()
+}
+
+pub fn get_mean_fitness_for_genome(
+    genome_entries: &Vec<GenomeExperimentEntry>,
+    uid: ExperimentGenomeUid,
+) -> Option<FitnessScore> {
+    let idx = find_by_uid(genome_entries, uid).unwrap();
+    calculate_mean(&genome_entries[idx].last_fitness_metrics)
+}
+
+pub fn find_by_uid(
+    genome_entries: &Vec<GenomeExperimentEntry>,
+    uid: ExperimentGenomeUid,
+) -> Option<usize> {
+    #[cfg(debug_assertions)]
+    {
+        let count = genome_entries.iter().filter(|e| e.uid == uid).count();
+        if count > 1 {
+            panic!("duplicate");
+        }
+    }
+
+    for i in (0..genome_entries.len()) {
+        if genome_entries[i].uid == uid {
+            return Some(i);
+        };
+    }
+
+    None
+}
+
 pub fn cull_genomes(
     genomes: &mut Vec<GenomeExperimentEntry>,
     method: &CullStrategy,
@@ -299,6 +340,41 @@ pub fn cull_genomes(
             cull_percent_in_tercile(genomes, percent_per_tercile.clone(), total_num_genomes)
         }
     }
+}
+
+pub fn calculate_mean(vec: &Vec<FitnessScore>) -> Option<FitnessScore> {
+    if vec.len() == 0 {
+        return None;
+    }
+
+    let mut ave = vec[0];
+
+    let mut i = 1;
+    while i < vec.len() {
+        ave = ave + vec[i];
+        i += 1;
+    }
+
+    Some(ave / vec.len() as FitnessScore)
+}
+
+pub fn push_into_with_max<T>(vec: &mut Vec<T>, item: T, max_size: usize) {
+    vec.insert(0, item);
+
+    while vec.len() > max_size {
+        vec.pop();
+    }
+}
+
+pub fn random_genome_of_length(length: usize) -> Vec<FramedGenomeWord> {
+    let mut rng = rand::thread_rng();
+    let mut vals = vec![];
+
+    for i in (0..length) {
+        vals.push(rng.gen::<FramedGenomeWord>());
+    }
+
+    vals
 }
 
 #[cfg(test)]

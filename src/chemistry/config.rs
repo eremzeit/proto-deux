@@ -80,6 +80,7 @@ pub enum ChemistryConfigValue {
     ResourceAmount(ResourceAmount),
     Integer(u64),
     Boolean(bool),
+    Float64(f64),
     Direction(GridDirection),
 }
 

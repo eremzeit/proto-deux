@@ -71,6 +71,7 @@ pub struct GenePoolSettingsBuilderTemplate {
     pub fitness_rank_adjustment_method: FitnessRankAdjustmentMethod,
     pub seed_genome_settings: SeedGenomeSettings,
     pub cull_strategy: CullStrategy,
+    pub receive_external_genomes: bool,
 }
 
 impl GenePoolSettingsBuilder {
@@ -88,6 +89,7 @@ impl GenePoolSettingsBuilder {
             fitness_rank_adjustment_method: self.fitness_rank_adjustment_method.clone().unwrap(),
             seed_genome_settings: self.seed_genome_settings.clone().unwrap(),
             cull_strategy: self.cull_strategy.clone().unwrap(),
+            receive_external_genomes: self.receive_external_genomes.unwrap(),
         }
     }
 }

@@ -1,15 +1,13 @@
 use crate::biology::experiments::types::ExperimentSimSettings;
 
-use super::types::{
-    MultiPoolExperimentLogger, MultiPoolExperimentSettings, MultiPoolLoggingSettings,
-};
+use super::{logger::MultiPoolExperimentLoggingSettings, types::MultiPoolExperimentSettings};
 
-#[derive(Builder)]
-#[builder(pattern = "owned", setter(strip_option))]
-pub struct MultiPoolExperiment {
-    pub settings: super::types::MultiPoolExperimentSettings,
-    _logger: Option<MultiPoolExperimentLogger>,
-}
+// #[derive(Builder)]
+// #[builder(pattern = "owned", setter(strip_option))]
+// pub struct MultiPoolExperiment {
+//     pub settings: super::types::MultiPoolExperimentSettings,
+//     _logger: Option<MultiPoolExperimentLogger>,
+// }
 #[derive(Builder)]
 #[builder(
     name = "MultiPoolExperimentSettingsBuilder",
@@ -21,8 +19,8 @@ pub struct MultiPoolExperimentSettingsBuilderTemplate {
     pub max_iterations: u64,
     pub chemistry_key: String,
     pub experiment_key: String,
-    pub logging_settings: Option<MultiPoolLoggingSettings>,
-    pub evaluation_points_per_tick: usize,
+    pub logging_settings: Option<MultiPoolExperimentLoggingSettings>,
+    pub evaluation_points_per_tick: u64,
 
     pub reference_sim_settings: ExperimentSimSettings,
     pub reference_fitness_calculation_key: String,

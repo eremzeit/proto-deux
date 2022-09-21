@@ -16,6 +16,8 @@ use crate::{
     },
 };
 
+use super::variants::multi_pool::gene_pool::GenePoolId;
+
 /**
  * Uniquely identifies a genome over the course of the entire experiment
  */
@@ -70,6 +72,7 @@ pub struct TrialResultItem {
     pub experiment_genome_uid: ExperimentGenomeUid,
     pub fitness_score: FitnessScore,
     pub stats: FramedGenomeExecutionStats,
+    pub gene_pool_id: GenePoolId,
 }
 
 impl Debug for TrialResultItem {

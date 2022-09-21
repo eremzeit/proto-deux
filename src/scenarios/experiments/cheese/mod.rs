@@ -4,6 +4,7 @@ use crate::biology::experiments::alterations::default_alteration_set;
 use crate::biology::experiments::fitness::FitnessRankAdjustmentMethod;
 use crate::biology::experiments::types::SeedGenomeSettings;
 use crate::biology::experiments::variants::multi_pool::builder::MultiPoolExperimentSettingsBuilder;
+use crate::biology::experiments::variants::multi_pool::logger::MultiPoolExperimentLoggingSettings;
 use crate::biology::experiments::variants::multi_pool::types::{
     FitnessCycleStrategy, GenePoolSettings,
 };
@@ -18,7 +19,8 @@ use crate::{
     biology::experiments::{
         alterations::CompiledAlterationSet,
         variants::simple::{
-            logger::LoggingSettings, utils::SimpleExperimentSettings, SimpleExperiment,
+            logger::SimpleExperimentLoggingSettings, utils::SimpleExperimentSettings,
+            SimpleExperiment,
         },
     },
     runners::ExperimentRunnerArgs,
@@ -43,7 +45,7 @@ pub fn simple_experiment(runner_args: ExperimentRunnerArgs) -> SimpleExperiment 
 
     let settings = SimpleExperimentSettings {
         experiment_key: runner_args.experiment_name_key.to_string(),
-        logging_settings: Some(LoggingSettings {
+        logging_settings: Some(SimpleExperimentLoggingSettings {
             experiment_key: runner_args.experiment_name_key.to_string(),
             allow_overwrite: true,
             checkpoint_interval: 2000,
@@ -86,16 +88,21 @@ pub fn multi_pool_cheese_experiment(runner_args: ExperimentRunnerArgs) -> MultiP
     let gm = GeneticManifest::from_chemistry(&chemistry).wrap_rc();
 
     let settings = MultiPoolExperimentSettingsBuilder::default()
-        .max_iterations(1000)
+        .max_iterations(10)
+        // .max_iterations(100)
         .chemistry_key("cheese".to_owned())
-        .experiment_key("my_key".to_owned())
-        // .logging_settings(None)
-        .evaluation_points_per_tick(100)
+        .experiment_key(runner_args.experiment_name_key.clone())
+        .logging_settings(MultiPoolExperimentLoggingSettings {
+            experiment_key: runner_args.experiment_name_key.clone(),
+            allow_overwrite: true,
+            checkpoint_interval: 1000,
+        })
+        .evaluation_points_per_tick(5000)
         .reference_sim_settings(
             ExperimentSimSettingsBuilder::default()
                 .num_simulation_ticks(100)
                 .grid_size((30, 30))
-                .num_genomes_per_sim(20)
+                .num_genomes_per_sim(10)
                 .place_units_method(PlaceUnitsMethod::Default)
                 .chemistry_key("cheese".to_string())
                 .build(),
@@ -103,17 +110,29 @@ pub fn multi_pool_cheese_experiment(runner_args: ExperimentRunnerArgs) -> MultiP
         .reference_fitness_calculation_key("total_cheese_consumed".to_owned())
         .build();
 
+    let known_settings = ExperimentSimSettings {
+        num_simulation_ticks: 70,
+        // num_simulation_ticks: 2,
+        grid_size: (20, 20),
+        num_genomes_per_sim: 10,
+        default_unit_resources: vec![("cheese".to_owned(), 100)],
+        default_unit_attr: vec![],
+        place_units_method: PlaceUnitsMethod::Default,
+        chemistry_options: chemistry_builder,
+    };
     let mut base_gene_pool = GenePoolSettingsBuilder::default();
     base_gene_pool
+        // .sim_settings(known_settings.clone())
         .sim_settings(
             ExperimentSimSettingsBuilder::default()
                 .num_simulation_ticks(100)
                 .grid_size((30, 30))
                 .num_genomes_per_sim(20)
-                .place_units_method(PlaceUnitsMethod::Default)
+                .default_unit_resources(vec![("cheese".to_owned(), 100)])
                 .chemistry_key("cheese".to_string())
                 .build(),
         )
+        .receive_external_genomes(false)
         .num_genomes(20)
         .alteration_specs(alterations())
         .fitness_calculation_key("total_cheese_consumed".to_string())

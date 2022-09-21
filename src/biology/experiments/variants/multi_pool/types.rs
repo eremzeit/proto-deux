@@ -21,7 +21,7 @@ use crate::{
     },
 };
 
-use super::gene_pool::ExperimentGenePool;
+use super::{gene_pool::ExperimentGenePool, logger::MultiPoolExperimentLoggingSettings};
 
 // use super::FitnessCycleStrategy;
 #[derive(Clone)]
@@ -35,15 +35,15 @@ pub struct MultiPoolExperimentSettings {
     pub max_iterations: u64,
     pub chemistry_key: String,
     pub experiment_key: String,
-    pub logging_settings: Option<MultiPoolLoggingSettings>,
-    pub evaluation_points_per_tick: usize,
+    pub logging_settings: Option<MultiPoolExperimentLoggingSettings>,
+    pub evaluation_points_per_tick: u64,
 
     pub reference_sim_settings: ExperimentSimSettings,
     pub reference_fitness_calculation_key: String,
 }
 
-#[derive(Serialize, Clone)]
-pub struct MultiPoolLoggingSettings {}
+// #[derive(Serialize, Clone)]
+// pub struct MultiPoolLoggingSettings {}
 
 #[derive(Clone)]
 pub struct GenePoolSettings {
@@ -56,9 +56,9 @@ pub struct GenePoolSettings {
     pub fitness_rank_adjustment_method: FitnessRankAdjustmentMethod,
     pub seed_genome_settings: SeedGenomeSettings,
     pub cull_strategy: CullStrategy,
-}
 
-pub struct MultiPoolExperimentLogger {}
+    pub receive_external_genomes: bool,
+}
 
 #[derive(Clone)]
 pub enum FitnessCycleStrategy {

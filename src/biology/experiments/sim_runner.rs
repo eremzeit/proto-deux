@@ -29,6 +29,16 @@ pub struct SimRunnerGenomeEntry {
     pub execution_stats: FramedGenomeExecutionStats,
 }
 
+impl Debug for SimRunnerGenomeEntry {
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result {
+        write!(
+            f,
+            "SimRunnerGenomeEntry(gene_pool: {}, uid: {})",
+            self.gene_pool_id, self.genome_uid
+        )
+    }
+}
+
 pub struct ExperimentSimRunner {
     gm: Rc<GeneticManifest>,
     genomes: Vec<SimRunnerGenomeEntry>,
@@ -62,9 +72,7 @@ impl ExperimentSimRunner {
     ) -> Vec<TrialResultItem> {
         let chemistry = self.chemistry_builder.build();
 
-        perf_timer_start!("get_unit_entries");
         let (unit_entries, stat_entries) = self.get_unit_entries();
-        perf_timer_stop!("get_unit_entries");
         // explog!("EVAL fitness for genomes: {:?}", genome_uids);
         let mut sim = SimulationBuilder::default()
             .size(self.sim_settings.grid_size.clone())
@@ -129,7 +137,8 @@ impl ExperimentSimRunner {
                 experiment_genome_uid: genome_uid,
                 fitness_score,
                 genome_idx,
-                stats: (*stats).clone().into_inner(),
+                gene_pool_id: genome_entry.gene_pool_id,
+                stats: (*stats).clone().into_inner(), // inefficient
             };
             fitness_scores.push(resultItem);
         }
@@ -210,7 +219,9 @@ pub fn execute_sim_runners(
                 let mut runner =
                     ExperimentSimRunner::new(chemistry_builder, entries, sim_settings, fitness_key);
 
+                perf_timer_start!("run_eval");
                 let result = runner.run_evaluation_for_uids();
+                perf_timer_stop!("run_eval");
                 result
             })
             .collect::<Vec<_>>();

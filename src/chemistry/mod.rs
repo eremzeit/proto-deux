@@ -64,6 +64,11 @@ impl ChemistryConfigBuilder {
             .insert(key.to_string(), ChemistryConfigValue::ResourceAmount(val));
         self
     }
+    pub fn set_float_amount(mut self, key: &str, val: f64) -> Self {
+        self.config
+            .insert(key.to_string(), ChemistryConfigValue::Float64(val));
+        self
+    }
     pub fn build(self) -> ChemistryConfiguration {
         self.config
     }

@@ -4,7 +4,10 @@ use crate::{
         types::{CullStrategy, ExperimentSimSettings},
         variants::{
             multi_pool::types::FitnessCycleStrategy,
-            simple::{logger::LoggingSettings, utils::SimpleExperimentSettings, SimpleExperiment},
+            simple::{
+                logger::SimpleExperimentLoggingSettings, utils::SimpleExperimentSettings,
+                SimpleExperiment,
+            },
         },
     },
     runners::ExperimentRunnerArgs,
@@ -44,7 +47,7 @@ pub fn simple_experiment(runner_args: ExperimentRunnerArgs) -> SimpleExperiment 
         iterations: 5000,
         alteration_set: alterations(),
         experiment_key: runner_args.experiment_name_key.to_string(),
-        logging_settings: Some(LoggingSettings {
+        logging_settings: Some(SimpleExperimentLoggingSettings {
             experiment_key: runner_args.experiment_name_key.to_string(),
             allow_overwrite: true,
             checkpoint_interval: 1000,

@@ -1,6 +1,7 @@
 pub mod builder;
 pub mod data_store;
 pub mod gene_pool;
+pub mod logger;
 pub mod types;
 pub mod utils;
 use std::{cell::Cell, rc::Rc};
@@ -22,16 +23,13 @@ use crate::{
 use self::{
     data_store::MultiPoolExperimentDataStore,
     gene_pool::ExperimentGenePool,
-    types::{
-        GenePoolSettings, MultiPoolExperimentLogger, MultiPoolExperimentSettings,
-        MultiPoolExperimentState, MultiPoolLoggingSettings,
-    },
+    logger::MultiPoolExperimentLogger,
+    types::{GenePoolSettings, MultiPoolExperimentSettings, MultiPoolExperimentState},
 };
 
 pub struct MultiPoolExperiment {
     pub state: MultiPoolExperimentState,
     pub settings: MultiPoolExperimentSettings,
-    // pub store: Box<dyn MultiPoolExperimentDataStore>,
     _logger: Option<MultiPoolExperimentLogger>,
 }
 
@@ -48,7 +46,9 @@ impl MultiPoolExperiment {
             _logger: settings
                 .logging_settings
                 .clone()
-                .map(|settings| make_logger(&settings)),
+                .map(|settings| MultiPoolExperimentLogger {
+                    settings: settings.clone(),
+                }),
 
             settings,
         };
@@ -67,10 +67,9 @@ impl MultiPoolExperiment {
     }
 
     pub fn initialize(&mut self) {
-        // if let Some(logger) = &self._logger {
-        //     logger.init();
-        //     logger.log_settings(&self.settings);
-        // }
+        if let Some(logger) = &self._logger {
+            logger.init(&self.state.gene_pools);
+        }
 
         // self.populate_initial_genomes();
     }
@@ -97,7 +96,69 @@ impl MultiPoolExperiment {
         self.execute_reference_evaluation();
 
         println!("Experiment tick: {}", self.state.current_tick);
+
+        if self.state.current_tick % 10000 == 0 {
+            self.shuffle_genomes_across_gene_pools();
+        }
+
+        if self.state.current_tick % 1 == 0 {
+            self.print_fitness_summary();
+
+            if let Some(logger) = &self._logger {
+                for gene_pool in &self.state.gene_pools {
+                    logger.log_gene_pool_summary(gene_pool);
+                }
+            }
+        }
+
         self.state.current_tick += 1;
+    }
+
+    pub fn print_fitness_summary(&self) {
+        let best_scores = self
+            .state
+            .gene_pools
+            .iter()
+            .map(|gene_pool| {
+                let i = gene_pool._highest_fitness_idx();
+                (
+                    gene_pool.settings.name_key.clone(),
+                    gene_pool.state.genome_entries[i].max_fitness_metric,
+                )
+                // gene_pool
+                //     .state
+                //     .genome_entries
+                //     .iter()
+                //     .map(|g| (gene_pool.id, g.uid, g.max_fitness_metric))
+                //     .collect::<Vec<_>>()
+            })
+            .collect::<Vec<_>>();
+
+        println!("best scores: {:?}", best_scores)
+    }
+
+    pub fn shuffle_genomes_across_gene_pools(&mut self) {
+        let best_genomes = self
+            .state
+            .gene_pools
+            .iter()
+            .map(|gene_pool| {
+                let i = gene_pool._highest_fitness_idx();
+                gene_pool.state.genome_entries[i]
+                    .compiled_genome
+                    .as_ref()
+                    .clone()
+            })
+            .collect::<Vec<_>>();
+
+        for gene_pool in self.state.gene_pools.iter_mut() {
+            if gene_pool.settings.receive_external_genomes {
+                gene_pool
+                    .state
+                    .external_genomes_queue
+                    .append(&mut best_genomes.clone());
+            }
+        }
     }
 
     pub fn execute_reference_evaluation(&mut self) {
@@ -112,7 +173,7 @@ impl MultiPoolExperiment {
             .map(|gene_pool| {
                 let (id, genome) = gene_pool
                     .state
-                    .genomes
+                    .genome_entries
                     .iter()
                     .enumerate()
                     .max_by(|(i, genome1), (j, genome2)| {
@@ -133,12 +194,12 @@ impl MultiPoolExperiment {
         let mut runner =
             ExperimentSimRunner::new(chemistry_builder, entries, sim_settings, fitness_key);
 
-        let result = runner.run_evaluation_for_uids();
+        let results = runner.run_evaluation_for_uids();
 
-        // TODO: log result somehow
+        if let Some(logger) = &self._logger {
+            if self.state.current_tick % 10 == 0 {
+                logger.log_reference_eval_results(&results, self.state.current_tick);
+            }
+        }
     }
-}
-
-pub fn make_logger(settings: &MultiPoolLoggingSettings) -> MultiPoolExperimentLogger {
-    MultiPoolExperimentLogger {}
 }

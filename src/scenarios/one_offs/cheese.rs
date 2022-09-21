@@ -4,7 +4,10 @@ use crate::{
         types::{CullStrategy, ExperimentSimSettings},
         variants::{
             multi_pool::types::FitnessCycleStrategy,
-            simple::{logger::LoggingSettings, utils::SimpleExperimentSettings, SimpleExperiment},
+            simple::{
+                logger::SimpleExperimentLoggingSettings, utils::SimpleExperimentSettings,
+                SimpleExperiment,
+            },
         },
     },
     simulation::common::{builder::ChemistryBuilder, helpers::place_units::PlaceUnitsMethod},

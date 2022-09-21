@@ -1,5 +1,9 @@
 use crate::biology::experiments::alterations;
-use crate::biology::experiments::logging::get_data_dir;
+use crate::biology::experiments::logging::{
+    ensure_experiment_data_dir_exists, ensure_experiment_dir_exists, get_data_dir,
+    get_experiment_log_dir, log_fitness_percentiles, log_status, logarithmic_tick_test,
+    write_to_file,
+};
 use crate::biology::experiments::types::GenomeExperimentEntry;
 use crate::biology::genome::framed::render::with_stats::render_frames_with_stats;
 use crate::biology::unit_behavior::framed::common::*;
@@ -19,13 +23,13 @@ use std::path::{Path, PathBuf};
 use super::utils::SimpleExperimentSettings;
 
 #[derive(Clone, Serialize, Deserialize)]
-pub struct LoggingSettings {
+pub struct SimpleExperimentLoggingSettings {
     pub experiment_key: String,
     pub allow_overwrite: bool,
-    pub checkpoint_interval: usize,
+    pub checkpoint_interval: u64,
 }
 
-impl Default for LoggingSettings {
+impl Default for SimpleExperimentLoggingSettings {
     fn default() -> Self {
         Self {
             experiment_key: "default".to_string(),
@@ -37,49 +41,15 @@ impl Default for LoggingSettings {
 
 #[derive(Default)]
 pub struct SimpleExperimentLogger {
-    pub settings: LoggingSettings,
+    pub settings: SimpleExperimentLoggingSettings,
 }
 
 impl SimpleExperimentLogger {
-    /**
-     * Gets the path used for log files of this experiment
-     */
-    fn get_log_dir(&self) -> PathBuf {
-        let mut data_dir = get_data_dir().to_path_buf();
-
-        // panic!("data dir: {}", data_dir.to_str().unwrap());
-        data_dir.push("experiments");
-        data_dir.push(&self.settings.experiment_key);
-
-        // println!("LOG_DIR: {}", data_dir.to_str().unwrap());
-        data_dir
-    }
-
     pub fn init(&self) {
-        let mut experiments_path = get_data_dir().to_path_buf();
-        experiments_path.push("experiments");
+        ensure_experiment_data_dir_exists();
+        ensure_experiment_dir_exists(&self.settings.experiment_key, self.settings.allow_overwrite);
 
-        if !experiments_path.as_path().exists() {
-            fs::create_dir(experiments_path.as_path()).expect("failed to create path");
-        }
-
-        let log_path = self.get_log_dir();
-
-        let exists = log_path.exists();
-
-        //
-        if exists {
-            if !self.settings.allow_overwrite {
-                panic!("Experiment data dir {:?} aready exists", log_path);
-            }
-
-            println!("Removing path at: {}", log_path.to_str().unwrap());
-            fs::remove_dir_all(log_path.as_path());
-        }
-
-        fs::create_dir(log_path.as_path()).expect("failed to create experiment log path");
-
-        let mut genome_path = self.get_log_dir();
+        let mut genome_path = get_experiment_log_dir(&self.settings.experiment_key);
         genome_path.push("genomes");
         if !genome_path.exists() {
             fs::create_dir(genome_path.as_path()).expect("failed to create genome log path");
@@ -87,19 +57,22 @@ impl SimpleExperimentLogger {
     }
 
     pub fn log_settings(&self, settings: &SimpleExperimentSettings) {
-        let mut path = self.get_log_dir();
+        let mut path = get_experiment_log_dir(&self.settings.experiment_key);
         path.push("settings.ron");
 
         let settings_str = ron::to_string(&settings.sim_settings).unwrap();
-        self._write_to_file(path, settings_str.as_bytes(), false);
+        write_to_file(path, settings_str.as_bytes(), false);
     }
 
     pub fn log_best_genomes(
         &self,
-        tick: usize,
+        tick: u64,
         genome_entries: &Vec<GenomeExperimentEntry>,
         num_genomes: usize,
     ) {
+        if !logarithmic_tick_test(tick) {
+            return;
+        }
         let mut entries = genome_entries.clone();
 
         entries.sort_by_key(|entry| entry.max_fitness_metric.unwrap_or(0));
@@ -112,7 +85,7 @@ impl SimpleExperimentLogger {
 
         let entries = entries.iter().take(num_genomes);
 
-        let mut path = self.get_log_dir();
+        let mut path = get_experiment_log_dir(&self.settings.experiment_key);
         path.push("genomes");
         path.push(format!("{}.csv", tick));
 
@@ -132,177 +105,41 @@ impl SimpleExperimentLogger {
         }
 
         // s.push_str(&format!("raw_genome: {:?}\n\n", entry.genome.clone()));
-        self._write_to_file(path, s.as_bytes(), false);
+        write_to_file(path, s.as_bytes(), false);
     }
 
-    fn _write_to_file(&self, file_path: PathBuf, buf: &[u8], append: bool) {
-        // println!("append: {}", append);
-        // println!("file path: {}", file_path.as_path().to_str().unwrap());
-        let mut file = fs::OpenOptions::new()
-            .write(true)
-            .create(true)
-            .append(append) // This is needed to append to file
-            .open(file_path.as_path())
-            .unwrap();
-
-        file.write_all(buf);
-    }
-
-    pub fn _should_log_percentiles(tick: usize) -> bool {
-        let factor = (10.0 as f32)
-            .powf((tick as f32).log10().trunc() - 1.0)
-            .max(1.0);
-        tick % (factor as usize) == 0
-    }
-
-    // log csv where each row is an iteration and each column is a fitness score
-    pub fn _log_fitness_percentiles(
+    pub fn log_fitness_percentiles(
         &self,
-        tick: usize,
+        tick: u64,
         genome_entries: &Vec<GenomeExperimentEntry>,
+        max_ticks: u64,
     ) {
-        if !Self::_should_log_percentiles(tick) {
+        let interval = (max_ticks / 1000).max(10);
+
+        if tick % interval != 0 {
             return;
         }
 
-        let mut path = self.get_log_dir();
+        let mut path = get_experiment_log_dir(&self.settings.experiment_key);
         path.push("fitness.csv");
 
-        let entries = genome_entries
-            .iter()
-            .filter(|e| e.max_fitness_metric.is_some())
-            .collect::<Vec<_>>();
-
-        let pcts = get_percentiles(entries.as_slice(), &[0, 25, 75, 100], |entry| {
-            entry.max_fitness_metric.unwrap()
-        });
-
-        let mut s = format!("{},", tick);
-
-        for i in 0..pcts.len() {
-            s.push_str(format!("{}", pcts[i]).as_str());
-            if i != pcts.len() - 1 {
-                s.push_str(",");
-            }
-        }
-        s.push_str("\n");
-
-        self._write_to_file(path, s.as_bytes(), true)
+        log_fitness_percentiles(&path, tick, genome_entries);
     }
 
-    pub fn _log_status(
+    /**
+     * log csv where each row is an iteration and each column is a fitness score
+     */
+    pub fn log_status(
         &self,
-        tick: usize,
+        tick: u64,
         genome_entries: &Vec<GenomeExperimentEntry>,
-
         genetic_manifest: &GeneticManifest,
     ) {
-        let mut s = String::new();
-        let mut sorted_entries = genome_entries
-            .iter()
-            .filter(|e| e.max_fitness_metric.is_some())
-            .collect::<Vec<_>>();
-        sorted_entries.sort_by_key(|e| {
-            e.max_fitness_metric
-                .unwrap()
-                .cmp(&(u64::MAX - e.max_fitness_metric.unwrap()))
-        });
-
-        for entry in sorted_entries.iter() {
-            // let genome_str =
-            //     FramedGenomeCompiler::compile(entry.raw_genome.clone(), genetic_manifest)
-            //         .display(genetic_manifest);
-            let genome_str = render_frames_with_stats(
-                &entry.compiled_genome.frames,
-                genetic_manifest,
-                Some(&entry.previous_execution_stats),
-            );
-
-            s.push_str(&format!(
-                "{}------------------ (f: {})\n",
-                entry.uid,
-                entry.max_fitness_metric.unwrap()
-            ));
-            s.push_str(&genome_str);
-            s.push_str(&format!(
-                "raw_genome: {:?}\n\n",
-                &entry.compiled_genome.raw_values
-            ));
-            s.push_str(&format!(
-                "raw_genome_length: {}\n",
-                entry.compiled_genome.raw_size
-            ));
-            s.push_str(&format!("\n\n\n\n"));
-        }
-
-        let mut path = self.get_log_dir();
+        let mut path = get_experiment_log_dir(&self.settings.experiment_key);
         path.push(format!("status-{}.txt", tick));
-        self._write_to_file(path, s.as_bytes(), false);
+        log_status(genome_entries, tick, &path, genetic_manifest);
     }
 }
 
-fn get_percentiles<F, T, R>(items: &[T], percentiles: &[u8], f: F) -> Vec<R>
-where
-    F: Fn(&T) -> R,
-    R: Ord + Copy,
-{
-    let mut values = items.iter().map(|i| f(i)).collect::<Vec<_>>();
-    values.sort();
-
-    if values.is_empty() {
-        return vec![];
-    }
-
-    let mut result: Vec<R> = vec![];
-    for p in percentiles.iter() {
-        if *p > 100 {
-            panic!("percentile out of range");
-        }
-
-        let index = ((items.len() - 1) * (*p as usize)) / 100;
-
-        result.push(values[index]);
-    }
-
-    result
-}
 #[cfg(test)]
-pub mod tests {
-    use crate::biology::experiments::variants::simple::logger::SimpleExperimentLogger;
-
-    use super::get_percentiles;
-
-    #[test]
-    pub fn test_percentiles() {
-        let mut values = vec![];
-        for i in 0..100 {
-            values.push(i);
-        }
-
-        let _vals = values.as_slice();
-        let pcts = get_percentiles(_vals, &[0, 50, 100], |x| *x);
-
-        assert_eq!(pcts.len(), 3);
-        assert_eq!(pcts[0], 0);
-        assert_eq!(pcts[1], 49);
-        assert_eq!(pcts[2], 99);
-    }
-
-    #[test]
-    pub fn test_should_log_percentiles() {
-        assert_eq!(SimpleExperimentLogger::_should_log_percentiles(1), true);
-        assert_eq!(SimpleExperimentLogger::_should_log_percentiles(10), true);
-        assert_eq!(SimpleExperimentLogger::_should_log_percentiles(101), false);
-        assert_eq!(SimpleExperimentLogger::_should_log_percentiles(100), true);
-        assert_eq!(SimpleExperimentLogger::_should_log_percentiles(1001), false);
-        assert_eq!(SimpleExperimentLogger::_should_log_percentiles(1010), false);
-        // assert_eq!(SimpleExperimentLogger::_should_log_percentiles(101), true);
-
-        // for i in 0..10000000 {
-        //     if SimpleExperimentLogger::_should_log_percentiles(i) {
-        //         print!("tick: {}\n", i);
-        //     }
-        // }
-        // panic!("");
-    }
-}
+pub mod tests {}
