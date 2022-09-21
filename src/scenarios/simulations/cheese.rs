@@ -89,7 +89,7 @@ pub fn with_genome2(sim_args: &SimulationRunnerArgs) -> SimulationBuilder {
     SimulationBuilder::default()
         .chemistry(chemistry_builder.build())
         .size((50, 30))
-        .iterations(1000)
+        .iterations(10000)
         .unit_manifest(UnitManifest {
             units: vec![entry1],
         })

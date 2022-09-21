@@ -222,6 +222,7 @@ pub fn cull_worst_first(
     let mut uids_to_remove = vec![];
     while uids_to_remove.len() < to_remove && by_rank.len() > 0 {
         let item = by_rank.remove(0);
+        // println!("removing {} with fitness {}", by_rank[0].1, by_rank[0].2);
         uids_to_remove.push(item.1);
     }
 
@@ -230,7 +231,6 @@ pub fn cull_worst_first(
         let idx = (0..genomes.len())
             .find(|(i)| genomes[*i].uid == uid)
             .unwrap();
-
         genomes.remove(idx);
     }
 }
@@ -335,10 +335,7 @@ pub fn cull_genomes(
         }
         CullStrategy::RandomTiers {
             percent_per_tercile,
-        } => {
-            panic!("this needs testing");
-            cull_percent_in_tercile(genomes, percent_per_tercile.clone(), total_num_genomes)
-        }
+        } => cull_percent_in_tercile(genomes, percent_per_tercile.clone(), total_num_genomes),
     }
 }
 

@@ -111,6 +111,15 @@ impl ChemistryConfigValue {
         }
     }
 
+    pub fn unwrap_float(&self) -> f64 {
+        match self {
+            Self::Float64(x) => *x,
+            _ => {
+                panic!("Expected a float but found a {:?}", self);
+            }
+        }
+    }
+
     pub fn unwrap_direction(&self) -> GridDirection {
         match self {
             Self::Direction(x) => x.clone(),

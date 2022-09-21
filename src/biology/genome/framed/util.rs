@@ -53,7 +53,7 @@ macro_rules! flog {
  *
  * eg.
  *
- * "pos_attr::is_cheese_source"
+ * "pos_attr::is_cheese_dispenser"
  */
 pub fn identify_raw_param_string(str_param: &String, gm: &GeneticManifest) -> ParsedGenomeParam {
     //println!("identify_raw_param_string() called for {}", &str_param);

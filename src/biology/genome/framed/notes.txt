@@ -74,7 +74,7 @@ genome_frame!(
    gene!(
        if_any(
            all(
-               (is_truthy, "pos_attr::is_cheese_source(0, 0)", 0, 0),
+               (is_truthy, "pos_attr::is_cheese_dispenser(0, 0)", 0, 0),
                (gt, unit_res::cheese, 1000, 0)
            )
        ),

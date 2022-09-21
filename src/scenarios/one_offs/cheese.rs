@@ -25,7 +25,7 @@ pub fn test_fitness(key: &str) {
 
     let settings = SimpleExperimentSettings {
         cull_strategy: CullStrategy::WorstFirst { percent: 0.30 },
-        fitness_calculation_key: "total_cheese_consumed".to_string(),
+        fitness_calculation_key: "total_cheese_acquired".to_string(),
         num_genomes: 4,
         sim_settings: ExperimentSimSettings {
             num_simulation_ticks: 10,

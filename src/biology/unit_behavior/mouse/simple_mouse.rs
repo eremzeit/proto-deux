@@ -22,7 +22,7 @@ impl UnitBehavior for SimpleMouse {
 
         let pos_resources = defs::PositionResourcesLookup::new();
 
-        if world.get_pos_resource_at(coord, pos_resources.cheese) > 10 {
+        if world.get_pos_resource_at(coord, pos_resources.milk) > 10 {
             return UnitBehaviorResult::with_reactions(vec![(
                 defs::REACTION_ID_GOBBLE_CHEESE,
                 0,
@@ -32,7 +32,7 @@ impl UnitBehavior for SimpleMouse {
         }
 
         for (_coord, _dir) in CoordOffsetIterator::new(coord, &world.size) {
-            if world.get_pos_resource_at(&_coord, pos_resources.cheese) > 10 {
+            if world.get_pos_resource_at(&_coord, pos_resources.milk) > 10 {
                 return UnitBehaviorResult::with_reactions(vec![(
                     defs::REACTION_ID_MOVE_UNIT,
                     grid_direction_to_num(_dir) as u16,

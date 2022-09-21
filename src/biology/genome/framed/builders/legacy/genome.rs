@@ -441,16 +441,16 @@ Channel #0 (DEFAULT)
 CALL new_unit(Constant(0)) IF unit_res::cheese(0, 0) == Constant(1)
 
 Channel #1
-CALL gobble_cheese() IF FALSE
-CALL gobble_cheese() IF FALSE
+CALL make_cheese() IF FALSE
+CALL make_cheese() IF FALSE
 
 Channel #2
-CALL gobble_cheese() IF FALSE
-CALL gobble_cheese() IF FALSE
+CALL make_cheese() IF FALSE
+CALL make_cheese() IF FALSE
 
 Channel #3
-CALL gobble_cheese() IF FALSE
-CALL gobble_cheese() IF FALSE\n\n";
+CALL make_cheese() IF FALSE
+CALL make_cheese() IF FALSE\n\n";
 
         println!("{}", frames.display(&gm));
         assert_eq!(
@@ -504,7 +504,7 @@ CALL gobble_cheese() IF FALSE\n\n";
                     if_any(
                         all(
                             (eq, unit_res::cheese, 5, 0),
-                            (gt, pos_res::cheese, 2, 0)
+                            (gt, pos_res::milk, 2, 0)
                         )
                     ),
 
@@ -513,7 +513,7 @@ CALL gobble_cheese() IF FALSE\n\n";
                 gene(
                     if_any(
                         all(
-                            (is_truthy, pos_attr::is_cheese_source, 1, 0)
+                            (is_truthy, pos_attr::is_cheese_dispenser, 1, 0)
                         )
                     ),
 
@@ -530,29 +530,29 @@ CALL gobble_cheese() IF FALSE\n\n";
 
         let s = "***FRAME 0:***
 Channel #0 (DEFAULT)
-CALL new_unit(Constant(0)) IF (unit_res::cheese(0, 0) == Constant(5) && pos_res::cheese(0, 0) > Constant(2))
-CALL move_unit(Constant(0)) IF is_truthy(pos_attr::is_cheese_source(0, 0))
+CALL new_unit(Constant(0)) IF (unit_res::cheese(0, 0) == Constant(5) && pos_res::milk(0, 0) > Constant(2))
+CALL move_unit(Constant(0)) IF is_truthy(pos_attr::is_cheese_dispenser(0, 0))
 
 Channel #1
-CALL gobble_cheese() IF FALSE
-CALL gobble_cheese() IF FALSE
-CALL gobble_cheese() IF FALSE
-CALL gobble_cheese() IF FALSE
-CALL gobble_cheese() IF FALSE
+CALL make_cheese() IF FALSE
+CALL make_cheese() IF FALSE
+CALL make_cheese() IF FALSE
+CALL make_cheese() IF FALSE
+CALL make_cheese() IF FALSE
 
 Channel #2
-CALL gobble_cheese() IF FALSE
-CALL gobble_cheese() IF FALSE
-CALL gobble_cheese() IF FALSE
-CALL gobble_cheese() IF FALSE
-CALL gobble_cheese() IF FALSE
+CALL make_cheese() IF FALSE
+CALL make_cheese() IF FALSE
+CALL make_cheese() IF FALSE
+CALL make_cheese() IF FALSE
+CALL make_cheese() IF FALSE
 
 Channel #3
-CALL gobble_cheese() IF FALSE
-CALL gobble_cheese() IF FALSE
-CALL gobble_cheese() IF FALSE
-CALL gobble_cheese() IF FALSE
-CALL gobble_cheese() IF FALSE\n\n";
+CALL make_cheese() IF FALSE
+CALL make_cheese() IF FALSE
+CALL make_cheese() IF FALSE
+CALL make_cheese() IF FALSE
+CALL make_cheese() IF FALSE\n\n";
 
         assert_eq!(
             render_frames(&frames.frames, &gm),

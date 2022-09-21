@@ -14,7 +14,7 @@ pub fn get_genome1() -> GenomeBuilderLegacy {
     genome!(
         gene(
             if_any(all(
-                (is_truthy, "pos_attr::is_cheese_source(0, 0)", 0, 0),
+                (is_truthy, "pos_attr::is_cheese_dispenser(0, 0)", 0, 0),
                 (gt, unit_res::cheese, 1000, 0)
             )),
             // move off the much needed spot
@@ -22,21 +22,21 @@ pub fn get_genome1() -> GenomeBuilderLegacy {
         ),
         gene(
             if_any(all(
-                (is_truthy, "pos_attr::is_cheese_source(0, 0)", 0, 0),
-                (gt, pos_res::cheese, 300, 0)
+                (is_truthy, "pos_attr::is_cheese_dispenser(0, 0)", 0, 0),
+                (gt, pos_res::milk, 300, 0)
             )),
-            then_do(gobble_cheese(0))
+            then_do(make_cheese(0))
         ),
         gene(
-            if_any(all((gt, "pos_res::cheese(0, 0)", 100, 0))),
-            then_do(gobble_cheese(0))
+            if_any(all((gt, "pos_res::milk(0, 0)", 100, 0))),
+            then_do(make_cheese(0))
         ),
         gene(
             if_any(all(
                 (lt, unit_res::cheese, 60, 0),
-                (gt, pos_res::cheese, 20, 0)
+                (gt, pos_res::milk, 20, 0)
             )),
-            then_do(gobble_cheese(0))
+            then_do(make_cheese(0))
         ),
         gene(
             if_any(all((lt, random_hundred, 10, 0))),
@@ -60,36 +60,36 @@ pub fn get_genome1() -> GenomeBuilderLegacy {
         ),
         gene(
             if_any(all(
-                (is_truthy, "pos_attr::is_cheese_source(0, 0)", 0, 0),
+                (is_truthy, "pos_attr::is_cheese_dispenser(0, 0)", 0, 0),
                 (lt, unit_res::cheese, 1000, 0)
             )),
-            then_do(gobble_cheese(0))
+            then_do(make_cheese(0))
         ),
         gene(
             if_any(all(
-                (is_falsy, "pos_attr::is_cheese_source", 0, 0),
-                (is_truthy, "pos_attr::is_cheese_source(0, 1)", 0, 0)
+                (is_falsy, "pos_attr::is_cheese_dispenser", 0, 0),
+                (is_truthy, "pos_attr::is_cheese_dispenser(0, 1)", 0, 0)
             )),
             then_do(move_unit(up))
         ),
         gene(
             if_any(all(
-                (is_falsy, "pos_attr::is_cheese_source", 0, 0),
-                (is_truthy, "pos_attr::is_cheese_source(1, 0)", 0, 0)
+                (is_falsy, "pos_attr::is_cheese_dispenser", 0, 0),
+                (is_truthy, "pos_attr::is_cheese_dispenser(1, 0)", 0, 0)
             )),
             then_do(move_unit(right))
         ),
         gene(
             if_any(all(
-                (is_falsy, "pos_attr::is_cheese_source", 0, 0),
-                (is_truthy, "pos_attr::is_cheese_source(0, -1)", 0, 0)
+                (is_falsy, "pos_attr::is_cheese_dispenser", 0, 0),
+                (is_truthy, "pos_attr::is_cheese_dispenser(0, -1)", 0, 0)
             )),
             then_do(move_unit(down))
         ),
         gene(
             if_any(all(
-                (is_falsy, "pos_attr::is_cheese_source", 0, 0),
-                (is_truthy, "pos_attr::is_cheese_source(-1, 0)", 0, 0)
+                (is_falsy, "pos_attr::is_cheese_dispenser", 0, 0),
+                (is_truthy, "pos_attr::is_cheese_dispenser(-1, 0)", 0, 0)
             )),
             then_do(move_unit(left))
         ),
@@ -123,7 +123,7 @@ pub fn get_genome2() -> GenomeBuilderLegacy {
     genome!(
         gene(
             if_any(all(
-                (is_truthy, "pos_attr::is_cheese_source(0, 0)", 0, 0),
+                (is_truthy, "pos_attr::is_cheese_dispenser(0, 0)", 0, 0),
                 (gt, unit_res::cheese, 1000, 0)
             )),
             // move off the much needed spot
@@ -131,17 +131,17 @@ pub fn get_genome2() -> GenomeBuilderLegacy {
         ),
         gene(
             if_any(all(
-                (is_truthy, "pos_attr::is_cheese_source(0, 0)", 0, 0),
-                (lt, pos_res::cheese, 300, 0)
+                (is_truthy, "pos_attr::is_cheese_dispenser(0, 0)", 0, 0),
+                (lt, pos_res::milk, 300, 0)
             )),
-            then_do(gobble_cheese(0))
+            then_do(make_cheese(0))
         ),
         gene(
             if_any(all(
                 (lt, unit_res::cheese, 60, 0),
-                (gt, pos_res::cheese, 20, 0)
+                (gt, pos_res::milk, 20, 0)
             )),
-            then_do(gobble_cheese(0))
+            then_do(make_cheese(0))
         ),
         gene(
             if_any(all((lt, random_hundred, 10, 0))),
@@ -165,57 +165,57 @@ pub fn get_genome2() -> GenomeBuilderLegacy {
         ),
         gene(
             if_any(all(
-                (is_falsy, "pos_attr::is_cheese_source", 0, 0),
-                (is_truthy, "pos_attr::is_cheese_source(0, 1)", 0, 0)
+                (is_falsy, "pos_attr::is_cheese_dispenser", 0, 0),
+                (is_truthy, "pos_attr::is_cheese_dispenser(0, 1)", 0, 0)
             )),
             then_do(move_unit(up))
         ),
         gene(
             if_any(all(
-                (is_falsy, "pos_attr::is_cheese_source", 0, 0),
-                (is_truthy, "pos_attr::is_cheese_source(1, 0)", 0, 0)
+                (is_falsy, "pos_attr::is_cheese_dispenser", 0, 0),
+                (is_truthy, "pos_attr::is_cheese_dispenser(1, 0)", 0, 0)
             )),
             then_do(move_unit(right))
         ),
         gene(
             if_any(all(
-                (is_falsy, "pos_attr::is_cheese_source", 0, 0),
-                (is_truthy, "pos_attr::is_cheese_source(0, -1)", 0, 0)
+                (is_falsy, "pos_attr::is_cheese_dispenser", 0, 0),
+                (is_truthy, "pos_attr::is_cheese_dispenser(0, -1)", 0, 0)
             )),
             then_do(move_unit(down))
         ),
         gene(
             if_any(all(
-                (is_falsy, "pos_attr::is_cheese_source", 0, 0),
-                (is_truthy, "pos_attr::is_cheese_source(-1, 0)", 0, 0)
+                (is_falsy, "pos_attr::is_cheese_dispenser", 0, 0),
+                (is_truthy, "pos_attr::is_cheese_dispenser(-1, 0)", 0, 0)
             )),
             then_do(move_unit(left))
         ),
         gene(
             if_any(all(
-                (is_falsy, "pos_attr::is_cheese_source", 0, 0),
-                (gt, "pos_res::cheese(0, 1)", 20, 0)
+                (is_falsy, "pos_attr::is_cheese_dispenser", 0, 0),
+                (gt, "pos_res::milk(0, 1)", 20, 0)
             )),
             then_do(move_unit(up))
         ),
         gene(
             if_any(all(
-                (is_falsy, "pos_attr::is_cheese_source", 0, 0),
-                (gt, "pos_res::cheese(1, 0)", 20, 0)
+                (is_falsy, "pos_attr::is_cheese_dispenser", 0, 0),
+                (gt, "pos_res::milk(1, 0)", 20, 0)
             )),
             then_do(move_unit(right))
         ),
         gene(
             if_any(all(
-                (is_falsy, "pos_attr::is_cheese_source", 0, 0),
-                (gt, "pos_res::cheese(0, -1)", 20, 0)
+                (is_falsy, "pos_attr::is_cheese_dispenser", 0, 0),
+                (gt, "pos_res::milk(0, -1)", 20, 0)
             )),
             then_do(move_unit(down))
         ),
         gene(
             if_any(all(
-                (is_falsy, "pos_attr::is_cheese_source", 0, 0),
-                (gt, "pos_res::cheese(-1, 0)", 20, 0)
+                (is_falsy, "pos_attr::is_cheese_dispenser", 0, 0),
+                (gt, "pos_res::milk(-1, 0)", 20, 0)
             )),
             then_do(move_unit(left))
         ),

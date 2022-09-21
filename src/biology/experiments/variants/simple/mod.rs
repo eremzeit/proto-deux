@@ -576,7 +576,7 @@ impl SimpleExperiment {
 
         execute_sim_runners(
             groups,
-            false,
+            use_threads,
             &self.settings.sim_settings,
             &self.settings.fitness_calculation_key,
         )
@@ -659,7 +659,7 @@ pub mod tests {
             .alteration_set(alterations::default_alteration_set())
             .experiment_key("my_experiment".to_string())
             .cull_strategy(CullStrategy::WorstFirst { percent: 0.30 })
-            .fitness_calculation_key("total_cheese_consumed".to_string())
+            .fitness_calculation_key("total_cheese_acquired".to_string())
             .num_genomes(11)
             .sim_settings(ExperimentSimSettings {
                 num_simulation_ticks: 10,

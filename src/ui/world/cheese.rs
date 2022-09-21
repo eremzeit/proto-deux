@@ -27,7 +27,7 @@ fn random_color() -> [f32; 4] {
         rng.gen_range(0..255) as f32 / 255.0,
         rng.gen_range(0..255) as f32 / 255.0,
         rng.gen_range(0..255) as f32 / 255.0,
-        rng.gen_range(0..255) as f32 / 255.0,
+        255.0,
     ]
 }
 
@@ -41,7 +41,7 @@ impl CheeseCellRenderer {
 
 pub fn get_cheese_pct(pos: &Position, current_tick: u64) -> f64 {
     let res_defs = cheese::defs::PositionResourcesLookup::new();
-    let cheese = pos.get_resource(res_defs.cheese, current_tick);
+    let cheese = pos.get_resource(res_defs.milk, current_tick);
 
     (cheese as f64 / 1000.0).min(1.0)
 }
@@ -108,11 +108,13 @@ impl CellRenderer for CheeseCellRenderer {
         let pos = sim.grid[[x, y]].as_ref().unwrap();
 
         let attr_defs = chemistry::variants::cheese::defs::PositionAttributesLookup::new();
-        let is_cheese_source = pos.get_attribute(attr_defs.is_cheese_source).unwrap_bool();
+        let is_cheese_dispenser = pos
+            .get_attribute(attr_defs.is_cheese_dispenser)
+            .unwrap_bool();
 
         // cell bg
-        let bg_color = if is_cheese_source {
-            [0.0, 100.0, 0.0, 100.0]
+        let bg_color = if is_cheese_dispenser {
+            to_color([0xE0, 0xD2, 0x00, 0xaa])
         } else {
             [0.0, 0.0, 0.0, 255.0]
         };
@@ -124,7 +126,8 @@ impl CellRenderer for CheeseCellRenderer {
         if cheese_pct > 0.0 {
             let resource_rect = calc_resource_rect(cell_rect, cheese_pct, &(x, y));
             rectangle(
-                to_color([0xA0, 0xC5, 0x5F, 0x44]),
+                // to_color([0xA0, 0xC5, 0x5F, 0x44]),
+                to_color([0xff, 0xff, 0xff, 0x44]),
                 resource_rect,
                 c.transform.trans(0.0, 0.0),
                 g,

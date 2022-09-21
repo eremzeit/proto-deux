@@ -240,6 +240,9 @@ impl ExperimentGenePool {
                 10,
             );
 
+            self.state.genome_entries[genome_idx].previous_execution_stats =
+                trial_result.stats.clone();
+
             // println!(
             //     "genome {} fitness: {}",
             //     trial_result.genome_idx, trial_result.fitness_score
@@ -260,6 +263,16 @@ impl ExperimentGenePool {
         );
 
         for new_rank in new_ranks {
+            // println!(
+            //     "fitness: {}, rank: {}, id: {}",
+            //     new_rank.0.fitness_score, new_rank.1, new_rank.0.genome_idx
+            // );
+
+            assert_eq!(
+                self._find_by_uid(new_rank.0.experiment_genome_uid).unwrap(),
+                new_rank.0.genome_idx
+            );
+
             self.state.genome_entries[new_rank.0.genome_idx].current_rank_score = new_rank.1;
         }
 
@@ -385,11 +398,17 @@ fn pull_fresh_genome(
     let mut input_genomes = vec![];
     for i in (0..alteration.genomes_required) {
         let uid = select_random_top_genome(sorted_by_fitness);
+
         let (idx, g) = genomes
             .iter()
             .enumerate()
             .find(|(idx, g)| g.uid == uid)
             .unwrap();
+
+        // println!(
+        //     "continuing genome {} with max_fitness {:?}",
+        //     genomes[idx].uid, genomes[idx].max_fitness_metric
+        // );
 
         input_genomes.push(genomes[idx].compiled_genome.as_ref());
     }

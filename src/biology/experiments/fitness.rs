@@ -63,10 +63,8 @@ pub fn adjust_winners_rank(
         FitnessRankAdjustmentMethod::Absolute => loser_rank + 1,
         FitnessRankAdjustmentMethod::Incremental { pct_jump, min_jump } => {
             let diff = loser_rank - winner_rank + 1;
-            println!("diff: {}", diff);
             let jump_amount =
                 ((diff as f32 * pct_jump).ceil() as ExperimentFitnessRank).max(*min_jump);
-            println!("jump amount : {}", jump_amount);
 
             winner_rank + jump_amount
         }

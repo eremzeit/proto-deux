@@ -97,7 +97,7 @@ impl MultiPoolExperiment {
 
         println!("Experiment tick: {}", self.state.current_tick);
 
-        if self.state.current_tick % 10000 == 0 {
+        if self.state.current_tick % 20 == 0 {
             self.shuffle_genomes_across_gene_pools();
         }
 
@@ -107,6 +107,7 @@ impl MultiPoolExperiment {
             if let Some(logger) = &self._logger {
                 for gene_pool in &self.state.gene_pools {
                     logger.log_gene_pool_summary(gene_pool);
+                    logger.log_gene_pool_fitness_percentiles(gene_pool, self.state.current_tick);
                 }
             }
         }
@@ -197,9 +198,7 @@ impl MultiPoolExperiment {
         let results = runner.run_evaluation_for_uids();
 
         if let Some(logger) = &self._logger {
-            if self.state.current_tick % 10 == 0 {
-                logger.log_reference_eval_results(&results, self.state.current_tick);
-            }
+            logger.log_reference_eval_results(&results, self.state.current_tick);
         }
     }
 }

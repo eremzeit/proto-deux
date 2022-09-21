@@ -173,9 +173,11 @@ pub fn log_status(
     });
 
     for entry in sorted_entries.iter() {
-        // let genome_str =
-        //     FramedGenomeCompiler::compile(entry.raw_genome.clone(), genetic_manifest)
-        //         .display(genetic_manifest);
+        // let genome_str = FramedGenomeCompiler::compile(
+        //     entry.compiled_genome.raw_values.clone(),
+        //     genetic_manifest,
+        // )
+        // .display(genetic_manifest);
         let genome_str = render_frames_with_stats(
             &entry.compiled_genome.frames,
             genetic_manifest,
@@ -183,7 +185,7 @@ pub fn log_status(
         );
 
         s.push_str(&format!(
-            "{}------------------ (f: {})\n",
+            "------------------\n(uid: {}, fitness: {})\n",
             entry.uid,
             entry.max_fitness_metric.unwrap()
         ));

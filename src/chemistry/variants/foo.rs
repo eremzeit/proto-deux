@@ -176,8 +176,8 @@ impl Chemistry for FooChemistry {
         //     .get_attribute(position_attributes.is_air_source)
         //     .unwrap_bool();
 
-        // let is_cheese_source = pos
-        //     .get_attribute(position_attributes.is_cheese_source)
+        // let is_cheese_dispenser = pos
+        //     .get_attribute(position_attributes.is_cheese_dispenser)
         //     .unwrap_bool();
 
         let is_foo_position_attr = pos

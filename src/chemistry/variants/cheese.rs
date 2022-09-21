@@ -66,11 +66,11 @@ pub mod defs {
     use super::*;
 
     def_unit_entry_attributes! {[
-        [total_cheese_consumed, Number]
+        [total_cheese_acquired, Number]
     ]}
 
     def_simulation_attributes! {[
-        [total_cheese_consumed, Number]
+        [total_cheese_acquired, Number]
     ]}
 
     def_unit_attributes! {[
@@ -78,12 +78,13 @@ pub mod defs {
     ]}
 
     def_position_attributes! {[
-        [is_cheese_source, Boolean],
+        [is_cheese_dispenser, Boolean],
         [is_air_source, Boolean]
     ]}
 
     def_position_resources! {[
-        [cheese, false]
+        [milk, false]
+        // [cheese, false]
         // [water, false]
     ]}
 
@@ -97,9 +98,9 @@ pub mod defs {
 
     //trace_macros!(true);
     def_reactions! {
-        reaction!("gobble_cheese",
-            reagent!("gobble_cheese",
-                chemistry_arg!(UnitResourceAmount, max_gobble_amount),
+        reaction!("make_cheese",
+            reagent!("make_cheese",
+                chemistry_arg!(UnitResourceAmount, max_make_cheese_amount),
             ),
         ),
 
@@ -197,9 +198,10 @@ impl Chemistry for CheeseChemistry {
         ChemistryConfigBuilder::new()
             .set_resource_amount("move_cost", -1)
             .set_resource_amount("new_unit_cost", -200)
-            .set_resource_amount("max_gobble_amount", 50)
-            .set_float_amount("cheese_source_odds", 0.30)
-            .set_float_amount("cheese_source_odds", 0.30)
+            .set_resource_amount("max_make_cheese_amount", 50)
+            .set_float_amount("cheese_dispenser_odds", 0.20)
+            .set_float_amount("milk_source_odds", 0.20)
+            .set_resource_amount("max_milk_in_position", 100)
             .build()
     }
 
@@ -220,8 +222,8 @@ impl Chemistry for CheeseChemistry {
         LocalPropertySensorManifest::from_whitelist(
             vec![
                 ("unit_res::cheese".to_string(), 0),
-                ("pos_res::cheese".to_string(), 1),
-                ("pos_attr::is_cheese_source".to_string(), 1),
+                ("pos_res::milk".to_string(), 1),
+                ("pos_attr::is_cheese_dispenser".to_string(), 1),
             ]
             .as_slice(),
             self.get_manifest().all_properties.as_slice(),
@@ -248,8 +250,8 @@ impl Chemistry for CheeseChemistry {
             .get_attribute(position_attributes.is_air_source)
             .unwrap_bool();
 
-        let is_cheese_source = pos
-            .get_attribute(position_attributes.is_cheese_source)
+        let is_cheese_dispenser = pos
+            .get_attribute(position_attributes.is_cheese_dispenser)
             .unwrap_bool();
 
         let has_unit = pos.has_unit();
@@ -264,12 +266,12 @@ impl Chemistry for CheeseChemistry {
             resources[unit_resources.air] = std::cmp::max(resources[unit_resources.air] - 1, 0);
         }
 
-        if is_cheese_source {
+        if is_cheese_dispenser {
             let amount = 2;
             resources[unit_resources.cheese] += amount;
 
             sim.unit_entry_attributes[unit.entry_id]
-                [unit_entry_attributes.total_cheese_consumed] +=
+                [unit_entry_attributes.total_cheese_acquired] +=
                 UnitAttributeValue::Integer(amount);
         }
     }
@@ -342,33 +344,47 @@ impl Chemistry for CheeseChemistry {
                 && coord.1 >= unit_drop_area[0].1
                 && coord.1 < unit_drop_area[1].1;
 
-            // if !is_unit_drop_area && rng.gen_range(0..(coord.0 + coord.1) % 5 + 5) == 0 {
-            let odds = 5;
-            if is_unit_drop_area && rng.gen_range(0..odds) == 0 {
+            let odds = self
+                .get_configuration()
+                .get("cheese_dispenser_odds")
+                .unwrap()
+                .unwrap_float();
+            if is_unit_drop_area && rng.gen_ratio((odds * 100.0) as u32, 100) {
                 world.set_pos_attribute_at(
                     &coord,
                     self.get_manifest()
-                        .position_attribute_by_key("is_cheese_source")
+                        .position_attribute_by_key("is_cheese_dispenser")
                         .id as usize,
                     PositionAttributeValue::Bool(true),
                 );
             }
 
-            let odds = 5;
-            if is_unit_drop_area || rng.gen_range(0..odds) == 0 {
+            let odds = self
+                .get_configuration()
+                .get("milk_source_odds")
+                .unwrap()
+                .unwrap_float();
+            if rng.gen_ratio((odds * 100.0) as u32, 100) {
                 let position_resources = defs::PositionResourcesLookup::new();
-                world.set_pos_resource_at(&coord, position_resources.cheese, 20);
+                world.set_pos_resource_at(&coord, position_resources.milk, 20);
 
                 let amount = if is_unit_drop_area {
                     rng.gen_range(0..3)
                 } else {
                     20
                 };
+
+                let max_milk_in_position = self
+                    .get_configuration()
+                    .get("max_milk_in_position")
+                    .unwrap()
+                    .unwrap_resource_amount();
+
                 world.set_pos_resource_tab_offset(
                     &coord,
-                    position_resources.cheese,
+                    position_resources.milk,
                     amount,
-                    Some(100),
+                    Some(max_milk_in_position),
                 );
             }
         }
@@ -389,7 +405,7 @@ impl Chemistry for CheeseChemistry {
 
 fn custom_action_definitions() -> Vec<ActionDefinition> {
     vec![ActionDefinition::new(
-        &"gobble_cheese",
+        &"make_cheese",
         vec![],
         // execute action
         Rc::new(
@@ -399,43 +415,41 @@ fn custom_action_definitions() -> Vec<ActionDefinition> {
                 let sim_attributes = defs::SimulationAttributesLookup::new();
                 let unit_entry_attributes = defs::UnitEntryAttributesLookup::new();
 
-                let max_gobble_amount = context.params[0].to_unit_resource_amount();
+                let max_make_cheese_amount = context.params[0].to_unit_resource_amount();
 
                 let pos = sim_cell.world.get_position_at(context.coord).unwrap();
                 let entry_id = &pos.unit.as_ref().unwrap().entry_id.clone();
-                let pos_cheese_amount = pos.get_resource(pos_resources.cheese, sim_cell.world.tick);
+                let pos_milk_amount = pos.get_resource(pos_resources.milk, sim_cell.world.tick);
 
-                let diff = pos_cheese_amount - max_gobble_amount;
+                let diff = pos_milk_amount - max_make_cheese_amount;
 
-                let amount = if pos_cheese_amount >= max_gobble_amount {
-                    max_gobble_amount
+                let amount = if pos_milk_amount >= max_make_cheese_amount {
+                    max_make_cheese_amount
                 } else {
-                    pos_cheese_amount
+                    pos_milk_amount
                 };
 
-                let new_pos_cheese = pos_cheese_amount - amount;
-                sim_cell.world.set_pos_resource_at(
-                    context.coord,
-                    pos_resources.cheese,
-                    new_pos_cheese,
-                );
+                let new_pos_milk = pos_milk_amount - amount;
+                sim_cell
+                    .world
+                    .set_pos_resource_at(context.coord, pos_resources.milk, new_pos_milk);
                 sim_cell
                     .world
                     .add_unit_resource_at(context.coord, unit_resources.cheese, amount);
 
                 let next_val = sim_cell.unit_entry_attributes[*entry_id]
-                    [unit_entry_attributes.total_cheese_consumed]
+                    [unit_entry_attributes.total_cheese_acquired]
                     .unwrap_integer()
                     + amount;
 
                 sim_cell.unit_entry_attributes[*entry_id]
-                    [unit_entry_attributes.total_cheese_consumed] =
+                    [unit_entry_attributes.total_cheese_acquired] =
                     UnitEntryAttributeValue::Integer(next_val);
 
-                let next_val = sim_cell.attributes[sim_attributes.total_cheese_consumed]
+                let next_val = sim_cell.attributes[sim_attributes.total_cheese_acquired]
                     .unwrap_integer()
                     + amount;
-                sim_cell.attributes[sim_attributes.total_cheese_consumed] =
+                sim_cell.attributes[sim_attributes.total_cheese_acquired] =
                     SimulationAttributeValue::Integer(next_val);
 
                 true
@@ -505,7 +519,7 @@ mod tests {
         let position_attributes = defs::PositionAttributesLookup::make_defs();
         let position_resources = defs::PositionResourcesLookup::make_defs();
     }
-    mod gobble_cheese {
+    mod make_cheese {
         use super::*;
         use crate::chemistry::actions::tests::execute_action;
         use crate::fixtures;
@@ -521,7 +535,7 @@ mod tests {
             let action_library = CheeseChemistry::construct_action_library();
             let action = action_library
                 .iter()
-                .find(|action_def| action_def.key == "gobble_cheese")
+                .find(|action_def| action_def.key == "make_cheese")
                 .unwrap();
 
             let src_coord = (2, 0);
@@ -544,7 +558,7 @@ mod tests {
             assert!(execute_action(&action, &src_coord, &mut sim, &params));
 
             assert_eq!(
-                sim.attributes[sim_attributes.total_cheese_consumed].unwrap_integer(),
+                sim.attributes[sim_attributes.total_cheese_acquired].unwrap_integer(),
                 10
             );
 
@@ -557,9 +571,9 @@ mod tests {
 
             assert_eq!(
                 sim.world
-                    .get_pos_resource_at(&(2, 0), position_resources.cheese),
+                    .get_pos_resource_at(&(2, 0), position_resources.milk),
                 0,
-                "position cheese is not correct"
+                "position milk is not correct"
             );
         }
     }

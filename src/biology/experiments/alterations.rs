@@ -489,10 +489,10 @@ pub mod tests {
                 vec![gene(
                     if_none(vec![if_not_all(vec![conditional!(
                         lt,
-                        pos_res::cheese(0, 0),
+                        pos_res::milk(0, 0),
                         100
                     )])]),
-                    then_do!(gobble_cheese, register(3), 69, 69),
+                    then_do!(make_cheese, register(3), 69, 69),
                 )],
                 vec![],
                 vec![],

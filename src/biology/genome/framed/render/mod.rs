@@ -214,7 +214,7 @@ pub mod tests {
 
         assert_eq!(
             result,
-            "(sim_attr::total_cheese_consumed(0, 0) == Constant(0) && Value(true))".to_string()
+            "(sim_attr::total_cheese_acquired(0, 0) == Constant(0) && Value(true))".to_string()
         );
     }
 
@@ -240,7 +240,7 @@ pub mod tests {
 
         assert_eq!(
             result,
-            "(is_truthy(sim_attr::total_cheese_consumed(0, 0)) && Value(true))".to_string()
+            "(is_truthy(sim_attr::total_cheese_acquired(0, 0)) && Value(true))".to_string()
         );
     }
 
@@ -377,7 +377,7 @@ pub mod tests {
         let gm = GeneticManifest::from_default_chemistry_config::<CheeseChemistry>();
 
         let result = render_genes(&genes, &gm);
-        let expected = "CALL gobble_cheese() IF ( Value(false) || Value(true) )
+        let expected = "CALL make_cheese() IF ( Value(false) || Value(true) )
 CALL move_unit(Constant(0)) IF ( Value(true) || Value(false) )\n";
 
         println!("RESULT: \n{}", &result);
@@ -422,7 +422,7 @@ CALL move_unit(Constant(0)) IF ( Value(true) || Value(false) )\n";
         let gm = GeneticManifest::from_default_chemistry_config::<CheeseChemistry>();
 
         let result = render_genes(&genes, &gm);
-        let expected = "CALL gobble_cheese() IF ( Value(true) || Value(true) )
+        let expected = "CALL make_cheese() IF ( Value(true) || Value(true) )
 CALL move_unit(Constant(0)) IF NOT ( Value(true) || Value(true) )\n";
 
         assert_eq!(result, expected);

@@ -35,7 +35,7 @@ impl UnitBehavior for SmartMouse {
         let pos_resources = defs::PositionResourcesLookup::new();
         let pos_attributes = defs::PositionAttributesLookup::new();
 
-        if world.get_pos_resource_at(coord, pos_resources.cheese) > 50 / 2 {
+        if world.get_pos_resource_at(coord, pos_resources.milk) > 50 / 2 {
             return UnitBehaviorResult::with_reactions(vec![(
                 defs::REACTION_ID_GOBBLE_CHEESE,
                 0,
@@ -45,7 +45,7 @@ impl UnitBehavior for SmartMouse {
         }
 
         for (_coord, _dir) in CoordOffsetIterator::new(coord, &world.size) {
-            if world.get_pos_resource_at(&_coord, pos_resources.cheese) > 10 {
+            if world.get_pos_resource_at(&_coord, pos_resources.milk) > 10 {
                 return UnitBehaviorResult::with_reactions(vec![(
                     defs::REACTION_ID_MOVE_UNIT,
                     grid_direction_to_num(_dir) as u16,
@@ -56,7 +56,7 @@ impl UnitBehavior for SmartMouse {
         }
 
         let dir_of_cheese_source = get_direction_where(world, coord, |w, _coord| {
-            w.get_pos_attribute_at(_coord, pos_attributes.is_cheese_source)
+            w.get_pos_attribute_at(_coord, pos_attributes.is_cheese_dispenser)
                 .unwrap_bool()
         });
 

@@ -455,7 +455,7 @@ pub mod tests {
 
         println!("{}", render_genes(&genes, &gm, None, 0));
 
-        let expected = "CALL gobble_cheese() IF:
+        let expected = "CALL make_cheese() IF:
     NOT OR:
         AND:
             Constant(0) == Constant(0)
@@ -470,8 +470,8 @@ CALL move_unit(Constant(0)) IF:
             Value(true)
         AND:
             Value(false)
-CALL gobble_cheese() IF FALSE
-CALL gobble_cheese() IF TRUE\n";
+CALL make_cheese() IF FALSE
+CALL make_cheese() IF TRUE\n";
 
         assert_eq!(expected, render_genes(&genes, &gm, None, 0));
     }
@@ -555,8 +555,8 @@ CALL gobble_cheese() IF TRUE\n";
                     Value(true)
                 [--%]  AND:
                     Value(false)
-        [50%]  CALL gobble_cheese() IF FALSE
-        [50%]  CALL gobble_cheese() IF TRUE
+        [50%]  CALL make_cheese() IF FALSE
+        [50%]  CALL make_cheese() IF TRUE
 
     [--%]  Channel #1 (unused)
     [--%]  Channel #2 (unused)

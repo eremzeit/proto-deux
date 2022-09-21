@@ -508,14 +508,15 @@ pub mod parsing_v2 {
     fn conditional() {
         let gm = GeneticManifest::from_default_chemistry_config::<CheeseChemistry>();
 
-        let raw_conditional = conditional!(is_truthy, pos_attr::is_cheese_source(0, 0)).build(&gm);
+        let raw_conditional =
+            conditional!(is_truthy, pos_attr::is_cheese_dispenser(0, 0)).build(&gm);
 
         let operator_id = gm.operator_id_for_key("is_truthy") as FramedGenomeValue;
         let is_negated = 0 as FramedGenomeValue;
         let param1_meta = param_meta::val_for_sensor_lookup() as FramedGenomeValue;
         let sensor_id = gm
             .sensor_manifest
-            .identify_sensor_from_key(&"pos_attr::is_cheese_source(0, 0)".to_string())
+            .identify_sensor_from_key(&"pos_attr::is_cheese_dispenser(0, 0)".to_string())
             .unwrap()
             .id as FramedGenomeValue;
         assert_eq!(raw_conditional.len(), 8);
@@ -533,13 +534,13 @@ pub mod parsing_v2 {
         let param1_meta = param_meta::val_for_sensor_lookup() as FramedGenomeValue;
         let sensor_id = gm
             .sensor_manifest
-            .identify_sensor_from_key(&"pos_attr::is_cheese_source(0, 0)")
+            .identify_sensor_from_key(&"pos_attr::is_cheese_dispenser(0, 0)")
             .unwrap()
             .id as FramedGenomeValue;
 
         let values = if_any(vec![if_all(vec![conditional!(
             is_truthy,
-            pos_attr::is_cheese_source(0, 0)
+            pos_attr::is_cheese_dispenser(0, 0)
         )])])
         .build(&gm);
 
@@ -571,11 +572,11 @@ pub mod parsing_v2 {
         let operation_type = 0;
         let reaction_id = gm
             .chemistry_manifest
-            .identify_reaction(&"gobble_cheese".to_string())
+            .identify_reaction(&"make_cheese".to_string())
             .unwrap()
             .id as FramedGenomeValue;
         let param1_meta = param_meta::val_for_register_lookup() as FramedGenomeValue;
-        let result__register = then_do!(gobble_cheese, register(1)).build(&gm);
+        let result__register = then_do!(make_cheese, register(1)).build(&gm);
 
         assert_eq!(
             result__register,
@@ -596,7 +597,7 @@ pub mod parsing_v2 {
         let gene_values = gene(
             if_any(vec![if_not_all(vec![conditional!(
                 is_truthy,
-                pos_attr::is_cheese_source(0, 0)
+                pos_attr::is_cheese_dispenser(0, 0)
             )])]),
             then_do!(move_unit, register(3), 69, 70),
         )
@@ -627,7 +628,7 @@ pub mod parsing_v2 {
                         conditional1_is_negated,
                         param_meta::val_for_sensor_lookup() as FramedGenomeValue,
                         gm.sensor_manifest
-                            .sensor_id_from_key(&"pos_attr::is_cheese_source(0, 0)")
+                            .sensor_id_from_key(&"pos_attr::is_cheese_dispenser(0, 0)")
                             as FramedGenomeValue,
                         0,
                         0,
@@ -657,7 +658,7 @@ pub mod parsing_v2 {
         let framed_vals = frame_from_single_channel(vec![gene(
             if_any(vec![if_all(vec![conditional!(
                 is_truthy,
-                pos_attr::is_cheese_source(0, 0)
+                pos_attr::is_cheese_dispenser(0, 0)
             )])]),
             then_do!(move_unit, 75),
         )])
@@ -666,19 +667,19 @@ pub mod parsing_v2 {
         let genome = FramedGenomeCompiler::compile(framed_vals, &gm);
         let s = "***FRAME 0:***
 Channel #0 (DEFAULT)
-CALL move_unit(Constant(75)) IF is_truthy(pos_attr::is_cheese_source(0, 0))
+CALL move_unit(Constant(75)) IF is_truthy(pos_attr::is_cheese_dispenser(0, 0))
 
 Channel #1
-CALL gobble_cheese() IF FALSE
-CALL gobble_cheese() IF FALSE
+CALL make_cheese() IF FALSE
+CALL make_cheese() IF FALSE
 
 Channel #2
-CALL gobble_cheese() IF FALSE
-CALL gobble_cheese() IF FALSE
+CALL make_cheese() IF FALSE
+CALL make_cheese() IF FALSE
 
 Channel #3
-CALL gobble_cheese() IF FALSE
-CALL gobble_cheese() IF FALSE\n\n";
+CALL make_cheese() IF FALSE
+CALL make_cheese() IF FALSE\n\n";
 
         println!("{}", render_frames(&genome.frames, &gm));
         assert_eq!(s, render_frames(&genome.frames, &gm))
@@ -691,7 +692,7 @@ CALL gobble_cheese() IF FALSE\n\n";
         let framed_vals = frame_from_single_channel(vec![
             gene(
                 if_any(vec![if_all(vec![
-                    conditional!(is_truthy, pos_attr::is_cheese_source(0, 0)),
+                    conditional!(is_truthy, pos_attr::is_cheese_dispenser(0, 0)),
                     conditional!(gt, unit_res::cheese, 100),
                 ])]),
                 then_do!(move_unit, 75),
@@ -699,7 +700,7 @@ CALL gobble_cheese() IF FALSE\n\n";
             gene(
                 if_none(vec![if_not_all(vec![conditional!(
                     lt,
-                    sim_attr::total_cheese_consumed,
+                    sim_attr::total_cheese_acquired,
                     100
                 )])]),
                 then_do!(new_unit, register(1), 69, 69),
@@ -710,29 +711,29 @@ CALL gobble_cheese() IF FALSE\n\n";
         let genome = FramedGenomeCompiler::compile(framed_vals, &gm);
         let s = "***FRAME 0:***
 Channel #0 (DEFAULT)
-CALL move_unit(Constant(75)) IF (is_truthy(pos_attr::is_cheese_source(0, 0)) && unit_res::cheese(0, 0) > Constant(100))
-CALL new_unit(Register(1)) IF NOT NOT sim_attr::total_cheese_consumed(0, 0) < Constant(100)
+CALL move_unit(Constant(75)) IF (is_truthy(pos_attr::is_cheese_dispenser(0, 0)) && unit_res::cheese(0, 0) > Constant(100))
+CALL new_unit(Register(1)) IF NOT NOT sim_attr::total_cheese_acquired(0, 0) < Constant(100)
 
 Channel #1
-CALL gobble_cheese() IF FALSE
-CALL gobble_cheese() IF FALSE
-CALL gobble_cheese() IF FALSE
-CALL gobble_cheese() IF FALSE
-CALL gobble_cheese() IF FALSE
+CALL make_cheese() IF FALSE
+CALL make_cheese() IF FALSE
+CALL make_cheese() IF FALSE
+CALL make_cheese() IF FALSE
+CALL make_cheese() IF FALSE
 
 Channel #2
-CALL gobble_cheese() IF FALSE
-CALL gobble_cheese() IF FALSE
-CALL gobble_cheese() IF FALSE
-CALL gobble_cheese() IF FALSE
-CALL gobble_cheese() IF FALSE
+CALL make_cheese() IF FALSE
+CALL make_cheese() IF FALSE
+CALL make_cheese() IF FALSE
+CALL make_cheese() IF FALSE
+CALL make_cheese() IF FALSE
 
 Channel #3
-CALL gobble_cheese() IF FALSE
-CALL gobble_cheese() IF FALSE
-CALL gobble_cheese() IF FALSE
-CALL gobble_cheese() IF FALSE
-CALL gobble_cheese() IF FALSE\n\n";
+CALL make_cheese() IF FALSE
+CALL make_cheese() IF FALSE
+CALL make_cheese() IF FALSE
+CALL make_cheese() IF FALSE
+CALL make_cheese() IF FALSE\n\n";
 
         println!("{}", &s);
         println!("{}", &render_frames(&genome.frames, &gm));

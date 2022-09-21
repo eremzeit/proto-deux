@@ -58,8 +58,8 @@
 //     ]}
 //
 //     def_reactions!{
-//         reaction!("gobble_cheese",
-//             reagent!("gobble_cheese"),
+//         reaction!("make_cheese",
+//             reagent!("make_cheese"),
 //         ),
 //
 //         reaction!("move_unit",
@@ -109,7 +109,7 @@
 //         ActionSet::from(
 //             vec![
 //                 ActionDefinition::new(
-//                     &"gobble_cheese",
+//                     &"make_cheese",
 //                     vec![],
 //                     // can execute action
 //                     Rc::new(
@@ -123,7 +123,7 @@
 //                             let unit_resources = defs::UnitResourcesLookup::new();
 //                             let pos_resources = defs::PositionResourcesLookup::new();
 //
-//                             let max_gobble_amount = MAX_GOBBLE_AMOUNT!();
+//                             let max_make_cheese_amount = MAX_GOBBLE_AMOUNT!();
 //                             let pos = sim.world.get_position_at(coord).unwrap();
 //                             let pos_cheese_amount = pos.get_resource(pos_resources.cheese);
 //
@@ -182,17 +182,17 @@
 //             resources[id_air] = 10;
 //         }
 //
-//         // is_cheese_source
-//         let is_cheese_source_id: PositionAttributeIndex = self.get_manifest().position_attribute_by_key("is_cheese_source").id as usize;
-//         let is_cheese_source = pos.get_attribute(is_cheese_source_id).unwrap_bool();
+//         // is_cheese_dispenser
+//         let is_cheese_dispenser_id: PositionAttributeIndex = self.get_manifest().position_attribute_by_key("is_cheese_dispenser").id as usize;
+//         let is_cheese_dispenser = pos.get_attribute(is_cheese_dispenser_id).unwrap_bool();
 //
-//         //println!("is_cheese_source: {}", is_cheese_source);
+//         //println!("is_cheese_dispenser: {}", is_cheese_dispenser);
 //
 //         let id_cheese: PositionAttributeIndex = self.get_manifest().unit_resource_by_key("cheese").id as usize;
 //         //println!("id_air: {}", id_air);
 //         //println!("id_cheese: {}", id_cheese);
 //
-//         if is_cheese_source {
+//         if is_cheese_dispenser {
 //             resources[id_cheese] += 50;
 //         }
 //
@@ -239,7 +239,7 @@
 //                 world.set_pos_attribute_at(
 //                     &coord,
 //                     self.get_manifest()
-//                         .position_attribute_by_key("is_cheese_source")
+//                         .position_attribute_by_key("is_cheese_dispenser")
 //                         .id as usize,
 //                     PositionAttributeValue::Bool(true),
 //                 );
@@ -278,7 +278,7 @@
 //         let position_resources = defs::PositionResourcesLookup::make_defs();
 //     }
 //
-//     mod gobble_cheese {
+//     mod make_cheese {
 //         use super::*;
 //         use tests::{can_execute, execute_action};
 //         use crate::tests::fixtures;
@@ -291,7 +291,7 @@
 //             let unit_resources = defs::UnitResourcesLookup::new();
 //
 //             let actions = CheeseChemistry::custom_actions();
-//             let action = actions.by_key("gobble_cheese");
+//             let action = actions.by_key("make_cheese");
 //
 //             let src_coord = (2,0);
 //             let mut sim = fixtures::default_base(Some(vec![

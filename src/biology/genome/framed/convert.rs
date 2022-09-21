@@ -496,7 +496,7 @@ pub mod tests {
 
         let mut frame1 = frame_from_single_channel(vec![gene(
             if_any(vec![if_all(vec![
-                conditional!(is_truthy, pos_attr::is_cheese_source(0, 0)),
+                conditional!(is_truthy, pos_attr::is_cheese_dispenser(0, 0)),
                 conditional!(gt, unit_res::cheese, 100),
             ])]),
             then_do!(move_unit, 75),
@@ -506,7 +506,7 @@ pub mod tests {
         let mut frame2 = frame_from_single_channel(vec![gene(
             if_none(vec![if_not_all(vec![conditional!(
                 lt,
-                sim_attr::total_cheese_consumed,
+                sim_attr::total_cheese_acquired,
                 100
             )])]),
             then_do!(new_unit, register(1), 69, 69),
