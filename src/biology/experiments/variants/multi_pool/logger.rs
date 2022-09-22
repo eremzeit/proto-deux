@@ -122,8 +122,6 @@ impl MultiPoolExperimentLogger {
         let mut s = format!("{},", tick);
 
         for (i, result) in results.iter().enumerate() {
-            assert_eq!(i, result.gene_pool_id);
-
             s.push_str(&format!("{},", result.fitness_score))
         }
 

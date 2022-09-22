@@ -547,7 +547,7 @@ mod tests {
                 });
 
             sim.world
-                .set_pos_resource_at(&(2, 0), position_resources.cheese, 10);
+                .set_pos_resource_at(&(2, 0), position_resources.milk, 10);
             let params = vec![ActionParam::UnitResourceAmount(50)];
             assert_eq!(
                 sim.world

@@ -9,8 +9,12 @@ Cargo.lock
 .idea
 
 data/*
+analysis_js/data/*
 
 .DS_Store
 
 .vscode
 *.code-workspace
+
+analysis_js/node_modules/*
+analysis_js/node_modules

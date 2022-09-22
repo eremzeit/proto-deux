@@ -1,0 +1,15 @@
+{
+  "name": "analysis_js",
+  "version": "1.0.0",
+  "description": "",
+  "main": "process_fitness.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "chart.js-image": "^6.1.3",
+    "neat-csv": "^7.0.0"
+  }
+}

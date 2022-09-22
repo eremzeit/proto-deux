@@ -101,11 +101,13 @@ impl MultiPoolExperiment {
             self.shuffle_genomes_across_gene_pools();
         }
 
-        if self.state.current_tick % 1 == 0 {
+        if self.state.current_tick % 10 == 0 {
             self.print_fitness_summary();
 
             if let Some(logger) = &self._logger {
                 for gene_pool in &self.state.gene_pools {
+
+                    
                     logger.log_gene_pool_summary(gene_pool);
                     logger.log_gene_pool_fitness_percentiles(gene_pool, self.state.current_tick);
                 }
