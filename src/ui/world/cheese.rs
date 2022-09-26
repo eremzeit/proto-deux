@@ -34,7 +34,7 @@ fn random_color() -> [f32; 4] {
 impl CheeseCellRenderer {
     pub fn new() -> Self {
         Self {
-            unit_colors: (0..15).map(|i| random_color()).collect::<Vec<_>>(),
+            unit_colors: vec![to_color([0x00, 0x76, 0xFF, 0xFF])],
         }
     }
 }
@@ -43,7 +43,7 @@ pub fn get_cheese_pct(pos: &Position, current_tick: u64) -> f64 {
     let res_defs = cheese::defs::PositionResourcesLookup::new();
     let cheese = pos.get_resource(res_defs.milk, current_tick);
 
-    (cheese as f64 / 1000.0).min(1.0)
+    (cheese as f64 / 200.0).min(1.0)
 }
 
 pub fn get_unit_cheese_size_ratio(pos: &Position, config: &ChemistryConfiguration) -> f64 {
@@ -56,7 +56,8 @@ pub fn get_unit_cheese_size_ratio(pos: &Position, config: &ChemistryConfiguratio
         .unwrap_resource_amount()
         .abs() as f64;
     // println!("unit cheese: {}", cheese);
-    (cheese as f64 / new_unit_cost).min(1.0).max(0.2)
+    (cheese as f64 / new_unit_cost / 2.0).min(1.0).max(0.2)
+    // (cheese as f64 / new_unit_cost).min(1.0).max(0.2)
 }
 
 pub fn calc_resource_rect(full_rect: [f64; 4], pct: f64, coord: &Coord) -> [f64; 4] {
@@ -106,7 +107,6 @@ impl CellRenderer for CheeseCellRenderer {
         cell_rect: [f64; 4],
     ) {
         let pos = sim.grid[[x, y]].as_ref().unwrap();
-
         let attr_defs = chemistry::variants::cheese::defs::PositionAttributesLookup::new();
         let is_cheese_dispenser = pos
             .get_attribute(attr_defs.is_cheese_dispenser)
@@ -114,7 +114,9 @@ impl CellRenderer for CheeseCellRenderer {
 
         // cell bg
         let bg_color = if is_cheese_dispenser {
-            to_color([0xE0, 0xD2, 0x00, 0xaa])
+            // to_color([0xE0, 0xD2, 0x00, 0x66])
+            // to_color([0x00, 0x00, 0x00, 0x00]) // invisible
+            [0.0, 0.0, 0.0, 255.0]
         } else {
             [0.0, 0.0, 0.0, 255.0]
         };
@@ -126,8 +128,7 @@ impl CellRenderer for CheeseCellRenderer {
         if cheese_pct > 0.0 {
             let resource_rect = calc_resource_rect(cell_rect, cheese_pct, &(x, y));
             rectangle(
-                // to_color([0xA0, 0xC5, 0x5F, 0x44]),
-                to_color([0xff, 0xff, 0xff, 0x44]),
+                to_color([0x36, 0xBE, 0x4F, 0xff]),
                 resource_rect,
                 c.transform.trans(0.0, 0.0),
                 g,

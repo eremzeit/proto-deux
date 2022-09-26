@@ -84,8 +84,6 @@ pub mod defs {
 
     def_position_resources! {[
         [milk, false]
-        // [cheese, false]
-        // [water, false]
     ]}
 
     def_unit_resources! {[
@@ -199,8 +197,8 @@ impl Chemistry for CheeseChemistry {
             .set_resource_amount("move_cost", -1)
             .set_resource_amount("new_unit_cost", -200)
             .set_resource_amount("max_make_cheese_amount", 50)
-            .set_float_amount("cheese_dispenser_odds", 0.20)
-            .set_float_amount("milk_source_odds", 0.20)
+            .set_float_amount("cheese_dispenser_odds", 0.70)
+            .set_float_amount("milk_source_odds", 0.70)
             .set_resource_amount("max_milk_in_position", 100)
             .build()
     }

@@ -73,6 +73,12 @@ pub fn with_genomes(sim_args: &SimulationRunnerArgs) -> SimulationBuilder {
 }
 
 pub fn with_genome2(sim_args: &SimulationRunnerArgs) -> SimulationBuilder {
+    let config = ChemistryConfigBuilder::new()
+        .set_float_amount("cheese_dispenser_odds", 0.00)
+        .set_float_amount("milk_source_odds", 0.70)
+        .set_resource_amount("max_milk_in_position", 100)
+        .build();
+
     let chemistry_builder = ChemistryBuilder::with_key("cheese");
     let chemistry = chemistry_builder.build();
     let gm = GeneticManifest::from_chemistry(&chemistry).wrap_rc();
